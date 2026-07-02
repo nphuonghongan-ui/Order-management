@@ -6,17 +6,14 @@ import LoginPage from './pages/LoginPage';
 import Manufacture from './pages/Manufacture';
 
 function App() {
- 
-
   return (
     <>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Homepage />} />
-          
           <Route path="*" element={<NotFound />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/manufacture" element={<Manufacture />} /> 
+          <Route path="/manufacture" element={<Manufacture />} />
           
         </Routes>
       </BrowserRouter>
