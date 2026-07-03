@@ -1,12 +1,12 @@
-import * as React from "react"
+import type { ComponentProps } from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 function Card({
   className,
   size = "default",
   ...props
-}) {
+}: ComponentProps<"div"> & { size?: "default" | "sm" }) {
   return (
     <div
       data-slot="card"
@@ -22,7 +22,7 @@ function Card({
 function CardHeader({
   className,
   ...props
-}) {
+}: ComponentProps<"div">) {
   return (
     <div
       data-slot="card-header"
@@ -37,7 +37,7 @@ function CardHeader({
 function CardTitle({
   className,
   ...props
-}) {
+}: ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
@@ -52,7 +52,7 @@ function CardTitle({
 function CardDescription({
   className,
   ...props
-}) {
+}: ComponentProps<"div">) {
   return (
     <div
       data-slot="card-description"
@@ -64,7 +64,7 @@ function CardDescription({
 function CardAction({
   className,
   ...props
-}) {
+}: ComponentProps<"div">) {
   return (
     <div
       data-slot="card-action"
@@ -79,7 +79,7 @@ function CardAction({
 function CardContent({
   className,
   ...props
-}) {
+}: ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
@@ -91,7 +91,7 @@ function CardContent({
 function CardFooter({
   className,
   ...props
-}) {
+}: ComponentProps<"div">) {
   return (
     <div
       data-slot="card-footer"

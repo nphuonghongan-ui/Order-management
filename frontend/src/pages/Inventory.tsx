@@ -1,10 +1,19 @@
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import ActionToolbar from "@/components/ActionToolbar";
-import DataTable from "@/components/DataTable";
+import DataTable, { type Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 
-const MOCK_INVENTORY = [
+interface InventoryItem {
+  _id: string;
+  sku: string;
+  name: string;
+  quantity: number;
+  status: "confirmed" | "submitted";
+  createdAt: string;
+}
+
+const MOCK_INVENTORY: InventoryItem[] = [
   { _id: "1", sku: "INV-001", name: "Steel Sheet A36", quantity: 120, status: "confirmed", createdAt: "2026-06-01" },
   { _id: "2", sku: "INV-002", name: "Aluminum Bar 6061", quantity: 45, status: "submitted", createdAt: "2026-06-15" },
   { _id: "3", sku: "INV-003", name: "Copper Wire 12AWG", quantity: 300, status: "confirmed", createdAt: "2026-06-20" },
@@ -17,7 +26,7 @@ const FILTERS = [
   { value: "confirmed", label: "Confirmed" },
 ];
 
-const COLUMNS = [
+const COLUMNS: Column<InventoryItem>[] = [
   { key: "sku", label: "SKU / ID", mono: true },
   { key: "name", label: "Name" },
   { key: "quantity", label: "Quantity", align: "right" },
@@ -26,7 +35,7 @@ const COLUMNS = [
 ];
 
 export default function Inventory() {
-  const [items, setItems] = useState(MOCK_INVENTORY);
+  const [items, setItems] = useState<InventoryItem[]>(MOCK_INVENTORY);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
 
@@ -58,11 +67,11 @@ export default function Inventory() {
     toast.success("Item created successfully");
   };
 
-  const handleEdit = (row) => {
+  const handleEdit = (row: InventoryItem) => {
     toast.info(`Edit feature coming soon — ${row.sku}`);
   };
 
-  const handleDelete = (row) => {
+  const handleDelete = (row: InventoryItem) => {
     setItems(items.filter((item) => item._id !== row._id));
     toast.success("Item deleted successfully");
   };

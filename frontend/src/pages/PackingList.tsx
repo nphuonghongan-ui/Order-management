@@ -1,10 +1,19 @@
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import ActionToolbar from "@/components/ActionToolbar";
-import DataTable from "@/components/DataTable";
+import DataTable, { type Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 
-const MOCK_PACKING_LISTS = [
+interface PackingListItem {
+  _id: string;
+  plNumber: string;
+  customer: string;
+  itemsCount: number;
+  status: "pending" | "shipped";
+  createdAt: string;
+}
+
+const MOCK_PACKING_LISTS: PackingListItem[] = [
   { _id: "1", plNumber: "PL-2026-001", customer: "Acme Corp", itemsCount: 12, status: "shipped", createdAt: "2026-06-10" },
   { _id: "2", plNumber: "PL-2026-002", customer: "Globex Inc", itemsCount: 5, status: "pending", createdAt: "2026-06-22" },
   { _id: "3", plNumber: "PL-2026-003", customer: "Initech", itemsCount: 28, status: "shipped", createdAt: "2026-06-28" },
@@ -16,7 +25,7 @@ const FILTERS = [
   { value: "shipped", label: "Shipped" },
 ];
 
-const COLUMNS = [
+const COLUMNS: Column<PackingListItem>[] = [
   { key: "plNumber", label: "PL Number", mono: true },
   { key: "customer", label: "Customer" },
   { key: "itemsCount", label: "Items", align: "right" },
@@ -25,7 +34,7 @@ const COLUMNS = [
 ];
 
 export default function PackingList() {
-  const [items, setItems] = useState(MOCK_PACKING_LISTS);
+  const [items, setItems] = useState<PackingListItem[]>(MOCK_PACKING_LISTS);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
 
@@ -57,11 +66,11 @@ export default function PackingList() {
     toast.success("Packing list created successfully");
   };
 
-  const handleEdit = (row) => {
+  const handleEdit = (row: PackingListItem) => {
     toast.info(`Edit feature coming soon — ${row.plNumber}`);
   };
 
-  const handleDelete = (row) => {
+  const handleDelete = (row: PackingListItem) => {
     setItems(items.filter((item) => item._id !== row._id));
     toast.success("Packing list deleted successfully");
   };

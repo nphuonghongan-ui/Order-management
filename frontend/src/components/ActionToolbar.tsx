@@ -1,6 +1,21 @@
 import { Search, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+export interface FilterOption {
+  value: string;
+  label: string;
+}
+
+interface ActionToolbarProps {
+  search: string;
+  setSearch: (value: string) => void;
+  filters?: FilterOption[];
+  activeFilter?: string;
+  setActiveFilter?: (value: string) => void;
+  ctaLabel?: string;
+  onCTA?: () => void;
+}
+
 export default function ActionToolbar({
   search,
   setSearch,
@@ -9,7 +24,7 @@ export default function ActionToolbar({
   setActiveFilter,
   ctaLabel,
   onCTA,
-}) {
+}: ActionToolbarProps) {
   return (
     <div className="flex items-center justify-between gap-4 mb-4">
       <div className="flex items-center gap-3 flex-1">
@@ -24,7 +39,7 @@ export default function ActionToolbar({
           />
         </div>
 
-        {filters.length > 0 && (
+        {filters.length > 0 && setActiveFilter && (
           <div className="flex items-center gap-1">
             {filters.map((f) => (
               <button
@@ -44,7 +59,7 @@ export default function ActionToolbar({
         )}
       </div>
 
-      {ctaLabel && (
+      {ctaLabel && onCTA && (
         <button
           onClick={onCTA}
           className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium text-primary-foreground bg-primary hover:bg-primary-light transition-colors shrink-0"

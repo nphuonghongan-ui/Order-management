@@ -1,4 +1,4 @@
-import { cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const statusVariants = cva(
@@ -17,7 +17,9 @@ const statusVariants = cva(
   }
 );
 
-const STATUS_MAP = {
+type StatusVariant = VariantProps<typeof statusVariants>["variant"];
+
+const STATUS_MAP: Record<string, StatusVariant> = {
   confirmed: "success",
   shipped: "success",
   submitted: "warning",
@@ -27,7 +29,11 @@ const STATUS_MAP = {
   active: "info",
 };
 
-export default function StatusBadge({ status }) {
+interface StatusBadgeProps {
+  status: string;
+}
+
+export default function StatusBadge({ status }: StatusBadgeProps) {
   const variant = STATUS_MAP[status] || "neutral";
   const label = status
     ? status.charAt(0).toUpperCase() + status.slice(1)

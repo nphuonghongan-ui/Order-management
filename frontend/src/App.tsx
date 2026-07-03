@@ -1,8 +1,9 @@
 import { Toaster } from "sonner";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { DEFAULT_PATH_BY_ROLE, ROLES } from "./lib/roles";
+import { DEFAULT_PATH_BY_ROLE, ROLES, type Role } from "./lib/roles";
 import LoginPage from "./pages/LoginPage";
+import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import PackingList from "./pages/PackingList";
@@ -22,15 +23,15 @@ function ProtectedRoute() {
 
 function DashboardIndex() {
   const { role } = useAuth();
-  return <Navigate to={DEFAULT_PATH_BY_ROLE[role] || "/"} replace />;
+  return <Navigate to={role ? DEFAULT_PATH_BY_ROLE[role] : "/"} replace />;
 }
 
-function RoleGuard({ allowed, children }) {
+function RoleGuard({ allowed, children }: { allowed: Role[]; children: React.ReactNode }) {
   const { role } = useAuth();
-  if (!allowed.includes(role)) {
-    return <Navigate to={DEFAULT_PATH_BY_ROLE[role]} replace />;
+  if (!role || !allowed.includes(role)) {
+    return <Navigate to={role ? DEFAULT_PATH_BY_ROLE[role] : "/"} replace />;
   }
-  return children;
+  return <>{children}</>;
 }
 
 function App() {
@@ -39,7 +40,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route element={<PublicRoute />}>
-            <Route path="/" element={<LoginPage />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
           </Route>
           <Route path="/dashboard" element={<ProtectedRoute />}>

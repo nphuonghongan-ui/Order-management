@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import {
   SquarePen,
   Trash2,
@@ -9,17 +9,34 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function DataTable({
+export interface Column<T> {
+  key: string;
+  label: string;
+  align?: "left" | "right";
+  mono?: boolean;
+  sortable?: boolean;
+  render?: (row: T) => ReactNode;
+}
+
+interface DataTableProps<T> {
+  columns: Column<T>[];
+  data: T[];
+  onEdit?: (row: T) => void;
+  onDelete?: (row: T) => void;
+  emptyMessage?: string;
+}
+
+export default function DataTable<T extends { _id: string }>({
   columns,
   data = [],
   onEdit,
   onDelete,
   emptyMessage = "No data available",
-}) {
-  const [sortKey, setSortKey] = useState(null);
-  const [sortDir, setSortDir] = useState("asc");
+}: DataTableProps<T>) {
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
-  const handleSort = (key) => {
+  const handleSort = (key: string) => {
     if (sortKey === key) {
       setSortDir(sortDir === "asc" ? "desc" : "asc");
     } else {
@@ -31,8 +48,8 @@ export default function DataTable({
   const sortedData = useMemo(() => {
     if (!sortKey) return data;
     return [...data].sort((a, b) => {
-      const aVal = a[sortKey];
-      const bVal = b[sortKey];
+      const aVal = a[sortKey as keyof T];
+      const bVal = b[sortKey as keyof T];
       if (aVal == null) return 1;
       if (bVal == null) return -1;
       if (typeof aVal === "number" && typeof bVal === "number") {
@@ -108,7 +125,7 @@ export default function DataTable({
                       col.mono && "font-mono text-xs"
                     )}
                   >
-                    {col.render ? col.render(row) : row[col.key]}
+                    {col.render ? col.render(row) : String(row[col.key as keyof T] ?? "")}
                   </td>
                 ))}
                 {hasActions && (

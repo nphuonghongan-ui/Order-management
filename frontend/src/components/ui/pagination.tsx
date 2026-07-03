@@ -1,13 +1,13 @@
-import * as React from "react"
+import type { ComponentProps } from "react";
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from "lucide-react"
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from "lucide-react";
 
 function Pagination({
   className,
   ...props
-}) {
+}: ComponentProps<"nav">) {
   return (
     <nav
       role="navigation"
@@ -21,7 +21,7 @@ function Pagination({
 function PaginationContent({
   className,
   ...props
-}) {
+}: ComponentProps<"ul">) {
   return (
     <ul
       data-slot="pagination-content"
@@ -32,7 +32,7 @@ function PaginationContent({
 
 function PaginationItem({
   ...props
-}) {
+}: ComponentProps<"li">) {
   return <li data-slot="pagination-item" {...props} />;
 }
 
@@ -41,6 +41,9 @@ function PaginationLink({
   isActive,
   size = "icon",
   ...props
+}: ComponentProps<"a"> & {
+  isActive?: boolean;
+  size?: "default" | "icon" | "icon-sm" | "icon-xs" | "icon-lg" | "sm" | "xs" | "lg";
 }) {
   return (
     <Button
@@ -61,7 +64,7 @@ function PaginationPrevious({
   className,
   text = "Previous",
   ...props
-}) {
+}: ComponentProps<"a"> & { text?: string }) {
   return (
     <PaginationLink
       aria-label="Go to previous page"
@@ -78,7 +81,7 @@ function PaginationNext({
   className,
   text = "Next",
   ...props
-}) {
+}: ComponentProps<"a"> & { text?: string }) {
   return (
     <PaginationLink
       aria-label="Go to next page"
@@ -94,7 +97,7 @@ function PaginationNext({
 function PaginationEllipsis({
   className,
   ...props
-}) {
+}: ComponentProps<"span">) {
   return (
     <span
       aria-hidden
