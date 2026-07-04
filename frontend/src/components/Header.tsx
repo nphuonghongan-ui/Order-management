@@ -1,5 +1,5 @@
 import { useLocation } from "react-router";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/stores/authStore";
 import { MENU_BY_ROLE, type Role } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +10,7 @@ const ROLE_BADGE_STYLES: Record<Role, string> = {
 };
 
 export default function Header() {
-  const { role } = useAuth();
+  const role = useAuthStore((s) => s.role);
   const location = useLocation();
 
   const menuItems = role ? MENU_BY_ROLE[role] : [];

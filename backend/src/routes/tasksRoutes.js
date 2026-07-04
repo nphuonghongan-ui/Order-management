@@ -1,7 +1,10 @@
 import express from 'express';
 import { createTask, getAllTasks, updateTask, deleteTask } from '../controllers/tasksControllers.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
+
+router.use(requireAuth);
 
 /**
  * @openapi

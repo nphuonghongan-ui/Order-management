@@ -1,13 +1,14 @@
 import { useNavigate, useLocation, Link } from "react-router";
 import { Package, ClipboardList, LogOut, Boxes, type LucideIcon } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/stores/authStore";
 import { MENU_BY_ROLE } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<string, LucideIcon> = { Package, ClipboardList };
 
 export default function Sidebar() {
-  const { role, logout } = useAuth();
+  const role = useAuthStore((s) => s.role);
+  const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const location = useLocation();
 

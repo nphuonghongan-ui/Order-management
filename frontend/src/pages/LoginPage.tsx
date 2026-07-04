@@ -2,27 +2,31 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { ArrowRight, EyeOff, Package, Eye } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/stores/authStore";
 
 const sansFont = { fontFamily: "'Inter', sans-serif" };
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const login = useAuthStore((s) => s.login);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const [showPass, setShowPass] = useState(false);
   const [usernameFocus, setUsernameFocus] = useState(false);
   const [passFocus, setPassFocus] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const ok = login(username);
+    if (submitting) return;
+    setSubmitting(true);
+    const ok = await login(username, password);
+    setSubmitting(false);
     if (ok) {
       navigate("/dashboard");
     } else {
-      toast.error("Invalid username. Use: po, sale, or mfg");
+      toast.error("Invalid username or password");
     }
   };
 
@@ -159,21 +163,23 @@ export default function LoginPage() {
           </div>
 
           {/* Submit */}
-          <button
-            type="submit"
-            className="w-full py-3 text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all mt-2"
-            style={{ background: "#0052CC", borderRadius: "6px", border: "none" }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "#003B9A";
-              (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 16px rgba(0,82,204,0.35)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "#0052CC";
-              (e.currentTarget as HTMLElement).style.boxShadow = "none";
-            }}
-          >
-            Sign in <ArrowRight size={14} />
-          </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full py-3 text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all mt-2"
+              style={{ background: "#0052CC", borderRadius: "6px", border: "none" }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "#003B9A";
+                (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 16px rgba(0,82,204,0.35)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "#0052CC";
+                (e.currentTarget as HTMLElement).style.boxShadow = "none";
+              }}
+            >
+              {submitting ? "Signing in..." : "Sign in"}
+              {!submitting && <ArrowRight size={14} />}
+            </button>
         </form>
       </div>
     </div>
