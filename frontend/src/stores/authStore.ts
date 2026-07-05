@@ -45,6 +45,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         account: AccountProfile;
         accessToken: string;
       }>("/auth/login", { userName, password });
+
       set({
         role: data.account.role,
         account: data.account,

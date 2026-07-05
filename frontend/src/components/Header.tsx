@@ -24,14 +24,14 @@ export default function Header() {
         {role && (
           <span
             className={cn(
-              "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
+              "inline-flex items-center px-2.5 py-0.5 text-xs font-medium",
               ROLE_BADGE_STYLES[role]
             )}
           >
             {role}
           </span>
         )}
-        <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground text-xs font-medium">
+        <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground text-xs font-medium cursor-pointer">
           {role?.charAt(0).toUpperCase()}
         </div>
       </div>

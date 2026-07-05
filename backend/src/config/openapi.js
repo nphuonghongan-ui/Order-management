@@ -62,6 +62,73 @@ const options = {
             },
           },
         },
+        LineItemRequest: {
+          type: 'object',
+          required: ['poNum', 'shipToNum', 'needByDate', 'requestDate', 'mode', 'orderDtl', 'unitPrice', 'quantityPerCont'],
+          properties: {
+            poNum: { type: 'string' },
+            shipToNum: { type: 'string' },
+            needByDate: { type: 'string', format: 'date' },
+            requestDate: { type: 'string', format: 'date' },
+            mode: { type: 'string', enum: ['SEA', 'AIR', 'ROAD', 'RAIL'] },
+            orderDtl: {
+              type: 'object',
+              required: ['orderLine', 'partNum', 'sellingQuantity'],
+              properties: {
+                orderLine: { type: 'integer', minimum: 1 },
+                partNum: { type: 'string' },
+                sellingQuantity: { type: 'integer', minimum: 1 },
+              },
+            },
+            unitPrice: { type: 'number', minimum: 0 },
+            quantityPerCont: { type: 'integer', minimum: 1 },
+          },
+        },
+        CreatePORequest: {
+          type: 'object',
+          required: ['lines'],
+          properties: {
+            lines: {
+              type: 'array',
+              minItems: 1,
+              items: { $ref: '#/components/schemas/LineItemRequest' },
+            },
+          },
+        },
+        POLinePublic: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            customerCustId: { type: 'string' },
+            poNum: { type: 'string' },
+            shipToNum: { type: 'string' },
+            needByDate: { type: 'string', format: 'date-time' },
+            requestDate: { type: 'string', format: 'date-time' },
+            mode: { type: 'string', enum: ['SEA', 'AIR', 'ROAD', 'RAIL'] },
+            orderDtl: {
+              type: 'object',
+              properties: {
+                orderLine: { type: 'integer' },
+                partNum: { type: 'string' },
+                sellingQuantity: { type: 'integer' },
+              },
+            },
+            unitPrice: { type: 'number' },
+            total: { type: 'number' },
+            quantityPerCont: { type: 'integer' },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        CreatePOResponse: {
+          type: 'object',
+          properties: {
+            created: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/POLinePublic' },
+            },
+          },
+        },
       },
     },
     security: [{ bearerAuth: [] }],

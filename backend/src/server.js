@@ -7,6 +7,7 @@ import { spec } from './config/openapi.js';
 import { apiReference } from '@scalar/express-api-reference';
 import tasksRoutes from './routes/tasksRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import poRoutes from './routes/poRoutes.js';
 
 if (!process.env.JWT_SECRET) {
   console.warn('[WARN] JWT_SECRET is not set. Auth will fail until it is.');
@@ -29,6 +30,7 @@ app.use(express.json());
 
 app.use("/api/tasks", tasksRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/pos", poRoutes);
 
 app.get('/', apiReference({ pageTitle: 'Order Management API', content: spec }));
 
