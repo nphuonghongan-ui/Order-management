@@ -14,7 +14,7 @@ const setRefreshCookie = (res, refreshToken) => {
   res.cookie('refresh_token', refreshToken, refreshCookieOptions);
 };
 
-const clearRefreshCookie = (res) => {
+const clearRefreshCookie123 = (res) => {
   res.clearCookie('refresh_token', refreshCookieOptions);
 };
 
@@ -152,6 +152,6 @@ export const logout = async (req, res) => {
       // invalid/expired refresh token — nothing to revoke, still clear cookies
     }
   }
-  clearRefreshCookie(res);
+  clearRefreshCookie123(res);
   return res.status(204).send();
 };
