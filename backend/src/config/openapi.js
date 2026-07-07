@@ -129,6 +129,38 @@ const options = {
             },
           },
         },
+        ItemPublic: {
+          allOf: [
+            { $ref: '#/components/schemas/POLinePublic' },
+            {
+              type: 'object',
+              properties: {
+                exWorkDate: { type: 'string', format: 'date-time', nullable: true },
+              },
+            },
+          ],
+        },
+        ItemExWorkPatch: {
+          type: 'object',
+          required: ['exWorkDate'],
+          properties: {
+            exWorkDate: {
+              type: 'string',
+              format: 'date',
+              nullable: true,
+              description: 'ISO date string (YYYY-MM-DD) to set, or null to clear.',
+            },
+          },
+        },
+        ItemListResponse: {
+          type: 'object',
+          properties: {
+            items: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/ItemPublic' },
+            },
+          },
+        },
       },
     },
     security: [{ bearerAuth: [] }],

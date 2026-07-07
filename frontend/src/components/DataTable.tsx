@@ -23,7 +23,7 @@ interface DataTableProps<T> {
   data: T[];
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
-  emptyMessage?: string;
+  emptyMessage?: ReactNode;
 }
 
 export default function DataTable<T extends { _id: string }>({

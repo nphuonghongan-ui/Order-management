@@ -23,7 +23,7 @@ export const MENU_BY_ROLE: Record<Role, MenuItem[]> = {
     { label: "Inventory", path: "/dashboard/inventory", icon: "Package" },
   ],
   [ROLES.MANUFACTURE]: [
-    { label: "Inventory", path: "/dashboard/inventory", icon: "Package" },
+    { label: "Production Schedule", path: "/dashboard/production", icon: "Factory" },
   ],
   [ROLES.SALE]: [
     { label: "Packing List", path: "/dashboard/packing-list", icon: "ClipboardList" },
@@ -32,7 +32,7 @@ export const MENU_BY_ROLE: Record<Role, MenuItem[]> = {
 
 export const DEFAULT_PATH_BY_ROLE: Record<Role, string> = {
   [ROLES.PO]: "/dashboard/inventory",
-  [ROLES.MANUFACTURE]: "/dashboard/inventory",
+  [ROLES.MANUFACTURE]: "/dashboard/production",
   [ROLES.SALE]: "/dashboard/packing-list",
 };
 

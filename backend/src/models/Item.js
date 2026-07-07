@@ -33,9 +33,12 @@ const itemSchema = new mongoose.Schema(
     unitPrice: { type: Number, required: true, min: 0 },
     total: { type: Number, required: true, min: 0 },
     quantityPerCont: { type: Number, required: true, min: 1 },
+    exWorkDate: { type: Date, required: false, default: null },
   },
   { timestamps: true, collection: 'items' }
 );
+
+itemSchema.index({ createdAt: -1, _id: -1 });
 
 itemSchema.statics.toClient = (doc) => ({
   _id: doc._id,
@@ -49,6 +52,7 @@ itemSchema.statics.toClient = (doc) => ({
   unitPrice: doc.unitPrice,
   total: doc.total,
   quantityPerCont: doc.quantityPerCont,
+  exWorkDate: doc.exWorkDate ?? null,
   createdAt: doc.createdAt,
   updatedAt: doc.updatedAt,
 });

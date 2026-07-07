@@ -8,6 +8,7 @@ import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import PackingList from "./pages/PackingList";
+import ProductionSchedule from "./pages/ProductionSchedule";
 import NotFound from "./pages/NotFound";
 
 function AuthBootstrap() {
@@ -62,8 +63,16 @@ function App() {
             <Route
               path="inventory"
               element={
-                <RoleGuard allowed={[ROLES.PO, ROLES.MANUFACTURE]}>
+                <RoleGuard allowed={[ROLES.PO]}>
                   <Inventory />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="production"
+              element={
+                <RoleGuard allowed={[ROLES.MANUFACTURE]}>
+                  <ProductionSchedule />
                 </RoleGuard>
               }
             />

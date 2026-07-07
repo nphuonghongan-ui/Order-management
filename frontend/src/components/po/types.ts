@@ -13,6 +13,30 @@ export interface LineItem {
   sellingQuantity: string;
   unitPrice: string;
   quantityPerCont: string;
+  exWorkDate?: string | null;
 }
 
 export type FieldError = Partial<Record<keyof LineItem, string>>;
+
+export interface ManufactureOrderDtl {
+  orderLine: number;
+  partNum: string;
+  sellingQuantity: number;
+}
+
+export interface ManufactureItem {
+  _id: string;
+  customerCustId: string;
+  poNum: string;
+  shipToNum: string;
+  needByDate: string;
+  requestDate: string;
+  mode: Mode;
+  orderDtl: ManufactureOrderDtl;
+  unitPrice: number;
+  total: number;
+  quantityPerCont: number;
+  exWorkDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

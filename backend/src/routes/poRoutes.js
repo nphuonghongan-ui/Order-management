@@ -4,7 +4,7 @@ import { createPO } from '../controllers/poController.js';
 
 const router = express.Router();
 
-router.use(requireAuth, requireRole('PO', 'Manufacture'));
+router.use(requireAuth, requireRole('PO'));
 
 /**
  * @openapi
