@@ -12,7 +12,7 @@ export const connectDB = async () => {
   try {
     switchingDns();
 
-    const conn = await mongoose.connect("mongodb+srv://hongan_db_user:w9suCwO9lN62xk8L@cluster0.mewuycn.mongodb.net/order-management?appName=Cluster0");
+    const conn = await mongoose.connect(process.env.MONGODB_URI);
     console.log(`MongoDB connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`MongoDB connection error: ${error}`);
