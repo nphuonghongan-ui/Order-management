@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import ActionToolbar from "@/components/ActionToolbar";
 import DataTable, { type Column } from "@/components/DataTable";
+import { PageShell } from "@/components/PageShell";
 import StatusBadge from "@/components/StatusBadge";
 
 interface PackingListItem {
@@ -76,7 +77,7 @@ export default function PackingList() {
   };
 
   return (
-    <div>
+    <PageShell>
       <ActionToolbar
         search={search}
         setSearch={setSearch}
@@ -93,6 +94,6 @@ export default function PackingList() {
         onDelete={handleDelete}
         emptyMessage="No packing lists found"
       />
-    </div>
+    </PageShell>
   );
 }

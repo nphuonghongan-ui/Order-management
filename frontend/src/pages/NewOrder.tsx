@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PageShell } from "@/components/PageShell";
 import {
   Select,
   SelectContent,
@@ -208,26 +209,26 @@ export default function NewOrder() {
 
   if (poNumLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-muted/50">
+      <PageShell className="items-center justify-center gap-3">
         <Loader2 size={28} className="animate-spin text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Generating PO number…</p>
-      </div>
+      </PageShell>
     );
   }
 
   if (poNumError) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-muted/50">
+      <PageShell className="items-center justify-center gap-3">
         <AlertCircle size={28} className="text-destructive" />
         <p className="text-sm text-destructive">Failed to generate PO number</p>
         <Button onClick={loadNextPONum}>Retry</Button>
-      </div>
+      </PageShell>
     );
   }
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-muted/50">
+      <PageShell className="items-center justify-center gap-4">
         <div className="size-16 rounded-full flex items-center justify-center bg-green-100">
           <CheckCircle2 size={32} className="text-green-600" />
         </div>
@@ -254,15 +255,15 @@ export default function NewOrder() {
         >
           Create another PO
         </Button>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f5f7fb]">
+    <PageShell>
       <form
         onSubmit={handleSubmit}
-        className="flex-1 flex flex-col max-w-[888px] w-full mx-auto px-5 py-3.5 gap-5"
+        className="flex-1 flex flex-col gap-5"
       >
         {/* PO identity strip */}
         <div className="flex flex-wrap items-center gap-4 px-5 py-4 rounded-[10px] border border-[#c8d4e5] bg-white">
@@ -483,6 +484,6 @@ export default function NewOrder() {
           </Button>
         </div>
       </form>
-    </div>
+    </PageShell>
   );
 }

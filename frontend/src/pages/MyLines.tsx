@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import ActionToolbar from "@/components/ActionToolbar";
 import DataTable, { type Column } from "@/components/DataTable";
+import { PageShell } from "@/components/PageShell";
 import {
   Pagination,
   PaginationContent,
@@ -343,14 +344,14 @@ export default function MyLines() {
 
   if (loading && items.length === 0) {
     return (
-      <div className="flex items-center justify-center py-24">
+      <PageShell className="items-center justify-center py-24">
         <Loader2 size={28} className="animate-spin text-muted-foreground" />
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <PageShell>
       {/* Fixed top: stats, toolbar, error */}
       <div className="shrink-0">
         {/* Stats row */}
@@ -610,7 +611,7 @@ export default function MyLines() {
           )}
         </SheetContent>
       </Sheet>
-    </div>
+    </PageShell>
   );
 }
 

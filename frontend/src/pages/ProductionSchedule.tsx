@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import ActionToolbar from "@/components/ActionToolbar";
 import DataTable, { type Column } from "@/components/DataTable";
+import { PageShell } from "@/components/PageShell";
 import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
 import {
@@ -388,14 +389,14 @@ export default function ProductionSchedule() {
 
   if (loading && items.length === 0) {
     return (
-      <div className="flex items-center justify-center py-24">
+      <PageShell className="items-center justify-center py-24">
         <Loader2 size={28} className="animate-spin text-muted-foreground" />
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div>
+    <PageShell>
       <div className="flex items-center justify-between mb-3 gap-4">
         <ActionToolbar
           search={qDraft}
@@ -632,6 +633,6 @@ export default function ProductionSchedule() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageShell>
   );
 }
