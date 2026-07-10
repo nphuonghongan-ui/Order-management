@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
 import api from "./axios";
-import type { LineItem, Mode } from "@/components/po/types";
+import type { LineItem, Mode, POHeader } from "@/components/po/types";
 
 export interface SubmitLine {
   poNum: string;
@@ -40,17 +40,18 @@ export interface SubmitResponse {
 export interface SubmitErrorBody {
   message: string;
   errors?: Record<string, string>[];
-  existingPoNums?: string[];
+  duplicatePairs?: { poNum: string; orderLine: number }[];
+  existingPairs?: { poNum: string; orderLine: number }[];
 }
 
-export function toSubmitPayload(items: LineItem[]): SubmitPayload {
+export function toSubmitPayload(items: LineItem[], header: POHeader): SubmitPayload {
   return {
     lines: items.map((it) => ({
       poNum: it.poNum,
-      shipToNum: it.shipToNum,
-      needByDate: it.needByDate,
-      requestDate: it.requestDate,
-      mode: it.mode,
+      shipToNum: header.shipToNum,
+      needByDate: header.needByDate,
+      requestDate: header.requestDate,
+      mode: header.mode,
       orderDtl: {
         orderLine: it.orderLine,
         partNum: it.partNum,
@@ -69,17 +70,24 @@ export async function submitPO(
   return data;
 }
 
+export async function fetchNextPONum(): Promise<{ poNum: string }> {
+  const { data } = await api.get<{ poNum: string }>("/pos/next-po-num");
+  return data;
+}
+
 export function extractSubmitError(err: unknown): {
   message: string;
-  conflictingPoNums: string[];
+  conflictingPairs: { poNum: string; orderLine: number }[];
 } {
   let message = "Submission failed. Please try again.";
-  let conflictingPoNums: string[] = [];
+  let conflictingPairs: { poNum: string; orderLine: number }[] = [];
   if (isAxiosError<SubmitErrorBody>(err)) {
     const body = err.response?.data;
     if (body?.message) message = body.message;
-    if (Array.isArray(body?.existingPoNums)) {
-      conflictingPoNums = body.existingPoNums;
+    if (Array.isArray(body?.existingPairs)) {
+      conflictingPairs = body.existingPairs;
+    } else if (Array.isArray(body?.duplicatePairs)) {
+      conflictingPairs = body.duplicatePairs;
     }
     if (Array.isArray(body?.errors)) {
       const flat = body.errors.flatMap((e) =>
@@ -90,5 +98,5 @@ export function extractSubmitError(err: unknown): {
       }
     }
   }
-  return { message, conflictingPoNums };
+  return { message, conflictingPairs };
 }

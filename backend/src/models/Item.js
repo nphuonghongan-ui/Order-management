@@ -39,6 +39,10 @@ const itemSchema = new mongoose.Schema(
 );
 
 itemSchema.index({ createdAt: -1, _id: -1 });
+itemSchema.index(
+  { accountId: 1, poNum: 1, 'orderDtl.orderLine': 1 },
+  { unique: true, name: 'uniq_account_po_line' }
+);
 
 itemSchema.statics.toClient = (doc) => ({
   _id: doc._id,

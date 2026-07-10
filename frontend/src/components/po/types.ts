@@ -1,5 +1,12 @@
 export type Mode = "SEA" | "AIR" | "ROAD" | "RAIL";
 
+export interface POHeader {
+  shipToNum: string;
+  needByDate: string;
+  requestDate: string;
+  mode: Mode;
+}
+
 export interface LineItem {
   _id: string;
   customerCustID: string;

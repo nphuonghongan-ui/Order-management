@@ -20,7 +20,8 @@ const MOCK_USERS: Record<string, Role> = {
 
 export const MENU_BY_ROLE: Record<Role, MenuItem[]> = {
   [ROLES.PO]: [
-    { label: "Inventory", path: "/dashboard/inventory", icon: "Package" },
+    { label: "New Order", path: "/dashboard/new-order", icon: "PackagePlus" },
+    { label: "My Lines", path: "/dashboard/my-lines", icon: "ListChecks" },
   ],
   [ROLES.MANUFACTURE]: [
     { label: "Production Schedule", path: "/dashboard/production", icon: "Factory" },
@@ -31,7 +32,7 @@ export const MENU_BY_ROLE: Record<Role, MenuItem[]> = {
 };
 
 export const DEFAULT_PATH_BY_ROLE: Record<Role, string> = {
-  [ROLES.PO]: "/dashboard/inventory",
+  [ROLES.PO]: "/dashboard/my-lines",
   [ROLES.MANUFACTURE]: "/dashboard/production",
   [ROLES.SALE]: "/dashboard/packing-list",
 };

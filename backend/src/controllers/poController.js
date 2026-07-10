@@ -63,19 +63,38 @@ export const createPO = async (req, res) => {
     });
   }
 
-  const poNums = lines.map((l) => l.poNum);
-  if (new Set(poNums).size !== poNums.length) {
-    return res.status(400).json({ message: 'Duplicate poNum within request' });
+  const pairKey = (l) => `${String(l.poNum).trim()}::${parseInt(l.orderDtl.orderLine, 10)}`;
+  const pairCounts = new Map();
+  for (const l of lines) {
+    const k = pairKey(l);
+    pairCounts.set(k, (pairCounts.get(k) || 0) + 1);
+  }
+  const dupPairs = [...pairCounts.entries()].filter(([, n]) => n > 1).map(([k]) => {
+    const [poNum, orderLine] = k.split('::');
+    return { poNum, orderLine: Number(orderLine) };
+  });
+  if (dupPairs.length > 0) {
+    return res.status(400).json({
+      message: 'Duplicate (poNum, orderLine) within request',
+      duplicatePairs: dupPairs,
+    });
   }
 
+  const orClauses = lines.map((l) => ({
+    poNum: String(l.poNum).trim(),
+    'orderDtl.orderLine': parseInt(l.orderDtl.orderLine, 10),
+  }));
   const existing = await Item.find({
     accountId: account._id,
-    poNum: { $in: poNums },
-  }).select('poNum');
+    $or: orClauses,
+  }).select('poNum orderDtl.orderLine');
   if (existing.length > 0) {
     return res.status(409).json({
-      message: 'One or more PO numbers already exist',
-      existingPoNums: existing.map((d) => d.poNum),
+      message: 'One or more (poNum, orderLine) pairs already exist',
+      existingPairs: existing.map((d) => ({
+        poNum: d.poNum,
+        orderLine: d.orderDtl.orderLine,
+      })),
     });
   }
 
@@ -107,4 +126,45 @@ export const createPO = async (req, res) => {
   } catch (err) {
     return res.status(500).json({ message: 'Failed to create PO lines', error: String(err) });
   }
+};
+
+export const getNextPONum = async (req, res) => {
+  const account = await Account.findOne({ customerCustId: req.user.customerCustId });
+  if (!account) {
+    return res.status(404).json({ message: 'Account not found' });
+  }
+
+  // Lazy init: if counter is at default (0 or undefined), skip past any
+  // existing POs with the new POSRS-{5-digit}-{ts} format. Old-format POs
+  // (POSRS0xxxx) are structurally distinct and ignored.
+  if (!account.poCounter) {
+    const maxExisting = await Item.findOne({
+      accountId: account._id,
+      poNum: { $regex: /^POSRS-\d{5}-/ },
+    })
+      .sort({ poNum: -1 })
+      .select('poNum')
+      .lean();
+    let maxNum = 0;
+    if (maxExisting) {
+      const m = /^POSRS-(\d{5})-/.exec(maxExisting.poNum);
+      if (m) maxNum = parseInt(m[1], 10);
+    }
+    const updated = await Account.findOneAndUpdate(
+      { _id: account._id, $or: [{ poCounter: { $exists: false } }, { poCounter: 0 }] },
+      { $set: { poCounter: maxNum } },
+      { new: true }
+    );
+    if (updated) account.poCounter = updated.poCounter;
+  }
+
+  const updated = await Account.findOneAndUpdate(
+    { _id: account._id },
+    { $inc: { poCounter: 1 } },
+    { new: true }
+  );
+
+  const timestamp = Date.now();
+  const paddedCounter = String(updated.poCounter).padStart(5, '0');
+  return res.status(200).json({ poNum: `POSRS-${paddedCounter}-${timestamp}` });
 };

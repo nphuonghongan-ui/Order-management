@@ -191,6 +191,12 @@ module.exports = {
         "row-dense": "var(--row-height-dense)",
         "row-standard": "var(--row-height-standard)",
       },
+      /* Placeholder opacity (DESIGN.md Input Fields) — sourced from
+         --placeholder-opacity in index.css so the `placeholder:opacity-70`
+         utility and the base-layer ::placeholder rule stay in sync. */
+      opacity: {
+        70: "var(--placeholder-opacity)",
+      },
       keyframes: {
         "fade-in": {
           "0%": { opacity: "0", transform: "translateY(10px)" },

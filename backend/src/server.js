@@ -9,6 +9,7 @@ import tasksRoutes from './routes/tasksRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import poRoutes from './routes/poRoutes.js';
 import manufactureRoutes from './routes/manufactureRoutes.js';
+import lineItemRoutes from './routes/lineItemRoutes.js';
 
 if (!process.env.JWT_SECRET) {
   console.warn('[WARN] JWT_SECRET is not set. Auth will fail until it is.');
@@ -33,6 +34,7 @@ app.use("/api/tasks", tasksRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/pos", poRoutes);
 app.use("/api/manufacture", manufactureRoutes);
+app.use("/api/line-items", lineItemRoutes);
 
 app.get('/', apiReference({ pageTitle: 'Order Management API', content: spec }));
 

@@ -48,7 +48,7 @@ export default function ActionToolbar({
                 className={cn(
                   "px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
                   activeFilter === f.value
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primary-light text-primary-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
@@ -62,7 +62,7 @@ export default function ActionToolbar({
       {ctaLabel && onCTA && (
         <button
           onClick={onCTA}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium text-primary-foreground bg-primary hover:bg-primary-light transition-colors shrink-0"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium text-primary-foreground bg-primary-light hover:bg-primary transition-colors shrink-0"
         >
           <Plus size={16} />
           {ctaLabel}

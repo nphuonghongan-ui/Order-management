@@ -6,9 +6,10 @@ import { DEFAULT_PATH_BY_ROLE, ROLES, type Role } from "./lib/roles";
 import LoginPage from "./pages/LoginPage";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
-import Inventory from "./pages/Inventory";
+import NewOrder from "./pages/NewOrder";
 import PackingList from "./pages/PackingList";
 import ProductionSchedule from "./pages/ProductionSchedule";
+import MyLines from "./pages/MyLines";
 import NotFound from "./pages/NotFound";
 
 function AuthBootstrap() {
@@ -61,10 +62,18 @@ function App() {
           <Route element={<Dashboard />}>
             <Route index element={<DashboardIndex />} />
             <Route
-              path="inventory"
+              path="new-order"
               element={
                 <RoleGuard allowed={[ROLES.PO]}>
-                  <Inventory />
+                  <NewOrder />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="my-lines"
+              element={
+                <RoleGuard allowed={[ROLES.PO]}>
+                  <MyLines />
                 </RoleGuard>
               }
             />

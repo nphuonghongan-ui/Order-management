@@ -66,7 +66,10 @@ const options = {
           type: 'object',
           required: ['poNum', 'shipToNum', 'needByDate', 'requestDate', 'mode', 'orderDtl', 'unitPrice', 'quantityPerCont'],
           properties: {
-            poNum: { type: 'string' },
+            poNum: {
+              type: 'string',
+              description: 'PO identifier shared across all line items belonging to the same purchase order.',
+            },
             shipToNum: { type: 'string' },
             needByDate: { type: 'string', format: 'date' },
             requestDate: { type: 'string', format: 'date' },
@@ -75,7 +78,11 @@ const options = {
               type: 'object',
               required: ['orderLine', 'partNum', 'sellingQuantity'],
               properties: {
-                orderLine: { type: 'integer', minimum: 1 },
+                orderLine: {
+                  type: 'integer',
+                  minimum: 1,
+                  description: 'Distinguishes line items within the same PO. Unique together with poNum per account.',
+                },
                 partNum: { type: 'string' },
                 sellingQuantity: { type: 'integer', minimum: 1 },
               },

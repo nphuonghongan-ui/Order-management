@@ -1,10 +1,25 @@
 import { useNavigate, useLocation, Link } from "react-router";
-import { Package, ClipboardList, LogOut, Boxes, Factory, type LucideIcon } from "lucide-react";
+import {
+  Package,
+  ClipboardList,
+  LogOut,
+  Boxes,
+  Factory,
+  PackagePlus,
+  ListChecks,
+  type LucideIcon,
+} from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { MENU_BY_ROLE } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
-const ICONS: Record<string, LucideIcon> = { Package, ClipboardList, Factory };
+const ICONS: Record<string, LucideIcon> = {
+  Package,
+  PackagePlus,
+  ListChecks,
+  ClipboardList,
+  Factory,
+};
 
 export default function Sidebar() {
   const role = useAuthStore((s) => s.role);

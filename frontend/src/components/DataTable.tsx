@@ -65,7 +65,7 @@ export default function DataTable<T extends { _id: string }>({
   const colCount = columns.length + (hasActions ? 1 : 0);
 
   return (
-    <div className="w-full overflow-x-auto rounded-lg border border-border bg-card">
+    <div className="w-full overflow-x-auto bg-card">
       <table className="w-full text-sm">
         <thead className="sticky top-0 bg-muted z-10">
           <tr>

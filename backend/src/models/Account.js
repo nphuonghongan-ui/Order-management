@@ -28,6 +28,7 @@ const accountSchema = new mongoose.Schema(
       required: true,
       enum: ['PO', 'Sale', 'Manufacture'],
     },
+    poCounter: { type: Number, default: 0, min: 0 },
   },
   { timestamps: true, collection: 'accounts' }
 );

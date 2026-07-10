@@ -160,11 +160,22 @@ The core component of the system. Tables must feature sticky headers, sortable c
 ### Status Badges
 Pill-shaped with a light background tint and dark text (e.g., Success: Light Green BG / Dark Green Text). This ensures readability while providing a clear color signal.
 
+### Buttons
+Default filled buttons, active filter chips, and primary CTA buttons use the **Primary Light** token (`#0052cc`, mapped to `--primary-light` in `index.css` and exposed as the Tailwind utility `bg-primary-light` via `tailwind.config.js`).
+
+**Token source of truth:** `--primary-light` (HSL `216 100% 40%`). Do not hardcode `bg-[#0052CC]` — always use `bg-primary-light` so the value can be changed in one place.
+
+**Hover state:** the main `Button` component darkens to `bg-primary-light/80` (80% opacity). The `ActionToolbar` CTA reverses on hover to `bg-primary` (the darker Primary token) for a pressed-in feel.
+
 ### Action Toolbars
 Positioned above data tables. Includes search inputs, filter chips, and primary action buttons (e.g., "Create Shipment"). Use secondary button styles for bulk actions like "Export" or "Print Labels."
 
 ### Input Fields
 Clean, outlined boxes with clear labels and placeholder text. Focus states use a 2px Primary Blue border. Error states replace the border with Status Red.
+
+**Placeholder opacity:** All input and textarea placeholders use `opacity: 0.7` (Tailwind `placeholder:opacity-70`) for improved readability against the background while maintaining a clear visual distinction from actual input text.
+
+The value is sourced from the `--placeholder-opacity` design token (defined in `@theme` in `index.css`) and wired into `tailwind.config.js` as `opacity.70` so the `placeholder:opacity-70` utility and the base-layer `::placeholder` rule resolve to the same value. Change the token in one place to update everywhere.
 
 ### Lists
 Used for sidebar navigation and "Recent Activity" feeds. Active items should be highlighted with a subtle blue background (#DEEBFF) and primary blue text.

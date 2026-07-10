@@ -35,6 +35,7 @@ import {
   listManufactureItems,
   patchManufactureItem,
 } from "@/lib/manufactureApi";
+import { calcContainers } from "@/components/po/utils";
 import type { ManufactureItem, Mode } from "@/components/po/types";
 
 const MODE_LABELS: Record<Mode, string> = {
@@ -296,6 +297,31 @@ export default function ProductionSchedule() {
         key: "requestDate",
         label: "Request",
         render: (row) => formatDisplay(row.requestDate),
+      },
+      {
+        key: "sellingQuantity",
+        label: "Sell Qty",
+        align: "right",
+        sortable: false,
+        render: (row) => (
+          <span className="font-mono text-xs">
+            {row.orderDtl.sellingQuantity.toLocaleString()}
+          </span>
+        ),
+      },
+      {
+        key: "noOfContainers",
+        label: "No. cont",
+        align: "right",
+        sortable: false,
+        render: (row) => (
+          <span className="font-mono text-xs">
+            {calcContainers(
+              row.orderDtl.sellingQuantity,
+              row.quantityPerCont
+            ).toLocaleString()}
+          </span>
+        ),
       },
       {
         key: "total",
