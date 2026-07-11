@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  CheckSquare,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -71,6 +72,8 @@ export function ItemPicker({
   const [rightSel, setRightSel] = useState<Set<string>>(new Set());
   const [q, setQ] = useState("");
 
+  const fetchLineItemLimit = 50;
+
   useEffect(() => {
     if (!open) return;
     setLocalPicked(initialPicked);
@@ -82,7 +85,7 @@ export function ItemPicker({
       setLoading(true);
       setLoadError(null);
       try {
-        const result = await listLineItems({ limit: 100 });
+        const result = await listLineItems({ limit: fetchLineItemLimit });
         if (cancelled) return;
         setAvailable(result.items.map(toAvailableLine));
       } catch (err) {
@@ -169,21 +172,30 @@ export function ItemPicker({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className=" h-[85vh] flex flex-col gap-0 p-0"
+        className="w-full h-[85vh] sm:max-w-[95vw] flex flex-col gap-0"
       >
         <DialogHeader className="px-6 py-4 border-b border-border flex-row items-center justify-between gap-3 space-y-0">
           <div>
             <DialogTitle>Pick Items</DialogTitle>
             <DialogDescription>
-              Select items on the left · use arrows to transfer · confirm when
-              ready
+              Select items on the left · use arrows to transfer · confirm when ready
             </DialogDescription>
+          </div>
+
+          <div className="flex justify-around gap-2">
+            <button type="button" onClick={() => onOpenChange(false)} className="text-sm font-medium px-5 py-2 rounded-lg border">Cancel</button>
+            <button type="button" onClick={handleConfirm} disabled={localPicked.length === 0}
+              className="flex items-center gap-1.5 text-sm font-semibold px-5 py-2 rounded-lg bg-dk-blue text-white disabled:opacity-50">
+              <CheckSquare size={14} /> Confirm ({localPicked.length})
+            </button>
           </div>
         </DialogHeader>
 
         <div className="flex-1 flex items-stretch gap-4 min-h-0 px-6 py-5">
+
+          {/* Left side: Available Line Items */}
           <Box
-            title="Available Lines"
+            title="Available Line Items"
             count={filteredAvailable.length}
             toolbar={
               <div className="flex items-center gap-2 px-4 py-2 border-b border-border">
@@ -261,10 +273,10 @@ export function ItemPicker({
                     <div className="text-right text-sm font-mono">
                       {formatNumber(line.sellingQuantity)}
                     </div>
-                    <div className="text-right text-sm font-mono text-muted-foreground">
+                    <div className="text-right text-sm font-mono">
                       {fmt(line.unitPrice)}
                     </div>
-                    <div className="text-right text-sm font-semibold font-mono text-primary">
+                    <div className="text-right text-sm font-semibold font-mono text-primary-light">
                       {fmt(line.total)}
                     </div>
                   </button>
@@ -273,6 +285,7 @@ export function ItemPicker({
             )}
           </Box>
 
+          {/* Navigation */}
           <div className="flex flex-col items-center justify-center gap-2 flex-shrink-0 w-12">
             <Button
               type="button"
@@ -320,6 +333,7 @@ export function ItemPicker({
             </Button>
           </div>
 
+          {/* Right side: Packing List */}
           <Box
             title="Packing List"
             count={localPicked.length}
@@ -366,10 +380,10 @@ export function ItemPicker({
                     <div className="text-right text-sm font-mono">
                       {formatNumber(it.qty)}
                     </div>
-                    <div className="text-right text-sm font-mono text-muted-foreground">
+                    <div className="text-right text-sm font-mono">
                       {fmt(it.unitPrice)}
                     </div>
-                    <div className="text-right text-sm font-semibold font-mono text-primary">
+                    <div className="text-right text-sm font-semibold font-mono text-primary-light">
                       {fmt(amount)}
                     </div>
                   </button>
@@ -378,23 +392,6 @@ export function ItemPicker({
             )}
           </Box>
         </div>
-
-        <DialogFooter className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            onClick={handleConfirm}
-            disabled={localPicked.length === 0}
-          >
-            Confirm ({localPicked.length})
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -424,7 +421,7 @@ function Box({
       <div className="flex-1 rounded-lg overflow-hidden border border-border bg-card flex flex-col min-h-0">
         {toolbar}
         <div className="grid px-4 py-2 border-b border-border text-xs font-semibold uppercase tracking-wide text-slate flex-shrink-0"
-             style={{ gridTemplateColumns: COL }}>
+          style={{ gridTemplateColumns: COL }}>
           <span>Part / PO</span>
           <span className="text-right">Qty</span>
           <span className="text-right">Unit $</span>

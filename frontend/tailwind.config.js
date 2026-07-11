@@ -143,6 +143,21 @@ module.exports = {
           foreground: "hsl(var(--accent-foreground))",
         },
 
+        /* DK dark palette */
+        dk: {
+          bg: "hsl(var(--dk-bg))",
+          surface: "hsl(var(--dk-surface))",
+          border: "hsl(var(--dk-border))",
+          "row-hov": "hsl(var(--dk-row-hov))",
+          "row-sel": "hsl(var(--dk-row-sel))",
+          text: "hsl(var(--dk-text))",
+          muted: "hsl(var(--dk-muted))",
+          btn: "hsl(var(--dk-btn))",
+          "btn-hov": "hsl(var(--dk-btn-hov))",
+          "btn-dis": "hsl(var(--dk-btn-dis))",
+          blue: "hsl(var(--dk-blue))",
+        },
+
         /* Sidebar */
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

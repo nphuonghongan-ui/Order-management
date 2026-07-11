@@ -195,6 +195,19 @@
     --sidebar-accent-foreground: 216 100% 30%;
     --sidebar-border: 220 5% 89%;
     --sidebar-ring: 216 100% 30%;
+
+    /* DK dark palette */
+    --dk-bg: 220 49% 8%;
+    --dk-surface: 221 39% 11%;
+    --dk-border: 217 38% 20%;
+    --dk-row-hov: 219 39% 14%;
+    --dk-row-sel: 214 52% 25%;
+    --dk-text: 214 32% 91%;
+    --dk-muted: 215 16% 47%;
+    --dk-btn: 217 33% 18%;
+    --dk-btn-hov: 215 32% 26%;
+    --dk-btn-dis: 215 48% 11%;
+    --dk-blue: 217 91% 60%;
   }
 
   .dark {
@@ -297,6 +310,19 @@
     --sidebar-accent-foreground: 216 100% 80%;
     --sidebar-border: 204 9% 22%;
     --sidebar-ring: 216 100% 40%;
+
+    /* DK dark palette (same values — these are inherently dark tokens) */
+    --dk-bg: 220 49% 8%;
+    --dk-surface: 221 39% 11%;
+    --dk-border: 217 38% 20%;
+    --dk-row-hov: 219 39% 14%;
+    --dk-row-sel: 214 52% 25%;
+    --dk-text: 214 32% 91%;
+    --dk-muted: 215 16% 47%;
+    --dk-btn: 217 33% 18%;
+    --dk-btn-hov: 215 32% 26%;
+    --dk-btn-dis: 215 48% 11%;
+    --dk-blue: 217 91% 60%;
   }
 }
 

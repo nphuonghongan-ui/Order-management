@@ -201,6 +201,7 @@ export default function NewPackingList() {
             <Button
               type="submit"
               disabled={!canSubmit}
+              className="px-6 py-2 text-xs cursor-pointer"
               title={
                 picked.length === 0
                   ? "Pick at least one item"
@@ -360,10 +361,11 @@ export default function NewPackingList() {
               <div className="rounded-lg border border-border overflow-hidden mb-4">
                 <div
                   className="grid px-4 py-2 border-b border-border text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-muted/40"
-                  style={{ gridTemplateColumns: "1fr 90px 90px 90px 90px 36px" }}
+                  style={{ gridTemplateColumns: "1fr 120px 120px 120px 120px 120px 36px" }}
                 >
-                  <span>Item</span>
-                  <span className="text-center">PO Ref</span>
+                  <span>PO Ref</span>
+                  <span>Mode</span>
+                  <span className="text-center">PartNum</span>
                   <span className="text-right">Qty</span>
                   <span className="text-right">Unit Price</span>
                   <span className="text-right">Amount</span>
@@ -377,26 +379,29 @@ export default function NewPackingList() {
                       key={it.lineId}
                       className="grid items-center px-4 py-3 border-b last:border-b-0 border-border group"
                       style={{
-                        gridTemplateColumns: "1fr 90px 90px 90px 90px 36px",
+                        gridTemplateColumns: "1fr 120px 120px 120px 120px 120px 36px",
                       }}
                     >
                       <div className="min-w-0">
                         <div className="text-sm font-semibold font-mono truncate">
-                          {it.partNum}
-                        </div>
-                        <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
-                          <ModeIcon size={10} /> {it.shipToNum}
+                          {it.poNum}
                         </div>
                       </div>
+                      <div className="flex flex-row items-center gap-0.5">
+                        <ModeIcon size={14} />
+                        <span className="text-xs font-medium">
+                          {it.shipToNum}
+                        </span>
+                      </div>
                       <div className="flex justify-center">
-                        <span className="text-xs px-2 py-0.5 rounded-full font-medium font-mono bg-primary/10 text-primary">
-                          {it.poNum.replace(/^POSRS0?/, "#")}
+                        <span className="text-xs px-2 py-0.5 font-medium font-mono truncate max-w-full">
+                          {it.partNum}
                         </span>
                       </div>
                       <div className="text-right text-sm font-mono">
                         {formatNumber(it.qty)}
                       </div>
-                      <div className="text-right text-sm font-mono text-muted-foreground">
+                      <div className="text-right text-sm font-mono">
                         {fmt(it.unitPrice)}
                       </div>
                       <div className="text-right text-sm font-semibold font-mono">
