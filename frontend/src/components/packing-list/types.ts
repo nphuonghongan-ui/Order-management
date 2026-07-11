@@ -1,0 +1,48 @@
+import type { Mode } from "@/components/po/types";
+
+export type AvailableLine = {
+  _id: string;
+  poNum: string;
+  shipToNum: string;
+  mode: Mode;
+  partNum: string;
+  sellingQuantity: number;
+  unitPrice: number;
+  total: number;
+  needByDate: string;
+};
+
+export interface PickedItem {
+  lineId: string;
+  poNum: string;
+  partNum: string;
+  shipToNum: string;
+  mode: Mode;
+  qty: number;
+  unitPrice: number;
+}
+
+export interface CustomerInfo {
+  name: string;
+  address: string;
+  contact: string;
+  email: string;
+}
+
+export interface DeliveryInfo {
+  name: string;
+  address: string;
+  shipDate: string;
+  notes: string;
+}
+
+export interface PackingListRecord {
+  _id: string;
+  plNumber: string;
+  customer: CustomerInfo;
+  delivery: DeliveryInfo;
+  items: PickedItem[];
+  itemsCount: number;
+  total: number;
+  createdAt: string;
+}

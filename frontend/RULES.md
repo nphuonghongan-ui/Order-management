@@ -35,9 +35,10 @@ This document is the authoritative spec for the Order Management app's flow, rou
 /                          → LoginPage (public)
 /login                     → LoginPage (public, redirect to /dashboard if authed)
 /dashboard                 → ProtectedRoute → Dashboard layout
-  /dashboard/inventory     → Inventory.jsx (PO + Manufacture)
-  /dashboard/packing-list  → PackingList.jsx (Sale)
-*                          → NotFound
+  /dashboard/inventory         → Inventory.jsx (PO + Manufacture)
+  /dashboard/packing-list      → PackingList.jsx (Sale)
+  /dashboard/packing-list/new  → NewPackingList.jsx (Sale)
+*                             → NotFound
 ```
 
 - `Dashboard.jsx` uses react-router `<Outlet>` to render the active sub-page.
@@ -47,6 +48,7 @@ This document is the authoritative spec for the Order Management app's flow, rou
 - Role-gated pages:
   - Inventory only renders for `PO` and `Manufacture`. If `Sale` visits `/dashboard/inventory`, redirect to `/dashboard/packing-list`.
   - Packing List only renders for `Sale`. If `PO`/`Manufacture` visit `/dashboard/packing-list`, redirect to `/dashboard/inventory`.
+  - New Packing List (`/dashboard/packing-list/new`) is a nested route under the Packing List page. Same `Sale`-only guard.
 
 ---
 
@@ -95,6 +97,7 @@ src/
 │   ├── Dashboard.jsx         # NEW: layout shell (sidebar + header + outlet)
 │   ├── Inventory.jsx         # NEW: data table CRUD (PO / Manufacture)
 │   ├── PackingList.jsx       # NEW: data table CRUD (Sale)
+│   ├── NewPackingList.jsx    # NEW: form + item picker (Sale)
 │   └── NotFound.jsx          # existing
 ├── components/
 │   ├── Sidebar.jsx           # NEW: role-gated menu, per DESIGN.md
@@ -141,22 +144,61 @@ src/
 
 ### Packing List Page (Sale)
 
-**Action Toolbar**:
-- Search input
-- Filter chips: All / Pending / Shipped
-- Primary CTA button: "Create Packing List"
+**Action Toolbar** (above table):
+- Search input (filters by PL Number, Customer, Recipient)
+- Primary CTA button: "New Packing List" → navigates to `/dashboard/packing-list/new`
 
 **Data Table**:
 | Column | Type | Alignment | Notes |
 |--------|------|-----------|-------|
-| PL Number | text | left | JetBrains Mono (`label-md`) |
-| Customer | text | left | `body-md` |
-| Items Count | number | right | `body-md` |
-| Status | badge | left | StatusBadge (pill) |
-| Created | date | left | `body-sm` |
-| Actions | buttons | right | View / Edit / Delete |
+| PL Number | text | left | JetBrains Mono (`label-md`); created date as `body-sm` subline |
+| Customer | text | left | `body-md`; contact name as `body-sm` subline |
+| Items | number | right | `body-md` JetBrains Mono; total units as `body-sm` subline |
+| Total | currency | right | `body-md` JetBrains Mono, primary color, bold |
+| Deliver To | text | left | recipient name `body-md`; address as `body-sm` subline |
+| Actions | buttons | right | View (opens detail `Sheet`) / Delete (with toast) |
 
 - Same table behavior as Inventory (sticky header, hover, CRUD, empty state)
+- **No status column and no filter chips.** A packing list is created the moment the user clicks Submit on the New form — there is no draft state, so no "All / Pending / Shipped" filters are needed.
+- Row click target is the chevron button only (not the whole row), matching the `MyLines` detail-drawer pattern.
+- Detail `Sheet` (right side) shows: Customer block (name / contact / email / address), Delivery block (recipient / address / expected date / notes), Items table (part / qty / amount + line total), Delete action.
+
+### New Packing List Page (Sale)
+
+A nested route at `/dashboard/packing-list/new`. Same `Sale`-only guard as the index page. Sub-page lives in the Dashboard `<Outlet />` (gets the standard Sidebar + Header from `Dashboard.tsx`).
+
+**Form sections** (each rendered as a `Card` with icon, title, description header — same pattern as `NewOrder`):
+
+| Section | Card icon | Fields |
+|---------|-----------|--------|
+| Customer Information | `Building2` | Company / Customer Name (required), Contact Person, Address (required), Email |
+| Delivery Information | `MapPin` | Recipient Name (required), Expected Delivery Date, Delivery Address (required), Notes |
+| Order Details | `ClipboardCheck` | Item picker (search + shuttle transfer + confirm), running total, line-item table with per-row remove |
+
+- Each field uses `components/po/Field` (label + required indicator + error) wrapping shadcn `Input`.
+- The Order Details section is empty until the user opens the Item Picker.
+
+**Item Picker** (a shadcn `Dialog`):
+
+- Modal with title "Pick Items" and description "Select items on the left · use arrows to transfer · confirm when ready".
+- Two list panes inside a `Card`-like container:
+  - **Available Lines** (left): sourced from `GET /api/line-items` (same endpoint `MyLines` uses), filtered client-side by search (part / PO / ship-to). Each row shows part number (mono), PO pill, mode icon, ship-to, qty, unit price, total.
+  - **Packing List** (right): the user's currently-picked items. Each row shows part number (mono), mode icon, ship-to, qty, unit price, line total. Subtotal in the footer.
+- Four transfer buttons in a vertical column between the panes: `›` (move selected right), `»` (move all right), `‹` (remove selected), `«` (remove all). Each is a shadcn `Button size="icon-sm" variant="outline"`.
+- Footer: `Cancel` (outline) + `Confirm (n)` (primary, disabled when `n === 0`).
+- Clicking a row toggles its selection; selected rows use `bg-primary/10` and hover uses `bg-muted` (matches the `DataTable` row-hover convention).
+
+**PL Number generation** is client-side (`PL-YYYY-NNNN`) until the backend exposes `GET /api/packing-list/next-pl-num`; then swap to that endpoint (same pattern as `fetchNextPONum` in `lib/poApi.ts`).
+
+**Submit button** is enabled only when:
+- `picked.length > 0` (at least one item picked)
+- `customer.name` and `customer.address` are non-empty
+- `delivery.name` and `delivery.address` are non-empty
+
+On submit:
+- `POST /api/packing-list` with `{ customer, delivery, items }` payload.
+- On success: success screen with PL number + items count + total, plus a "Back to Packing Lists" button that navigates to `/dashboard/packing-list`. Toast: `Packing list submitted`.
+- On error: error banner above the form, toast: backend message. Form values preserved.
 
 ---
 
@@ -217,26 +259,64 @@ DELETE /api/inventory/:id      → 200 { message: "..." }
 }
 ```
 
-### Packing List (new)
+### Packing List
 
 ```
-GET    /api/packing-list       → 200 { lists: PackingListItem[] }
-POST   /api/packing-list       → 201 { list: PackingListItem }
-PUT    /api/packing-list/:id   → 200 { list: PackingListItem }
+GET    /api/packing-list       → 200 { lists: PackingListRecord[] }
+GET    /api/packing-list/:id   → 200 { list: PackingListRecord }
+POST   /api/packing-list       → 201 { list: PackingListRecord }
 DELETE /api/packing-list/:id   → 200 { message: "..." }
 ```
 
-**PackingListItem schema:**
+**PackingListRecord schema:**
 ```json
 {
   "_id": "string",
   "plNumber": "string",
-  "customer": "string",
+  "customer": {
+    "name": "string",
+    "address": "string",
+    "contact": "string",
+    "email": "string"
+  },
+  "delivery": {
+    "name": "string",
+    "address": "string",
+    "shipDate": "ISO-date-string (yyyy-mm-dd)",
+    "notes": "string"
+  },
+  "items": [
+    {
+      "lineId": "string",
+      "poNum": "string",
+      "partNum": "string",
+      "shipToNum": "string",
+      "mode": "SEA" | "AIR" | "ROAD" | "RAIL",
+      "qty": "number",
+      "unitPrice": "number"
+    }
+  ],
   "itemsCount": "number",
-  "status": "pending" | "shipped",
+  "total": "number",
   "createdAt": "ISO-date-string"
 }
 ```
+
+**POST body** (`SubmitPackingListPayload`):
+```json
+{
+  "customer":  { "name": "string", "address": "string", "contact": "string", "email": "string" },
+  "delivery":  { "name": "string", "address": "string", "shipDate": "yyyy-mm-dd", "notes": "string" },
+  "items": [
+    { "lineId": "string", "poNum": "string", "partNum": "string", "shipToNum": "string",
+      "mode": "SEA|AIR|ROAD|RAIL", "qty": "number", "unitPrice": "number" }
+  ]
+}
+```
+
+The response's `itemsCount` and `total` are server-computed (sum of `items.length` and `sum(qty * unitPrice)` respectively). The client also computes these locally for the running total in the form.
+
+> **No `status` field.** Earlier drafts of this contract had `status: "pending" | "shipped"`, but the Sale flow creates a packing list on submit with no intermediate states, so the field was removed. If a post-submit "shipped" state is needed later, reintroduce it as a separate `PATCH /api/packing-list/:id` endpoint (do not bake status into the create response).
 
 ### MongoDB Models (for backend implementation)
 
@@ -245,7 +325,33 @@ DELETE /api/packing-list/:id   → 200 { message: "..." }
 { sku: String, name: String, quantity: Number, status: { type: String, enum: ['submitted', 'confirmed'] }, createdAt: { type: Date, default: Date.now } }
 
 // models/PackingList.js
-{ plNumber: String, customer: String, itemsCount: Number, status: { type: String, enum: ['pending', 'shipped'] }, createdAt: { type: Date, default: Date.now } }
+{
+  plNumber:    { type: String, required: true, unique: true, index: true },
+  customer: {
+    name:    { type: String, required: true },
+    address: { type: String, required: true },
+    contact: String,
+    email:   String,
+  },
+  delivery: {
+    name:     { type: String, required: true },
+    address:  { type: String, required: true },
+    shipDate: String,
+    notes:    String,
+  },
+  items: [{
+    lineId:    { type: mongoose.Schema.Types.ObjectId, ref: 'LineItem', required: true },
+    poNum:     String,
+    partNum:   String,
+    shipToNum: String,
+    mode:      { type: String, enum: ['SEA', 'AIR', 'ROAD', 'RAIL'] },
+    qty:       { type: Number, required: true },
+    unitPrice: { type: Number, required: true },
+  }],
+  itemsCount: { type: Number, required: true },
+  total:      { type: Number, required: true },
+  createdAt:  { type: Date, default: Date.now, index: true },
+}
 ```
 
 ---

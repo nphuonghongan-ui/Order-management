@@ -115,6 +115,7 @@ The palette is anchored in **Corporate Blue** and **Slate Greys** to establish a
 - **Primary:** Used for primary actions, active states, and critical navigation.
 - **Secondary:** Applied to secondary iconography and supporting UI elements to reduce visual noise.
 - **Neutrals:** A range of cool-toned greys (Slate) is used for borders, backgrounds, and text hierarchy.
+  - **`slate` `#64748B` (`215 16% 47%`)** — neutral muted text tone. Use for icon accents, footer metadata, sub-table column headers, and empty-state copy where a slightly lighter, less blue-leaning tone reads better than `--muted-foreground` (`#434654`). Dark-mode mirror: `215 14% 65%`. Exposed as `text-slate`, `bg-slate`, `border-slate`, etc.
 - **Functional Status:** These colors are reserved strictly for data-driven statuses (Shipped, Pending, Issue). They utilize high-saturation tones to ensure they catch the eye immediately within dense data tables.
 
 ## Typography

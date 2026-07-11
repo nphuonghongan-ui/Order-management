@@ -10,6 +10,7 @@ import authRoutes from './routes/authRoutes.js';
 import poRoutes from './routes/poRoutes.js';
 import manufactureRoutes from './routes/manufactureRoutes.js';
 import lineItemRoutes from './routes/lineItemRoutes.js';
+import packingListRoutes from './routes/packingListRoutes.js';
 
 if (!process.env.JWT_SECRET) {
   console.warn('[WARN] JWT_SECRET is not set. Auth will fail until it is.');
@@ -35,6 +36,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/pos", poRoutes);
 app.use("/api/manufacture", manufactureRoutes);
 app.use("/api/line-items", lineItemRoutes);
+app.use("/api/packing-list", packingListRoutes);
 
 app.get('/', apiReference({ pageTitle: 'Order Management API', content: spec }));
 

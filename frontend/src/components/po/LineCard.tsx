@@ -35,7 +35,7 @@ export function LineCard({
   const ModeIcon = MODE_ICONS[mode];
 
   return (
-    <div className="rounded-[10px] border border-[#c8d4e5] bg-white overflow-hidden">
+    <div className="rounded-lg border border-[#c8d4e5] bg-white overflow-hidden">
       {/* Card header */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#c8d4e5] bg-[#f4f7fb]">
         <div className="flex items-center gap-2.5">

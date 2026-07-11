@@ -168,6 +168,84 @@ const options = {
             },
           },
         },
+        PackingListCustomer: {
+          type: 'object',
+          required: ['name', 'address'],
+          properties: {
+            name: { type: 'string', description: 'Company / customer name.' },
+            address: { type: 'string' },
+            contact: { type: 'string', description: 'Optional contact person name.' },
+            email: { type: 'string', format: 'email', description: 'Optional contact email.' },
+          },
+        },
+        PackingListDelivery: {
+          type: 'object',
+          required: ['name', 'address'],
+          properties: {
+            name: { type: 'string', description: 'Recipient name at the delivery location.' },
+            address: { type: 'string', description: 'Full delivery address including postal code.' },
+            shipDate: {
+              type: 'string',
+              format: 'date',
+              nullable: true,
+              description: 'Expected delivery date as ISO yyyy-mm-dd, or null/empty when unspecified.',
+            },
+            notes: { type: 'string', description: 'Optional delivery instructions (incoterms, port of entry, etc.).' },
+          },
+        },
+        PackingListItem: {
+          type: 'object',
+          required: ['lineId', 'poNum', 'partNum', 'shipToNum', 'mode', 'qty', 'unitPrice'],
+          properties: {
+            lineId: {
+              type: 'string',
+              description: 'MongoDB _id of the source Item document this line references.',
+            },
+            poNum: { type: 'string' },
+            partNum: { type: 'string' },
+            shipToNum: { type: 'string' },
+            mode: { type: 'string', enum: ['SEA', 'AIR', 'ROAD', 'RAIL'] },
+            qty: { type: 'integer', minimum: 1 },
+            unitPrice: { type: 'number', minimum: 0 },
+          },
+        },
+        PackingListPublic: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string', description: 'MongoDB document ID.' },
+            plNumber: {
+              type: 'string',
+              description: 'Server-generated in the format `PL-{customerCustId}-{ms-timestamp}`.',
+              example: 'PL-DYL-1736543212123',
+            },
+            customer: { $ref: '#/components/schemas/PackingListCustomer' },
+            delivery: { $ref: '#/components/schemas/PackingListDelivery' },
+            items: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/PackingListItem' },
+            },
+            itemsCount: { type: 'integer', minimum: 1, description: 'Server-computed `items.length`.' },
+            total: {
+              type: 'number',
+              minimum: 0,
+              description: 'Server-computed `sum(qty * unitPrice)`.',
+            },
+            createdAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        SubmitPackingListRequest: {
+          type: 'object',
+          required: ['customer', 'delivery', 'items'],
+          properties: {
+            customer: { $ref: '#/components/schemas/PackingListCustomer' },
+            delivery: { $ref: '#/components/schemas/PackingListDelivery' },
+            items: {
+              type: 'array',
+              minItems: 1,
+              items: { $ref: '#/components/schemas/PackingListItem' },
+            },
+          },
+        },
       },
     },
     security: [{ bearerAuth: [] }],

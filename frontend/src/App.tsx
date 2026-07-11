@@ -8,6 +8,7 @@ import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import NewOrder from "./pages/NewOrder";
 import PackingList from "./pages/PackingList";
+import NewPackingList from "./pages/NewPackingList";
 import ProductionSchedule from "./pages/ProductionSchedule";
 import MyLines from "./pages/MyLines";
 import NotFound from "./pages/NotFound";
@@ -85,14 +86,24 @@ function App() {
                 </RoleGuard>
               }
             />
-            <Route
-              path="packing-list"
-              element={
-                <RoleGuard allowed={[ROLES.SALE]}>
-                  <PackingList />
-                </RoleGuard>
-              }
-            />
+            <Route path="packing-list">
+              <Route
+                index
+                element={
+                  <RoleGuard allowed={[ROLES.SALE]}>
+                    <PackingList />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="new"
+                element={
+                  <RoleGuard allowed={[ROLES.SALE]}>
+                    <NewPackingList />
+                  </RoleGuard>
+                }
+              />
+            </Route>
           </Route>
         </Route>
         <Route path="*" element={<NotFound />} />

@@ -30,21 +30,21 @@ import {
 import ActionToolbar from "@/components/ActionToolbar";
 import DataTable, { type Column } from "@/components/DataTable";
 import { PageShell } from "@/components/PageShell";
-import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
 import {
   listManufactureItems,
   patchManufactureItem,
 } from "@/lib/manufactureApi";
 import { calcContainers } from "@/components/po/utils";
-import type { ManufactureItem, Mode } from "@/components/po/types";
-
-const MODE_LABELS: Record<Mode, string> = {
-  SEA: "Sea",
-  AIR: "Air",
-  ROAD: "Road",
-  RAIL: "Rail",
-};
+import type { ManufactureItem } from "@/components/po/types";
+import {
+  currencyCell,
+  formatDisplay,
+  formatNumber,
+  modePill,
+  monoCell,
+  partNumCell,
+} from "@/components/po/lineItemColumns";
 
 interface PendingChange {
   id: string;
@@ -60,17 +60,6 @@ const toDateInput = (iso: string | null | undefined): string => {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   return d.toISOString().slice(0, 10);
-};
-
-const formatDisplay = (iso: string | null | undefined): string => {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  });
 };
 
 const isAxiosError = (e: unknown): e is { response?: { data?: { message?: string } }; message: string } => {
@@ -272,70 +261,82 @@ export default function ProductionSchedule() {
 
   const columns: Column<ManufactureItem>[] = useMemo(
     () => [
-      { key: "poNum", label: "PO Number", mono: true },
-      { key: "orderLine", label: "Line", align: "right", mono: true,
-        render: (row) => row.orderDtl.orderLine },
-      { key: "partNum", label: "Part Number", mono: true,
-        render: (row) => row.orderDtl.partNum },
+      { key: "poNum", label: "PO Number", sortable: false, mono: true },
       {
-        key: "mode",
-        label: "Mode",
-        render: (row) => <StatusBadge status={MODE_LABELS[row.mode].toLowerCase()} />,
+        key: "partNum",
+        label: "Part Num",
+        sortable: false,
+        render: (row) => partNumCell(row.orderDtl.partNum),
       },
       {
-        key: "shipToNum",
-        label: "Ship To",
-        render: (row) => (
-          <span className="font-mono text-xs">{row.shipToNum}</span>
-        ),
-      },
-      {
-        key: "needByDate",
-        label: "Need By",
-        render: (row) => formatDisplay(row.needByDate),
-      },
-      {
-        key: "requestDate",
-        label: "Request",
-        render: (row) => formatDisplay(row.requestDate),
+        key: "orderLine",
+        label: "Order Line",
+        align: "right",
+        sortable: false,
+        render: (row) => monoCell(row.orderDtl.orderLine),
       },
       {
         key: "sellingQuantity",
         label: "Sell Qty",
         align: "right",
         sortable: false,
-        render: (row) => (
-          <span className="font-mono text-xs">
-            {row.orderDtl.sellingQuantity.toLocaleString()}
-          </span>
-        ),
+        render: (row) => monoCell(formatNumber(row.orderDtl.sellingQuantity)),
+      },
+      {
+        key: "quantityPerCont",
+        label: "Qty per Cont",
+        align: "right",
+        sortable: false,
+        render: (row) => monoCell(formatNumber(row.quantityPerCont)),
       },
       {
         key: "noOfContainers",
         label: "No. cont",
         align: "right",
         sortable: false,
-        render: (row) => (
-          <span className="font-mono text-xs">
-            {calcContainers(
-              row.orderDtl.sellingQuantity,
-              row.quantityPerCont
-            ).toLocaleString()}
-          </span>
-        ),
+        render: (row) =>
+          monoCell(
+            formatNumber(
+              calcContainers(row.orderDtl.sellingQuantity, row.quantityPerCont)
+            )
+          ),
+      },
+      {
+        key: "unitPrice",
+        label: "Unit Price",
+        align: "right",
+        sortable: false,
+        render: (row) => currencyCell(row.unitPrice),
       },
       {
         key: "total",
         label: "Total",
         align: "right",
-        render: (row) => (
-          <span className="font-mono text-xs">
-            {row.total.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </span>
-        ),
+        render: (row) => currencyCell(row.total, { bold: true, primary: true }),
+      },
+      {
+        key: "shipToNum",
+        label: "Ship To",
+        sortable: false,
+        render: (row) => monoCell(row.shipToNum),
+      },
+      {
+        key: "mode",
+        label: "Mode",
+        sortable: false,
+        render: (row) => modePill(row.mode),
+      },
+      {
+        key: "needByDate",
+        label: "Need By",
+        sortable: false,
+        render: (row) => formatDisplay(row.needByDate),
+      },
+      {
+        key: "requestDate",
+        label: "Request",
+        sortable: false,
+        render: (row) => formatDisplay(row.requestDate),
       },
       {
         key: "exWorkDate",

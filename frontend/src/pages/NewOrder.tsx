@@ -266,9 +266,9 @@ export default function NewOrder() {
         className="flex-1 flex flex-col gap-5"
       >
         {/* PO identity strip */}
-        <div className="flex flex-wrap items-center gap-4 px-5 py-4 rounded-[10px] border border-[#c8d4e5] bg-white">
+        <div className="flex flex-wrap items-center gap-4 px-5 py-4 rounded-lg border border-[#c8d4e5] bg-white">
           <div className="flex min-w-0 flex-1 items-center gap-4">
-            <div className="size-9 rounded-[10px] flex items-center justify-center flex-shrink-0 bg-[#dceaff]">
+            <div className="size-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#dceaff]">
               <Hash size={19} className="text-[#075bd8]" />
             </div>
             <div className="min-w-[176px]">
@@ -308,7 +308,7 @@ export default function NewOrder() {
         </div>
 
         {/* Shared Across All Lines */}
-        <div className="rounded-[10px] border border-[#7fe7ff] bg-white overflow-hidden">
+        <div className="rounded-lg border border-[#7fe7ff] bg-white overflow-hidden">
           <div className="flex items-start gap-3 px-5 py-4 border-b border-[#7fe7ff] bg-[#e9fbff]">
             <div className="mt-0.5 size-6 rounded-full flex items-center justify-center bg-[#0a7f98] text-white">
               <Link2 size={13} />
@@ -436,13 +436,13 @@ export default function NewOrder() {
           type="button"
           variant="outline"
           onClick={addLine}
-          className="w-full h-auto py-3 rounded-[10px] border-2 border-dashed border-[#9bc7ff] text-[#075bd8] bg-transparent font-semibold hover:bg-[#eef6ff] hover:border-[#6daeff]"
+          className="w-full h-auto py-3 rounded-lg border-2 border-dashed border-[#9bc7ff] text-[#075bd8] bg-transparent font-semibold hover:bg-[#eef6ff] hover:border-[#6daeff]"
         >
           <Plus size={16} /> Add another line
         </Button>
 
         {/* Summary */}
-        <div className="rounded-[10px] border border-[#c8d4e5] bg-white overflow-hidden">
+        <div className="rounded-lg border border-[#c8d4e5] bg-white overflow-hidden">
           <div className="px-5 py-4 border-b border-[#c8d4e5]">
             <span className="text-xs font-bold uppercase tracking-[0.24em] text-[#65748b] font-mono">
               Summary

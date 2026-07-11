@@ -8,7 +8,7 @@ export default function Dashboard() {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-6 bg-[#f5f7fb]">
           <Outlet />
         </main>
       </div>

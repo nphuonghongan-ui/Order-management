@@ -8,7 +8,7 @@ export function PageShell({
 }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("h-full flex flex-col bg-[#f5f7fb]", className)}
+      className={cn("h-full flex flex-col", className)}
       {...rest}
     >
       {children}

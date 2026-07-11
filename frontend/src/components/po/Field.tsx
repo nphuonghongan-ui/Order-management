@@ -15,8 +15,8 @@ export function Field({
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-xs font-semibold flex items-center gap-1 text-foreground">
+    <div className="flex flex-col gap-1.5">
+      <label className="text-sm font-medium flex items-center gap-1 text-foreground">
         {label}
         {required && <span className="text-destructive">*</span>}
         {caption && (

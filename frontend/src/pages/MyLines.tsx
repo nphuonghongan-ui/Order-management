@@ -4,10 +4,6 @@ import {
   Hash,
   Inbox,
   Loader2,
-  Plane,
-  Ship,
-  TrainFront,
-  Truck,
   AlertCircle,
 } from "lucide-react";
 import ActionToolbar from "@/components/ActionToolbar";
@@ -33,13 +29,15 @@ import { cn } from "@/lib/utils";
 import { listLineItems } from "@/lib/lineItemApi";
 import { calcContainers, fmt } from "@/components/po/utils";
 import type { ManufactureItem, Mode } from "@/components/po/types";
-
-const MODE_ICONS: Record<Mode, typeof Ship> = {
-  SEA: Ship,
-  AIR: Plane,
-  ROAD: Truck,
-  RAIL: TrainFront,
-};
+import {
+  currencyCell,
+  exWorkDateCell,
+  formatDisplay,
+  formatNumber,
+  modePill,
+  monoCell,
+  partNumCell,
+} from "@/components/po/lineItemColumns";
 
 const MODE_FILTERS = [
   { value: "ALL", label: "All modes" },
@@ -48,17 +46,6 @@ const MODE_FILTERS = [
   { value: "ROAD", label: "ROAD" },
   { value: "RAIL", label: "RAIL" },
 ];
-
-const formatDisplay = (iso: string | null | undefined): string => {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  });
-};
 
 const isAxiosError = (
   e: unknown
@@ -197,106 +184,66 @@ export default function MyLines() {
       key: "partNum",
       label: "Part Num",
       sortable: false,
-      render: (row) => (
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-xs font-semibold">
-            {row.orderDtl.partNum}
-          </span>
-        </div>
-      ),
+      render: (row) => partNumCell(row.orderDtl.partNum),
     },
     {
       key: "orderLine",
       label: "Order Line",
       align: "right",
       sortable: false,
-      render: (row) => (
-        <span className="font-mono text-xs">{row.orderDtl.orderLine}</span>
-      ),
+      render: (row) => monoCell(row.orderDtl.orderLine),
     },
     {
       key: "sellingQuantity",
       label: "Sell Qty",
       align: "right",
       sortable: false,
-      render: (row) => (
-        <span className="font-mono text-xs">
-          {row.orderDtl.sellingQuantity.toLocaleString()}
-        </span>
-      ),
+      render: (row) => monoCell(formatNumber(row.orderDtl.sellingQuantity)),
     },
     {
       key: "quantityPerCont",
       label: "Qty per Cont",
       align: "right",
       sortable: false,
-      render: (row) => (
-        <span className="font-mono text-xs">
-          {row.quantityPerCont.toLocaleString()}
-        </span>
-      ),
+      render: (row) => monoCell(formatNumber(row.quantityPerCont)),
     },
     {
       key: "noOfContainers",
       label: "No. cont",
       align: "right",
       sortable: false,
-      render: (row) => (
-        <span className="font-mono text-xs">
-          {calcContainers(
-            row.orderDtl.sellingQuantity,
-            row.quantityPerCont
-          ).toLocaleString()}
-        </span>
-      ),
+      render: (row) =>
+        monoCell(
+          formatNumber(
+            calcContainers(row.orderDtl.sellingQuantity, row.quantityPerCont)
+          )
+        ),
     },
     {
       key: "unitPrice",
       label: "Unit Price",
       align: "right",
       sortable: false,
-      render: (row) => (
-        <span className="font-mono text-xs">
-          {row.unitPrice.toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
-        </span>
-      ),
+      render: (row) => currencyCell(row.unitPrice),
     },
     {
       key: "total",
       label: "Total",
       align: "right",
       sortable: false,
-      render: (row) => (
-        <span className="font-mono text-xs font-semibold text-primary">
-          {row.total.toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
-        </span>
-      ),
+      render: (row) => currencyCell(row.total, { bold: true, primary: true }),
     },
     {
       key: "shipToNum",
       label: "Ship To",
       sortable: false,
-      render: (row) => <span className="font-mono text-xs">{row.shipToNum}</span>,
+      render: (row) => monoCell(row.shipToNum),
     },
     {
       key: "mode",
       label: "Mode",
       sortable: false,
-      render: (row) => {
-        const ModeIcon = MODE_ICONS[row.mode];
-        return (
-          <span className="inline-flex h-6 items-center gap-1 rounded-full border border-[#7fe7ff] bg-[#e9fbff] px-2.5 text-xs font-semibold text-[#0b6f8b]">
-            <ModeIcon size={12} />
-            {row.mode}
-          </span>
-        );
-      },
+      render: (row) => modePill(row.mode),
     },
     {
       key: "needByDate",
@@ -314,12 +261,7 @@ export default function MyLines() {
       key: "exWorkDate",
       label: "ExWorkDate",
       sortable: false,
-      render: (row) => (
-        <div className="flex flex-col">
-          <span className="font-mono text-xs">{formatDisplay(row.exWorkDate)}</span>
-          <span className="text-[10px] text-muted-foreground">Set by Manufacture</span>
-        </div>
-      ),
+      render: (row) => exWorkDateCell(row.exWorkDate),
     },
     {
       key: "_action",
@@ -549,15 +491,7 @@ export default function MyLines() {
                 <DetailRow label="Ship To" value={selectedItem.shipToNum} mono />
                 <DetailRow
                   label="Mode"
-                  value={
-                    <span className="inline-flex h-6 items-center gap-1 rounded-full border border-[#7fe7ff] bg-[#e9fbff] px-2.5 text-xs font-semibold text-[#0b6f8b]">
-                      {(() => {
-                        const ModeIcon = MODE_ICONS[selectedItem.mode];
-                        return <ModeIcon size={12} />;
-                      })()}
-                      {selectedItem.mode}
-                    </span>
-                  }
+                  value={modePill(selectedItem.mode)}
                 />
                 <DetailRow label="Need By Date" value={formatDisplay(selectedItem.needByDate)} />
                 <DetailRow label="Request Date" value={formatDisplay(selectedItem.requestDate)} />

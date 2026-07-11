@@ -31,6 +31,7 @@ module.exports = {
           DEFAULT: "hsl(var(--outline))",
           variant: "hsl(var(--outline-variant))",
         },
+        slate: "hsl(var(--slate))",
         background: {
           DEFAULT: "hsl(var(--background))",
           secondary: "hsl(var(--background-secondary))",
