@@ -83,7 +83,10 @@ const options = {
                   minimum: 1,
                   description: 'Distinguishes line items within the same PO. Unique together with poNum per account.',
                 },
-                partNum: { type: 'string' },
+                partNum: {
+                  type: 'string',
+                  description: 'Must be a known part number (must exist in the part_nums collection).',
+                },
                 sellingQuantity: { type: 'integer', minimum: 1 },
               },
             },

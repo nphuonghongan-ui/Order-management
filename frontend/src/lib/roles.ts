@@ -20,8 +20,8 @@ const MOCK_USERS: Record<string, Role> = {
 
 export const MENU_BY_ROLE: Record<Role, MenuItem[]> = {
   [ROLES.PO]: [
+    { label: "My Orders", path: "/dashboard/my-orders", icon: "ListChecks" },
     { label: "New Order", path: "/dashboard/new-order", icon: "PackagePlus" },
-    { label: "My Lines", path: "/dashboard/my-lines", icon: "ListChecks" },
   ],
   [ROLES.MANUFACTURE]: [
     { label: "Production Schedule", path: "/dashboard/production", icon: "Factory" },
@@ -32,18 +32,7 @@ export const MENU_BY_ROLE: Record<Role, MenuItem[]> = {
 };
 
 export const DEFAULT_PATH_BY_ROLE: Record<Role, string> = {
-  [ROLES.PO]: "/dashboard/my-lines",
+  [ROLES.PO]: "/dashboard/my-orders",
   [ROLES.MANUFACTURE]: "/dashboard/production",
   [ROLES.SALE]: "/dashboard/packing-list",
 };
-
-export function loginMock(username: string): Role | null {
-  const role = MOCK_USERS[username?.toLowerCase()?.trim()];
-  return role ?? null;
-}
-
-export function canAccess(role: Role, path: string): boolean {
-  const menus = MENU_BY_ROLE[role];
-  if (!menus) return false;
-  return menus.some((m) => path.startsWith(m.path));
-}

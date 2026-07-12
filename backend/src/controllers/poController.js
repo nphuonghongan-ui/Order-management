@@ -1,5 +1,6 @@
 import Account from '../models/Account.js';
 import Item from '../models/Item.js';
+import PartNum from '../models/PartNum.js';
 
 const MODE_VALUES = ['SEA', 'AIR', 'ROAD', 'RAIL'];
 
@@ -63,6 +64,32 @@ export const createPO = async (req, res) => {
       message: 'Validation failed',
       errors: perLineErrors,
     });
+  }
+
+  const submittedPartNums = [
+    ...new Set(
+      lines.map((l) => upper(l.orderDtl?.partNum)).filter(Boolean)
+    ),
+  ];
+  if (submittedPartNums.length > 0) {
+    const found = await PartNum.find(
+      { partNum: { $in: submittedPartNums } },
+      { partNum: 1 }
+    ).lean();
+    const foundSet = new Set(found.map((d) => d.partNum));
+    const partNumErrors = lines.map((l) => {
+      const pn = upper(l.orderDtl?.partNum);
+      if (!pn || !foundSet.has(pn)) {
+        return { 'orderDtl.partNum': 'Invalid part number' };
+      }
+      return {};
+    });
+    if (partNumErrors.some((e) => Object.keys(e).length > 0)) {
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors: partNumErrors,
+      });
+    }
   }
 
   const pairKey = (l) => `${String(l.poNum).trim()}::${parseInt(l.orderDtl.orderLine, 10)}`;

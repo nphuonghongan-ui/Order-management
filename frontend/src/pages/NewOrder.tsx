@@ -40,6 +40,7 @@ import {
   submitPO,
   toSubmitPayload,
 } from "@/lib/poApi";
+import { listPartNums, type PartNumOption } from "@/lib/partNumApi";
 import { Separator } from "@/components/ui/separator";
 
 const MODE_OPTIONS = [
@@ -71,6 +72,7 @@ export default function NewOrder() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [conflictingPairs, setConflictingPairs] = useState<{ poNum: string; orderLine: number }[]>([]);
+  const [partNums, setPartNums] = useState<PartNumOption[]>([]);
 
   async function loadNextPONum() {
     setPoNumLoading(true);
@@ -87,8 +89,28 @@ export default function NewOrder() {
     }
   }
 
+  async function loadPartNums() {
+    const cached = sessionStorage.getItem("partNums");
+    if (cached) {
+      try {
+        setPartNums(JSON.parse(cached) as PartNumOption[]);
+        return;
+      } catch {
+        sessionStorage.removeItem("partNums");
+      }
+    }
+    try {
+      const res = await listPartNums();
+      setPartNums(res);
+      sessionStorage.setItem("partNums", JSON.stringify(res));
+    } catch {
+      toast.error("Failed to load part numbers. Please try again.");
+    }
+  }
+
   useEffect(() => {
     loadNextPONum();
+    void loadPartNums();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -425,6 +447,7 @@ export default function NewOrder() {
             index={idx}
             errors={errors[item._id] ?? {}}
             mode={poHeader.mode}
+            partNums={partNums}
             onChange={(patch) => updateItem(item._id, patch)}
             onRemove={() => removeLine(item._id)}
             canRemove={items.length > 1}

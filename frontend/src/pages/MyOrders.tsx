@@ -45,7 +45,7 @@ const isAxiosError = (
   return typeof e === "object" && e !== null && "message" in e;
 };
 
-export default function MyLines() {
+export default function MyOrders() {
   const [items, setItems] = useState<ManufactureItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingPage, setLoadingPage] = useState(false);
@@ -302,7 +302,7 @@ export default function MyLines() {
         {/* Stats row */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="rounded-lg border border-border bg-card px-5 py-3.5">
-            <div className="text-xs text-muted-foreground">Total Lines</div>
+            <div className="text-xs text-muted-foreground">Total Orders</div>
             <div className="text-2xl font-bold text-primary-light font-mono mt-0.5">
               {totalLines}
             </div>

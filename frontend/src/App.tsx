@@ -10,7 +10,7 @@ import NewOrder from "./pages/NewOrder";
 import PackingList from "./pages/PackingList";
 import NewPackingList from "./pages/NewPackingList";
 import ProductionSchedule from "./pages/ProductionSchedule";
-import MyLines from "./pages/MyLines";
+import MyOrders from "./pages/MyOrders";
 import NotFound from "./pages/NotFound";
 
 function AuthBootstrap() {
@@ -71,10 +71,10 @@ function App() {
               }
             />
             <Route
-              path="my-lines"
+              path="my-orders"
               element={
                 <RoleGuard allowed={[ROLES.PO]}>
-                  <MyLines />
+                  <MyOrders />
                 </RoleGuard>
               }
             />
