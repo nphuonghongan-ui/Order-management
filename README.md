@@ -1,0 +1,1 @@
+[![Vercel Frontend Release Deployment](https://github.com/nphuonghongan-ui/Order-management/actions/workflows/deploy.yml/badge.svg?branch=release)](https://github.com/nphuonghongan-ui/Order-management/actions/workflows/deploy.yml)
