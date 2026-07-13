@@ -71,20 +71,33 @@ export const listManufactureItems = async (req, res) => {
 
 export const patchManufactureItem = async (req, res) => {
   const { id } = req.params;
-  const { exWorkDate } = req.body || {};
+  const { exWorkDate, quantityPerCont } = req.body || {};
 
-  if (!('exWorkDate' in (req.body || {}))) {
-    return res.status(400).json({ message: 'exWorkDate field is required' });
+  if (!('exWorkDate' in (req.body || {})) && !('quantityPerCont' in (req.body || {}))) {
+    return res.status(400).json({ message: 'At least one of exWorkDate or quantityPerCont is required' });
   }
 
-  const next = toOptionalDate(exWorkDate);
-  if (exWorkDate !== null && exWorkDate !== '' && next === null) {
-    return res.status(400).json({ message: 'exWorkDate must be a valid date or null' });
+  const $set = {};
+
+  if ('exWorkDate' in (req.body || {})) {
+    const next = toOptionalDate(exWorkDate);
+    if (exWorkDate !== null && exWorkDate !== '' && next === null) {
+      return res.status(400).json({ message: 'exWorkDate must be a valid date or null' });
+    }
+    $set.exWorkDate = next;
+  }
+
+  if ('quantityPerCont' in (req.body || {})) {
+    const n = typeof quantityPerCont === 'string' ? parseInt(quantityPerCont, 10) : quantityPerCont;
+    if (!Number.isInteger(n) || n < 0) {
+      return res.status(400).json({ message: 'quantityPerCont must be a non-negative integer' });
+    }
+    $set.quantityPerCont = n;
   }
 
   const updated = await Item.findOneAndUpdate(
     { _id: id },
-    { $set: { exWorkDate: next } },
+    { $set },
     { new: true }
   );
 

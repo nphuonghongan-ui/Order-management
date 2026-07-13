@@ -26,7 +26,6 @@ export function emptyLine(customerCustID = "", poNum = "", orderLine = ""): Line
     partNum: "",
     sellingQuantity: "",
     unitPrice: "",
-    quantityPerCont: "",
   };
 }
 
@@ -39,8 +38,6 @@ export function validateItem(item: LineItem): FieldError {
     err.sellingQuantity = "Min 1";
   if (item.unitPrice === "" || parseFloat(item.unitPrice) < 0)
     err.unitPrice = "Required";
-  if (!item.quantityPerCont || parseFloat(item.quantityPerCont) < 1)
-    err.quantityPerCont = "Min 1";
   return err;
 }
 

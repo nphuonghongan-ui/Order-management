@@ -7,18 +7,11 @@ import {
   X,
   AlertCircle,
   Inbox,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import PagePagination from "@/components/PagePagination";
 import {
   Dialog,
   DialogContent,
@@ -53,6 +46,8 @@ interface PendingChange {
   partNum: string;
   oldExWorkDate: string | null;
   newExWorkDate: string | null;
+  oldQtyPerCont: number;
+  newQtyPerCont: number;
 }
 
 const toDateInput = (iso: string | null | undefined): string => {
@@ -172,23 +167,43 @@ export default function ProductionSchedule() {
     await loadPage({ reset: false, cursor, search: q });
   };
 
-  const updatePending = (item: ManufactureItem, newValue: string | null) => {
+  const updatePending = (
+    item: ManufactureItem,
+    field: "exWorkDate" | "qtyPerCont",
+    newValue: string | null | number
+  ) => {
     setPending((prev) => {
-      const oldValue = item.exWorkDate ?? null;
-      const next = { ...prev };
-      if (newValue === oldValue) {
+      const existing = prev[item._id];
+      const newExWorkDate =
+        field === "exWorkDate"
+          ? (newValue as string | null)
+          : (existing?.newExWorkDate ?? (item.exWorkDate ?? null));
+      const newQtyPerCont =
+        field === "qtyPerCont"
+          ? (newValue as number)
+          : (existing?.newQtyPerCont ?? item.quantityPerCont);
+      const oldExWorkDate = existing?.oldExWorkDate ?? (item.exWorkDate ?? null);
+      const oldQtyPerCont = existing?.oldQtyPerCont ?? item.quantityPerCont;
+
+      if (newExWorkDate === oldExWorkDate && newQtyPerCont === oldQtyPerCont) {
+        const next = { ...prev };
         delete next[item._id];
-      } else {
-        next[item._id] = {
+        return next;
+      }
+
+      return {
+        ...prev,
+        [item._id]: {
           id: item._id,
           poNum: item.poNum,
           orderLine: item.orderDtl.orderLine,
           partNum: item.orderDtl.partNum,
-          oldExWorkDate: oldValue,
-          newExWorkDate: newValue,
-        };
-      }
-      return next;
+          oldExWorkDate,
+          newExWorkDate,
+          oldQtyPerCont,
+          newQtyPerCont,
+        },
+      };
     });
     setSaveErrors((prev) => {
       if (!prev[item._id]) return prev;
@@ -211,7 +226,10 @@ export default function ProductionSchedule() {
     setSaveErrors({});
     const results = await Promise.allSettled(
       pendingList.map((p) =>
-        patchManufactureItem(p.id, { exWorkDate: p.newExWorkDate })
+        patchManufactureItem(p.id, {
+          exWorkDate: p.newExWorkDate,
+          quantityPerCont: p.newQtyPerCont,
+        })
       )
     );
     const newErrors: Record<string, string> = {};
@@ -261,51 +279,118 @@ export default function ProductionSchedule() {
 
   const columns: Column<ManufactureItem>[] = useMemo(
     () => [
-      { key: "poNum", label: "PO Number", sortable: false, mono: true },
+      { key: "poNum", label: "PO Number", sortable: true, mono: true },
       {
         key: "partNum",
         label: "Part Num",
-        sortable: false,
+        sortable: true,
+        sortValue: (row) => row.orderDtl.partNum,
         render: (row) => partNumCell(row.orderDtl.partNum),
       },
       {
         key: "orderLine",
         label: "Order Line",
         align: "right",
-        sortable: false,
+        sortable: true,
+        sortValue: (row) => row.orderDtl.orderLine,
         render: (row) => monoCell(row.orderDtl.orderLine),
       },
       {
         key: "sellingQuantity",
         label: "Sell Qty",
         align: "right",
-        sortable: false,
+        sortable: true,
+        sortValue: (row) => row.orderDtl.sellingQuantity,
         render: (row) => monoCell(formatNumber(row.orderDtl.sellingQuantity)),
       },
       {
         key: "quantityPerCont",
         label: "Qty per Cont",
         align: "right",
-        sortable: false,
-        render: (row) => monoCell(formatNumber(row.quantityPerCont)),
+        sortable: true,
+        render: (row) => {
+          const isPending = !!pending[row._id];
+          const hasError = !!saveErrors[row._id];
+          const currentValue = isPending
+            ? pending[row._id].newQtyPerCont
+            : row.quantityPerCont;
+          const isUnset = currentValue <= 0;
+
+          return (
+            <div className="flex items-center gap-1 justify-end">
+              <div className="relative">
+                <Input
+                  type="number"
+                  min={0}
+                  value={currentValue === 0 ? "" : currentValue}
+                  placeholder="0"
+                  onChange={(e) => {
+                    const v =
+                      e.target.value === ""
+                        ? 0
+                        : Math.max(0, parseInt(e.target.value, 10) || 0);
+                    updatePending(row, "qtyPerCont", v);
+                  }}
+                  className={cn(
+                    "h-8 w-[80px] font-mono text-xs text-right",
+                    isUnset && "border-amber-500 ring-1 ring-amber-500/30",
+                    hasError && "border-destructive ring-1 ring-destructive/30",
+                    isPending && "border-primary ring-1 ring-primary/30"
+                  )}
+                  aria-invalid={hasError}
+                />
+                {isUnset && (
+                  <AlertTriangle
+                    size={12}
+                    className="absolute -top-1.5 -left-1.5 text-amber-500 bg-card rounded-full"
+                  />
+                )}
+                {isPending && (
+                  <CircleDot
+                    size={12}
+                    className="absolute -top-1.5 -right-1.5 text-primary bg-card rounded-full"
+                  />
+                )}
+              </div>
+              {isPending && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    updatePending(row, "qtyPerCont", row.quantityPerCont)
+                  }
+                  className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  title="Discard this change"
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+          );
+        },
       },
       {
         key: "noOfContainers",
         label: "No. cont",
         align: "right",
-        sortable: false,
-        render: (row) =>
-          monoCell(
+        sortable: true,
+        sortValue: (row) =>
+          calcContainers(row.orderDtl.sellingQuantity, row.quantityPerCont),
+        render: (row) => {
+          const currentQty = pending[row._id]
+            ? pending[row._id].newQtyPerCont
+            : row.quantityPerCont;
+          return monoCell(
             formatNumber(
-              calcContainers(row.orderDtl.sellingQuantity, row.quantityPerCont)
+              calcContainers(row.orderDtl.sellingQuantity, currentQty)
             )
-          ),
+          );
+        },
       },
       {
         key: "unitPrice",
         label: "Unit Price",
         align: "right",
-        sortable: false,
+        sortable: true,
         render: (row) => currencyCell(row.unitPrice),
       },
       {
@@ -317,31 +402,32 @@ export default function ProductionSchedule() {
       {
         key: "shipToNum",
         label: "Ship To",
-        sortable: false,
+        sortable: true,
         render: (row) => monoCell(row.shipToNum),
       },
       {
         key: "mode",
         label: "Mode",
-        sortable: false,
+        sortable: true,
         render: (row) => modePill(row.mode),
       },
       {
         key: "needByDate",
         label: "Need By",
-        sortable: false,
+        sortable: true,
         render: (row) => formatDisplay(row.needByDate),
       },
       {
         key: "requestDate",
         label: "Request",
-        sortable: false,
+        sortable: true,
         render: (row) => formatDisplay(row.requestDate),
       },
       {
         key: "exWorkDate",
         label: "ExWorkDate",
-        sortable: false,
+        sortable: true,
+        nullsSort: "direction-aware",
         render: (row) => {
           const isPending = !!pending[row._id];
           const hasError = !!saveErrors[row._id];
@@ -355,7 +441,7 @@ export default function ProductionSchedule() {
                       ? toDateInput(pending[row._id].newExWorkDate)
                       : toDateInput(row.exWorkDate)
                   }
-                  onChange={(e) => updatePending(row, e.target.value || null)}
+                  onChange={(e) => updatePending(row, "exWorkDate", e.target.value || null)}
                   className={cn(
                     "h-8 w-[150px] font-mono text-xs",
                     hasError && "border-destructive ring-1 ring-destructive/30",
@@ -373,7 +459,7 @@ export default function ProductionSchedule() {
               {isPending && (
                 <button
                   type="button"
-                  onClick={() => updatePending(row, row.exWorkDate ?? null)}
+                  onClick={() => updatePending(row, "exWorkDate", row.exWorkDate ?? null)}
                   className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                   title="Discard this change"
                 >
@@ -429,6 +515,9 @@ export default function ProductionSchedule() {
       <DataTable
         columns={columns}
         data={items}
+        rowClassName={(row) =>
+          row.quantityPerCont <= 0 ? "bg-amber-50/50" : ""
+        }
         emptyMessage={
           items.length === 0 ? (
             q ? (
@@ -452,72 +541,18 @@ export default function ProductionSchedule() {
         }
       />
 
-      <div className="mt-3 flex items-center justify-end gap-2">
-        <Pagination className="ml-auto mr-0 w-auto justify-end">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (cursorStack.length === 0 || loadingPage) return;
-                  handlePrev();
-                }}
-                aria-disabled={cursorStack.length === 0 || loadingPage}
-                className={cn(
-                  cursorStack.length === 0 || loadingPage
-                    ? "pointer-events-none opacity-50"
-                    : "cursor-pointer"
-                )}
-              />
-            </PaginationItem>
-            {visiblePages.map((p) => {
-              const isActive = p === currentPage;
-              const isUnreachable = p > currentPage + 1;
-              return (
-                <PaginationItem key={p}>
-                  <PaginationLink
-                    isActive={isActive}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageJump(p);
-                    }}
-                    aria-disabled={isUnreachable || loadingPage}
-                    aria-current={isActive ? "page" : undefined}
-                    className={cn(
-                      isUnreachable && "pointer-events-none opacity-50",
-                      !isActive && !isUnreachable && "cursor-pointer"
-                    )}
-                  >
-                    {p}
-                  </PaginationLink>
-                </PaginationItem>
-              );
-            })}
-            {hasMore && (
-              <PaginationItem>
-                <PaginationEllipsis />
-              </PaginationItem>
-            )}
-            <PaginationItem>
-              <PaginationNext
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (!hasMore || loadingPage) return;
-                  handleNext();
-                }}
-                aria-disabled={!hasMore || loadingPage}
-                className={cn(
-                  !hasMore || loadingPage
-                    ? "pointer-events-none opacity-50"
-                    : "cursor-pointer"
-                )}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-        {loadingPage && (
-          <Loader2 size={14} className="animate-spin text-muted-foreground" />
-        )}
+      <div className="mt-3">
+        <PagePagination
+        disabled={loadingPage}
+        loading={loadingPage}
+        canGoPrev={cursorStack.length > 0}
+        canGoNext={hasMore}
+        onPrev={handlePrev}
+        onNext={handleNext}
+        onPageJump={handlePageJump}
+        currentPage={currentPage}
+        visiblePages={visiblePages}
+      />
       </div>
 
       {pendingCount > 0 && (
@@ -532,7 +567,7 @@ export default function ProductionSchedule() {
                   {pendingCount} pending change{pendingCount !== 1 ? "s" : ""}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  Review and save to commit the ExWorkDate updates
+                  Review and save to commit the updates
                 </span>
               </div>
             </div>
@@ -557,39 +592,87 @@ export default function ProductionSchedule() {
       )}
 
       <Dialog open={confirmOpen} onOpenChange={(o) => !saving && setConfirmOpen(o)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Confirm schedule updates</DialogTitle>
+            <DialogTitle>Confirm updates</DialogTitle>
             <DialogDescription>
-              You are about to update ExWorkDate on {pendingCount} line item
+              You are about to update {pendingCount} line item
               {pendingCount !== 1 ? "s" : ""}. These changes will be saved
               immediately.
             </DialogDescription>
           </DialogHeader>
+
+          {(() => {
+            const unsetQty = pendingList.filter(
+              (p) => p.newQtyPerCont <= 0
+            ).length;
+            return unsetQty > 0 ? (
+              <div
+                role="alert"
+                className="flex items-start gap-2 px-3 py-2 rounded-md border border-amber-500/40 bg-amber-50"
+              >
+                <AlertTriangle
+                  size={14}
+                  className="text-amber-600 flex-shrink-0 mt-0.5"
+                />
+                <span className="text-xs text-amber-700">
+                  {unsetQty} item{unsetQty !== 1 ? "s" : ""} still need Qty per
+                  Container. You can still save — set it later or leave as 0.
+                </span>
+              </div>
+            ) : null;
+          })()}
+
           <div className="max-h-64 overflow-y-auto rounded-md border border-border">
             <table className="w-full text-xs">
               <thead className="bg-muted sticky top-0">
                 <tr>
-                  <th className="text-left font-bold uppercase tracking-wide py-2 px-3 text-muted-foreground">
+                  <th className="text-left font-bold uppercase tracking-wide py-2 px-2 text-muted-foreground">
                     PO
                   </th>
-                  <th className="text-left font-bold uppercase tracking-wide py-2 px-3 text-muted-foreground">
-                    Old ExWorkDate
+                  <th className="text-left font-bold uppercase tracking-wide py-2 px-2 text-muted-foreground">
+                    Old ExWork
                   </th>
-                  <th className="text-left font-bold uppercase tracking-wide py-2 px-3 text-muted-foreground">
-                    New ExWorkDate
+                  <th className="text-left font-bold uppercase tracking-wide py-2 px-2 text-muted-foreground">
+                    New ExWork
+                  </th>
+                  <th className="text-right font-bold uppercase tracking-wide py-2 px-2 text-muted-foreground">
+                    Old Qty/Cont
+                  </th>
+                  <th className="text-right font-bold uppercase tracking-wide py-2 px-2 text-muted-foreground">
+                    New Qty/Cont
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {pendingList.map((p) => (
                   <tr key={p.id} className="border-t border-border">
-                    <td className="py-1.5 px-3 font-mono">{p.poNum}</td>
-                    <td className="py-1.5 px-3 font-mono text-muted-foreground">
+                    <td className="py-1.5 px-2 font-mono">{p.poNum}</td>
+                    <td className="py-1.5 px-2 font-mono text-muted-foreground">
                       {formatDisplay(p.oldExWorkDate)}
                     </td>
-                    <td className="py-1.5 px-3 font-mono text-primary font-semibold">
+                    <td
+                      className={cn(
+                        "py-1.5 px-2 font-mono font-semibold",
+                        p.oldExWorkDate !== p.newExWorkDate
+                          ? "text-primary"
+                          : "text-muted-foreground"
+                      )}
+                    >
                       {formatDisplay(p.newExWorkDate)}
+                    </td>
+                    <td className="py-1.5 px-2 font-mono text-right text-muted-foreground">
+                      {formatNumber(p.oldQtyPerCont)}
+                    </td>
+                    <td
+                      className={cn(
+                        "py-1.5 px-2 font-mono text-right font-semibold",
+                        p.oldQtyPerCont !== p.newQtyPerCont
+                          ? "text-primary"
+                          : "text-muted-foreground"
+                      )}
+                    >
+                      {formatNumber(p.newQtyPerCont)}
                     </td>
                   </tr>
                 ))}

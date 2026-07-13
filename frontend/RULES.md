@@ -421,3 +421,22 @@ Every component references specific sections of `DESIGN.md`:
 - **Reference image** (`ref-dashboard.png`) — visual details to be refined when image review is available. Current rules rely on `DESIGN.md` only.
 - **Backend auth** — mock on frontend for MVP. Real `/api/auth/login` + JWT + middleware is a follow-up backend task.
 - **Dashboard home/overview** — not in MVP. Each role lands directly on their feature page. Can add a summary overview later.
+
+---
+
+## 12. Backend Naming Conventions
+
+### 12.1 MongoDB collection names must be `snake_case`
+
+All Mongoose `collection` names in the `schema` options (or auto-pluralized model names) must use `snake_case` (lowercase words separated by underscores).
+
+| Model | Collection | Notes |
+|-------|-----------|-------|
+| `Account` | `accounts` | |
+| `Item` | `items` | |
+| `PackingList` | `packing_lists` | |
+| `RefreshToken` | `refresh_tokens` | |
+| `PartNum` | `part_nums` | |
+| `SeedDataHistory` | `seed_data_histories` | |
+
+**When creating a new model**, always set an explicit `collection: 'snake_case_name'` in the schema options to avoid Mongoose's default pluralization surprises.

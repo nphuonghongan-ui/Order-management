@@ -19,7 +19,7 @@ export interface LineItem {
   partNum: string;
   sellingQuantity: string;
   unitPrice: string;
-  quantityPerCont: string;
+  quantityPerCont?: string;
   exWorkDate?: string | null;
 }
 

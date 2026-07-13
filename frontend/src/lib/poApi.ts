@@ -10,7 +10,7 @@ export interface SubmitLine {
   mode: Mode;
   orderDtl: { orderLine: string; partNum: string; sellingQuantity: string };
   unitPrice: string;
-  quantityPerCont: string;
+  quantityPerCont?: string;
 }
 
 export interface SubmitPayload {
@@ -58,7 +58,6 @@ export function toSubmitPayload(items: LineItem[], header: POHeader): SubmitPayl
         sellingQuantity: it.sellingQuantity,
       },
       unitPrice: it.unitPrice,
-      quantityPerCont: it.quantityPerCont,
     })),
   };
 }

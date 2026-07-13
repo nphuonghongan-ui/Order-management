@@ -149,7 +149,7 @@ export default function PackingList() {
       key: "itemsCount",
       label: "Items",
       align: "right",
-      sortable: false,
+      sortable: true,
       render: (row) => (
         <div className="flex flex-col items-end">
           <span className="text-sm font-mono">
@@ -168,7 +168,7 @@ export default function PackingList() {
       key: "total",
       label: "Total",
       align: "right",
-      sortable: false,
+      sortable: true,
       render: (row) => currencyCell(row.total, { bold: true, primary: true }),
     },
     {

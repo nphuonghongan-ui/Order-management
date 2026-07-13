@@ -64,7 +64,7 @@ const options = {
         },
         LineItemRequest: {
           type: 'object',
-          required: ['poNum', 'shipToNum', 'needByDate', 'requestDate', 'mode', 'orderDtl', 'unitPrice', 'quantityPerCont'],
+          required: ['poNum', 'shipToNum', 'needByDate', 'requestDate', 'mode', 'orderDtl', 'unitPrice'],
           properties: {
             poNum: {
               type: 'string',
@@ -88,7 +88,7 @@ const options = {
               },
             },
             unitPrice: { type: 'number', minimum: 0 },
-            quantityPerCont: { type: 'integer', minimum: 1 },
+             quantityPerCont: { type: 'integer', minimum: 0 },
           },
         },
         CreatePORequest: {
@@ -244,6 +244,24 @@ const options = {
               minItems: 1,
               items: { $ref: '#/components/schemas/PackingListItem' },
             },
+          },
+        },
+        PartNumPublic: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            no: { type: 'integer', minimum: 1 },
+            partNum: { type: 'string' },
+            dimension: {
+              type: 'object',
+              properties: {
+                length: { type: 'number', minimum: 0 },
+                width: { type: 'number', minimum: 0 },
+                height: { type: 'number', minimum: 0 },
+              },
+            },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
           },
         },
       },

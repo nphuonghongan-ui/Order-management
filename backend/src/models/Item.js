@@ -32,7 +32,7 @@ const itemSchema = new mongoose.Schema(
     orderDtl: { type: orderDtlSchema, required: true },
     unitPrice: { type: Number, required: true, min: 0 },
     total: { type: Number, required: true, min: 0 },
-    quantityPerCont: { type: Number, required: true, min: 1 },
+    quantityPerCont: { type: Number, required: false, default: 0, min: 0 },
     exWorkDate: { type: Date, required: false, default: null },
   },
   { timestamps: true, collection: 'items' }

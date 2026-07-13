@@ -1,7 +1,7 @@
 import { Plane, Ship, TrainFront, Trash2, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { calcTotal, calcContainers, fmt } from "./utils";
+import { calcTotal, fmt } from "./utils";
 import type { FieldError, LineItem, Mode } from "./types";
 import { Field } from "./Field";
 
@@ -109,27 +109,6 @@ export function LineCard({
             aria-invalid={!!errors.unitPrice}
             className="h-9 rounded-[4px] border-[#c8d4e5] bg-white font-mono placeholder:opacity-70"
           />
-        </Field>
-
-        <Field label="Qty per Container" required error={errors.quantityPerCont}>
-          <Input
-            type="number"
-            value={item.quantityPerCont}
-            onChange={(e) => onChange({ quantityPerCont: e.target.value })}
-            placeholder="0"
-            min={1}
-            aria-invalid={!!errors.quantityPerCont}
-            className="h-9 rounded-[4px] border-[#c8d4e5] bg-white font-mono placeholder:opacity-70"
-          />
-        </Field>
-
-        <Field label="No. cont" caption="Auto-calculated">
-          <div className="h-9 px-3 flex items-center rounded-[4px] text-sm font-mono bg-[#f4f7fb] text-foreground border border-[#c8d4e5]">
-            {calcContainers(
-              parseFloat(item.sellingQuantity) || 0,
-              parseFloat(item.quantityPerCont) || 0
-            ).toLocaleString()}
-          </div>
         </Field>
 
         <Field label="Total (auto)">

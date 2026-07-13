@@ -8,16 +8,9 @@ import {
 } from "lucide-react";
 import ActionToolbar from "@/components/ActionToolbar";
 import DataTable, { type Column } from "@/components/DataTable";
+import PagePagination from "@/components/PagePagination";
 import { PageShell } from "@/components/PageShell";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { cn } from "@/lib/utils";
 import {
   Sheet,
   SheetContent,
@@ -25,7 +18,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
 import { listLineItems } from "@/lib/lineItemApi";
 import { calcContainers, fmt } from "@/components/po/utils";
 import type { ManufactureItem, Mode } from "@/components/po/types";
@@ -62,13 +54,19 @@ export default function MyLines() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [qDraft, setQDraft] = useState("");
+  const [q, setQ] = useState("");
   const [activeMode, setActiveMode] = useState("ALL");
   const [selectedItem, setSelectedItem] = useState<ManufactureItem | null>(null);
 
   const requestSeq = useRef(0);
 
   const loadPage = useCallback(
-    async (opts: { reset: boolean; cursor?: string | null }) => {
+    async (opts: {
+      reset: boolean;
+      cursor?: string | null;
+      search: string;
+      mode?: string;
+    }) => {
       const seq = ++requestSeq.current;
       if (opts.reset) {
         setLoading(true);
@@ -79,7 +77,9 @@ export default function MyLines() {
         const result = await listLineItems({
           cursor: opts.reset ? null : opts.cursor ?? null,
           limit: 10,
-          mode: activeMode === "ALL" ? null : (activeMode as Mode),
+          q: opts.search || undefined,
+          mode:
+            opts.mode && opts.mode !== "ALL" ? (opts.mode as Mode) : null,
         });
         if (seq !== requestSeq.current) return;
         setItems(result.items);
@@ -106,25 +106,32 @@ export default function MyLines() {
         }
       }
     },
-    [activeMode]
+    []
   );
 
   useEffect(() => {
-    loadPage({ reset: true });
-  }, [loadPage]);
+    const handle = setTimeout(() => {
+      setQ(qDraft);
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [qDraft]);
+
+  useEffect(() => {
+    loadPage({ reset: true, search: q, mode: activeMode });
+  }, [q, activeMode, loadPage]);
 
   const handlePrev = () => {
     if (cursorStack.length === 0) return;
     const next = cursorStack.slice(0, -1);
     const cursor = next.length === 0 ? null : next[next.length - 1] ?? null;
     setCursorStack(next);
-    loadPage({ reset: false, cursor });
+    loadPage({ reset: false, cursor, search: q, mode: activeMode });
   };
 
   const handleNext = () => {
     if (!nextCursor) return;
     setCursorStack((prev) => [...prev, nextCursor]);
-    loadPage({ reset: false, cursor: nextCursor });
+    loadPage({ reset: false, cursor: nextCursor, search: q, mode: activeMode });
   };
 
   const handlePageJump = (page: number) => {
@@ -133,7 +140,7 @@ export default function MyLines() {
       const newStack = cursorStack.slice(0, page - 1);
       const cursor = page === 1 ? null : cursorStack[page - 2] ?? null;
       setCursorStack(newStack);
-      loadPage({ reset: false, cursor });
+      loadPage({ reset: false, cursor, search: q, mode: activeMode });
     } else if (page === currentPage + 1) {
       handleNext();
     }
@@ -146,12 +153,8 @@ export default function MyLines() {
   const refresh = async () => {
     const cursor =
       cursorStack.length === 0 ? null : cursorStack[cursorStack.length - 1] ?? null;
-    await loadPage({ reset: false, cursor });
+    await loadPage({ reset: false, cursor, search: q, mode: activeMode });
   };
-
-  // TODO: wire up search (currently visual only)
-  void qDraft;
-  void setQDraft;
 
   // Group items by poNum, ordered by most recent createdAt desc
   const groupedByPO = useMemo(() => {
@@ -352,10 +355,23 @@ export default function MyLines() {
             <div className="py-16 text-center">
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <Inbox size={32} className="opacity-40" />
-                <span className="text-sm">No line items yet</span>
-                <span className="text-xs">
-                  Submit a purchase order to see items here.
-                </span>
+                {q ? (
+                  <>
+                    <span className="text-sm">
+                      No items match &ldquo;{q}&rdquo;
+                    </span>
+                    <span className="text-xs">
+                      Try a different PO number.
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm">No line items yet</span>
+                    <span className="text-xs">
+                      Submit a purchase order to see items here.
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -402,72 +418,18 @@ export default function MyLines() {
       </div>
 
       {/* Fixed bottom: pagination */}
-      <div className="shrink-0 mt-4 flex items-center justify-end gap-2">
-        <Pagination className="ml-auto mr-0 w-auto justify-end">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (cursorStack.length === 0 || loadingPage) return;
-                  handlePrev();
-                }}
-                aria-disabled={cursorStack.length === 0 || loadingPage}
-                className={cn(
-                  cursorStack.length === 0 || loadingPage
-                    ? "pointer-events-none opacity-50"
-                    : "cursor-pointer"
-                )}
-              />
-            </PaginationItem>
-            {visiblePages.map((p) => {
-              const isActive = p === currentPage;
-              const isUnreachable = p > currentPage + 1;
-              return (
-                <PaginationItem key={p}>
-                  <PaginationLink
-                    isActive={isActive}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageJump(p);
-                    }}
-                    aria-disabled={isUnreachable || loadingPage}
-                    aria-current={isActive ? "page" : undefined}
-                    className={cn(
-                      isUnreachable && "pointer-events-none opacity-50",
-                      !isActive && !isUnreachable && "cursor-pointer"
-                    )}
-                  >
-                    {p}
-                  </PaginationLink>
-                </PaginationItem>
-              );
-            })}
-            {hasMore && (
-              <PaginationItem>
-                <PaginationEllipsis />
-              </PaginationItem>
-            )}
-            <PaginationItem>
-              <PaginationNext
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (!hasMore || loadingPage) return;
-                  handleNext();
-                }}
-                aria-disabled={!hasMore || loadingPage}
-                className={cn(
-                  !hasMore || loadingPage
-                    ? "pointer-events-none opacity-50"
-                    : "cursor-pointer"
-                )}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-        {loadingPage && (
-          <Loader2 size={14} className="animate-spin text-muted-foreground" />
-        )}
+      <div className="shrink-0 mt-4">
+        <PagePagination
+          disabled={loadingPage}
+          loading={loadingPage}
+          canGoPrev={cursorStack.length > 0}
+          canGoNext={hasMore}
+          onPrev={handlePrev}
+          onNext={handleNext}
+          onPageJump={handlePageJump}
+          currentPage={currentPage}
+          visiblePages={visiblePages}
+        />
       </div>
 
       {/* Detail drawer */}

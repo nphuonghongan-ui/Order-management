@@ -14,7 +14,8 @@ export interface ListManufactureResult {
 }
 
 export interface PatchExWorkDatePayload {
-  exWorkDate: string | null;
+  exWorkDate?: string | null;
+  quantityPerCont?: number;
 }
 
 export async function listManufactureItems(

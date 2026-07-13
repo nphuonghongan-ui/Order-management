@@ -15,6 +15,8 @@ export interface Column<T> {
   align?: "left" | "right";
   mono?: boolean;
   sortable?: boolean;
+  nullsSort?: "always-end" | "direction-aware";
+  sortValue?: (row: T) => string | number | null | undefined;
   render?: (row: T) => ReactNode;
 }
 
@@ -24,6 +26,7 @@ interface DataTableProps<T> {
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
   emptyMessage?: ReactNode;
+  rowClassName?: (row: T) => string;
 }
 
 export default function DataTable<T extends { _id: string }>({
@@ -32,6 +35,7 @@ export default function DataTable<T extends { _id: string }>({
   onEdit,
   onDelete,
   emptyMessage = "No data available",
+  rowClassName,
 }: DataTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -47,11 +51,18 @@ export default function DataTable<T extends { _id: string }>({
 
   const sortedData = useMemo(() => {
     if (!sortKey) return data;
+    const sortCol = columns.find((c) => c.key === sortKey);
+    const nullsEnd =
+      sortCol?.nullsSort !== "direction-aware" || sortDir === "asc";
     return [...data].sort((a, b) => {
-      const aVal = a[sortKey as keyof T];
-      const bVal = b[sortKey as keyof T];
-      if (aVal == null) return 1;
-      if (bVal == null) return -1;
+      const aVal = sortCol?.sortValue
+        ? sortCol.sortValue(a)
+        : (a[sortKey as keyof T] as unknown);
+      const bVal = sortCol?.sortValue
+        ? sortCol.sortValue(b)
+        : (b[sortKey as keyof T] as unknown);
+      if (aVal == null) return nullsEnd ? 1 : -1;
+      if (bVal == null) return nullsEnd ? -1 : 1;
       if (typeof aVal === "number" && typeof bVal === "number") {
         return sortDir === "asc" ? aVal - bVal : bVal - aVal;
       }
@@ -59,7 +70,7 @@ export default function DataTable<T extends { _id: string }>({
         ? String(aVal).localeCompare(String(bVal))
         : String(bVal).localeCompare(String(aVal));
     });
-  }, [data, sortKey, sortDir]);
+  }, [data, sortKey, sortDir, columns]);
 
   const hasActions = onEdit || onDelete;
   const colCount = columns.length + (hasActions ? 1 : 0);
@@ -84,8 +95,8 @@ export default function DataTable<T extends { _id: string }>({
                   {col.sortable !== false && (
                     sortKey === col.key ? (
                       sortDir === "asc"
-                        ? <ArrowUp size={12} className="ml-1 text-primary" />
-                        : <ArrowDown size={12} className="ml-1 text-primary" />
+                        ? <ArrowDown size={12} className="ml-1 text-primary" />
+                        : <ArrowUp size={12} className="ml-1 text-primary" />
                     ) : (
                       <ArrowUpDown size={12} className="ml-1 text-muted-foreground/50" />
                     )
@@ -114,7 +125,10 @@ export default function DataTable<T extends { _id: string }>({
             sortedData.map((row) => (
               <tr
                 key={row._id}
-                className="border-t border-border hover:bg-muted/50 transition-colors"
+                className={cn(
+                  "border-t border-border hover:bg-muted/50 transition-colors",
+                  rowClassName?.(row)
+                )}
               >
                 {columns.map((col) => (
                   <td

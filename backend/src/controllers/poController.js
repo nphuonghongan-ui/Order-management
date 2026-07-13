@@ -40,7 +40,9 @@ const validateLine = (line) => {
       errors['orderDtl.sellingQuantity'] = 'Min 1';
   }
   if (toNonNegNumber(line.unitPrice) == null) errors.unitPrice = 'Required';
-  if (toPositiveInt(line.quantityPerCont) == null) errors.quantityPerCont = 'Min 1';
+  if (line.quantityPerCont !== undefined && line.quantityPerCont !== '') {
+    if (toPositiveInt(line.quantityPerCont, 0) == null) errors.quantityPerCont = 'Min 0';
+  }
   return errors;
 };
 
@@ -116,7 +118,7 @@ export const createPO = async (req, res) => {
       },
       unitPrice: price,
       total: qty * price,
-      quantityPerCont: parseInt(l.quantityPerCont, 10),
+      quantityPerCont: parseInt(l.quantityPerCont, 10) || 0,
     };
   });
 
