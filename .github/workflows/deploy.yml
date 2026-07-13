@@ -5,7 +5,7 @@ on:
     branches:
       - release
     paths:
-      - 'frontend/**' # Only trigger if files inside the frontend folder change
+      - "frontend/**" # Only trigger if files inside the frontend folder change
 
 jobs:
   deploy:
@@ -13,6 +13,16 @@ jobs:
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-size: "26"
+          cache: "npm"
+          cache-dependency-path: "./frontend/package-lock.json"
+
+      - name: Install Dependencies
+        run: npm ci
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
