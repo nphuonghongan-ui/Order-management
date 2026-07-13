@@ -436,7 +436,7 @@ export default function App() {
       </section>
 
       {/* ══════════════════════════════════════════════════
-          TESTIMONIAL + CURVED LINE (bridges Solutions → CTA)
+          CURVED LINE (bridges Solutions → CTA)
       ══════════════════════════════════════════════════ */}
       <div className="relative bg-gray-50 pt-16 pb-32">
         {/* Curved SVG line from testimonial down to the conveyor image */}
@@ -466,7 +466,7 @@ export default function App() {
         }}
       >
         {/* Conveyor image — sits on top of the section */}
-        <div className="absolute left-1/2 -top-16 -translate-x-1/2 w-48 h-48 md:w-56 md:h-56 rounded-2xl overflow-hidden shadow-xl z-10">
+        <div className="absolute left-1/2 -top-16 -translate-x-1/2 w-64 h-48 md:w-64 md:h-48 rounded-2xl overflow-hidden shadow-xl z-10">
           <img
             src="/assets/cta-conveyor.png"
             alt="Logistics worker scanning packages on a conveyor belt"
@@ -474,7 +474,7 @@ export default function App() {
           />
         </div>
 
-        <div className="relative max-w-3xl mx-auto px-6 text-center pt-20">
+        <div className="relative max-w-3xl mx-auto px-6 text-center pt-18">
           {/* Heading */}
           <h2
             className="text-3xl sm:text-4xl md:text-5xl font-bold text-white"
@@ -494,7 +494,7 @@ export default function App() {
           {/* CTA button */}
           <button
             onClick={() => navigate("/login")}
-            className="mt-8 inline-flex items-center px-7 py-3 rounded-full bg-white text-sm font-semibold transition-colors hover:bg-gray-100 cursor-pointer"
+            className="mt-8 inline-flex items-center px-8 py-4 rounded-full bg-white text-sm font-semibold transition-colors hover:bg-gray-100 cursor-pointer"
             style={{ color: "#1D4ED8" }}
           >
             Explore AxonLog
