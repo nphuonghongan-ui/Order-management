@@ -3,7 +3,6 @@ import {
   Package,
   ClipboardList,
   LogOut,
-  Boxes,
   Factory,
   PackagePlus,
   ListChecks,
@@ -12,6 +11,7 @@ import {
 import { useAuthStore } from "@/stores/authStore";
 import { MENU_BY_ROLE } from "@/lib/roles";
 import { cn } from "@/lib/utils";
+import Logo from "@/components/Logo";
 
 const ICONS: Record<string, LucideIcon> = {
   Package,
@@ -36,11 +36,8 @@ export default function Sidebar() {
 
   return (
     <aside className="w-60 shrink-0 bg-sidebar border-r border-sidebar-border flex flex-col">
-      <div className="h-12 flex items-center gap-2 px-6 border-b border-sidebar-border">
-        <Boxes size={20} className="text-primary" />
-        <span className="font-semibold text-sm text-foreground">
-          Order Management
-        </span>
+      <div className="h-16 flex items-center px-6">
+        <Logo variant="dark" />
       </div>
 
       <nav className="flex-1 py-4">

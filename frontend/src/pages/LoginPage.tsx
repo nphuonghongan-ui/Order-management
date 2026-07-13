@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
-import { ArrowRight, EyeOff, Package, Eye } from "lucide-react";
+import { ArrowRight, EyeOff, Eye } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
+import Logo from "@/components/Logo";
 
 const sansFont = { fontFamily: "'Inter', sans-serif" };
 
@@ -60,16 +61,8 @@ export default function LoginPage() {
         />
 
         {/* Logo — top left */}
-        <div className="relative z-10 flex items-center gap-2 px-10 pt-8">
-          <div
-            className="w-7 h-7 flex items-center justify-center"
-            style={{ background: "#0052CC", borderRadius: "4px" }}
-          >
-            <Package size={14} color="#fff" />
-          </div>
-          <span className="text-sm font-semibold" style={{ color: "#0D1F3C" }}>
-            Axon<span style={{ color: "#0052CC" }}>Log</span>
-          </span>
+        <div className="relative z-10 px-10 pt-8">
+          <Logo />
         </div>
 
         {/* Bottom copy */}
@@ -97,13 +90,8 @@ export default function LoginPage() {
         style={{ background: "#ffffff", boxShadow: "-4px 0 32px rgba(0,30,80,0.07)" }}
       >
         {/* Mobile logo */}
-        <div className="flex items-center gap-2 mb-10 lg:hidden">
-          <div className="w-7 h-7 flex items-center justify-center" style={{ background: "#0052CC", borderRadius: "4px" }}>
-            <Package size={14} color="#fff" />
-          </div>
-          <span className="text-sm font-semibold" style={{ color: "#1A3A6B" }}>
-            Axon<span style={{ color: "#0052CC" }}>Log</span>
-          </span>
+        <div className="mb-10 lg:hidden">
+          <Logo variant="light" />
         </div>
 
         {/* Heading */}

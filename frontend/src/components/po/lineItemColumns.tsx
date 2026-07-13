@@ -51,7 +51,7 @@ export function currencyCell(
       className={cn(
         "font-mono text-xs",
         bold && "font-semibold",
-        primary && "text-primary"
+        primary && "text-primary-light"
       )}
     >
       {formatCurrency(value)}

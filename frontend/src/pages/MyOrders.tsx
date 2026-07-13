@@ -386,7 +386,7 @@ export default function MyOrders() {
                 <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/50">
                   <div className="flex items-center gap-2.5">
                     <div className="size-7 rounded-md flex items-center justify-center bg-primary/10 shrink-0">
-                      <Hash size={14} className="text-primary" />
+                      <Hash size={14} className="text-primary-light" />
                     </div>
                     <span className="font-mono text-sm font-bold text-foreground">
                       {group.poNum}
@@ -398,7 +398,7 @@ export default function MyOrders() {
                       · {group.lines.length} line{group.lines.length !== 1 ? "s" : ""}
                     </span>
                   </div>
-                  <span className="text-sm font-bold text-primary font-mono">
+                  <span className="text-sm font-bold text-primary-light font-mono">
                     $ {fmt(group.subtotal)}
                   </span>
                 </div>
