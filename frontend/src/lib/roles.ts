@@ -12,12 +12,6 @@ export interface MenuItem {
   icon: string;
 }
 
-const MOCK_USERS: Record<string, Role> = {
-  po: ROLES.PO,
-  sale: ROLES.SALE,
-  mfg: ROLES.MANUFACTURE,
-};
-
 export const MENU_BY_ROLE: Record<Role, MenuItem[]> = {
   [ROLES.PO]: [
     { label: "My Orders", path: "/dashboard/my-orders", icon: "ListChecks" },
