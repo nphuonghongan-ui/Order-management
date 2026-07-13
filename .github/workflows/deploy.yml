@@ -5,7 +5,7 @@ on:
     branches:
       - release
     paths:
-      - "frontend/**" # Only trigger if files inside the frontend folder change
+      - "frontend/**"
 
 jobs:
   deploy:
