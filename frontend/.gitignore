@@ -26,3 +26,4 @@ dist-ssr
 .ref
 .vercel
 .env*
+!.env.sample
