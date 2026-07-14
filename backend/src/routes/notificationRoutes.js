@@ -1,0 +1,118 @@
+import express from 'express';
+import { requireAuth, requireRole } from '../middleware/auth.js';
+import {
+  listMyNotifications,
+  sendUrgeUpdate,
+  markRead,
+  markAllRead,
+  listManufactureRecipients,
+} from '../controllers/notificationController.js';
+
+const router = express.Router();
+
+router.use(requireAuth);
+
+/**
+ * @openapi
+ * /notifications:
+ *   get:
+ *     summary: List notifications addressed to the current user
+ *     tags: [Notifications]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+ *       - in: query
+ *         name: cursor
+ *         schema: { type: string }
+ *       - in: query
+ *         name: unreadOnly
+ *         schema: { type: boolean }
+ *     responses:
+ *       200: { description: Page of notifications }
+ *       400: { description: Invalid cursor }
+ *       401: { description: Not authenticated }
+ */
+router.get('/', listMyNotifications);
+
+/**
+ * @openapi
+ * /notifications/recipients:
+ *   get:
+ *     summary: List Manufacture accounts available as notification recipients
+ *     description: Used by the Sale role to pick a target when sending an "urge" notification.
+ *     tags: [Notifications]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: List of Manufacture accounts }
+ *       401: { description: Not authenticated }
+ *       403: { description: Forbidden (not Sale) }
+ */
+router.get('/recipients', requireRole('Sale'), listManufactureRecipients);
+
+/**
+ * @openapi
+ * /notifications/read-all:
+ *   patch:
+ *     summary: Mark all of the caller's notifications as read
+ *     tags: [Notifications]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Updated }
+ *       401: { description: Not authenticated }
+ */
+router.patch('/read-all', markAllRead);
+
+/**
+ * @openapi
+ * /notifications/{id}/read:
+ *   patch:
+ *     summary: Mark a single notification as read (recipient only)
+ *     tags: [Notifications]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: Updated }
+ *       404: { description: Notification not found }
+ *       401: { description: Not authenticated }
+ */
+router.patch('/:id/read', markRead);
+
+/**
+ * @openapi
+ * /notifications:
+ *   post:
+ *     summary: Send an "urge update orders" notification to a Manufacture account
+ *     description: Sale-only. Persists the notification and emits `notification:new` to the recipient's socket room.
+ *     tags: [Notifications]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [recipientCustomerCustId]
+ *             properties:
+ *               recipientCustomerCustId: { type: string }
+ *               message: { type: string }
+ *               context:
+ *                 type: object
+ *                 properties:
+ *                   poNum: { type: string }
+ *                   orderId: { type: string }
+ *     responses:
+ *       201: { description: Created }
+ *       400: { description: Validation error }
+ *       404: { description: Recipient not found }
+ *       401: { description: Not authenticated }
+ *       403: { description: Forbidden (not Sale) }
+ */
+router.post('/', requireRole('Sale'), sendUrgeUpdate);
+
+export default router;

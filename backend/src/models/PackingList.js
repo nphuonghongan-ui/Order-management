@@ -24,7 +24,7 @@ const packingListItemSchema = new mongoose.Schema(
   {
     lineId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Item',
+      ref: 'Order',
       required: true,
     },
     poNum: { type: String, required: true, trim: true, uppercase: true },

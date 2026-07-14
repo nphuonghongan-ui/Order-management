@@ -433,10 +433,37 @@ All Mongoose `collection` names in the `schema` options (or auto-pluralized mode
 | Model | Collection | Notes |
 |-------|-----------|-------|
 | `Account` | `accounts` | |
-| `Item` | `items` | |
+| `Order` | `orders` | |
 | `PackingList` | `packing_lists` | |
 | `RefreshToken` | `refresh_tokens` | |
 | `PartNum` | `part_nums` | |
 | `SeedDataHistory` | `seed_data_histories` | |
 
 **When creating a new model**, always set an explicit `collection: 'snake_case_name'` in the schema options to avoid Mongoose's default pluralization surprises.
+
+---
+
+## 13. Data Table Column Standard — Line Items
+
+Any data table that lists line items / order lines (across all roles and pages) MUST expose the following 13 columns, in this order, using the cell renderers from `frontend/src/components/po/lineItemColumns.tsx`. The source of truth is `buildColumns()` in `frontend/src/pages/MyOrders.tsx` plus the leading `poNum` column.
+
+| # | Column | Cell renderer | Align |
+|---|--------|---------------|-------|
+| 1 | PO Number | `monoCell` | left |
+| 2 | Part Num | `partNumCell` | left |
+| 3 | Order Line | `monoCell` | right |
+| 4 | Sell Qty | `monoCell(formatNumber)` | right |
+| 5 | Qty per Cont | `monoCell(formatNumber)` | right |
+| 6 | No. cont | `monoCell(formatNumber(calcContainers(...)))` | right |
+| 7 | Unit Price | `currencyCell` | right |
+| 8 | Total | `currencyCell({ bold: true, primary: true })` | right |
+| 9 | Ship To | `monoCell` | left |
+| 10 | Mode | `modePill` | left |
+| 11 | Need By | `formatDisplay` | left |
+| 12 | Request | `formatDisplay` | left |
+| 13 | ExWork Date | `exWorkDateCell` | left |
+
+- Use the shared `DataTable` component (`frontend/src/components/DataTable.tsx`) to render the table — it provides sticky header, sortable columns, and horizontal overflow out of the box.
+- Page-specific columns (e.g., an action column with a chevron, an in-place editor) MAY be added on top of the 13 baseline columns, but none of the 13 above may be omitted from a line-item table.
+- When a row lacks a field (e.g., a packing-list item that has no `exWorkDate` yet), render `—` via `formatDisplay` / the cell's null-handling — do not drop the column.
+- Pickers, dialogs, and any other listing surface that shows line items (e.g., the Item Picker used in `NewPackingList`) MUST use the same 13 columns. Compact 4-cell grids are no longer permitted for line-item displays.

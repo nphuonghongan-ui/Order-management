@@ -9,7 +9,7 @@ const orderDtlSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const itemSchema = new mongoose.Schema(
+const orderSchema = new mongoose.Schema(
   {
     accountId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -34,17 +34,29 @@ const itemSchema = new mongoose.Schema(
     total: { type: Number, required: true, min: 0 },
     quantityPerCont: { type: Number, required: false, default: 0, min: 0 },
     exWorkDate: { type: Date, required: false, default: null },
+    quantityPerContModifiedBy: {
+      type: String,
+      default: null,
+      trim: true,
+      uppercase: true,
+    },
+    exWorkDateModifiedBy: {
+      type: String,
+      default: null,
+      trim: true,
+      uppercase: true,
+    },
   },
-  { timestamps: true, collection: 'items' }
+  { timestamps: true, collection: 'orders' }
 );
 
-itemSchema.index({ createdAt: -1, _id: -1 });
-itemSchema.index(
+orderSchema.index({ createdAt: -1, _id: -1 });
+orderSchema.index(
   { accountId: 1, poNum: 1, 'orderDtl.orderLine': 1 },
   { unique: true, name: 'uniq_account_po_line' }
 );
 
-itemSchema.statics.toClient = (doc) => ({
+orderSchema.statics.toClient = (doc) => ({
   _id: doc._id,
   customerCustId: doc.customerCustId,
   poNum: doc.poNum,
@@ -61,4 +73,4 @@ itemSchema.statics.toClient = (doc) => ({
   updatedAt: doc.updatedAt,
 });
 
-export default mongoose.model('Item', itemSchema);
+export default mongoose.model('Order', orderSchema);

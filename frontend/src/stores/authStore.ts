@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import api from "@/lib/axios";
+import { connectSocket, disconnectSocket } from "@/lib/socket";
+import { useNotificationStore } from "@/stores/notificationStore";
 import type { Role } from "@/lib/roles";
 
 interface AccountProfile {
@@ -34,6 +36,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const { data } = await api.get<{ account: AccountProfile }>("/auth/me");
       set({ role: data.account.role, account: data.account, hydrated: true });
+      const token = useAuthStore.getState().accessToken;
+      if (token) connectSocket(token);
     } catch {
       set({ role: null, account: null, hydrated: true });
     }
@@ -52,6 +56,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         accessToken: data.accessToken,
         hydrated: true,
       });
+      connectSocket(data.accessToken);
       return true;
     } catch {
       return false;
@@ -64,6 +69,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch {
       // best-effort
     }
+    disconnectSocket();
+    useNotificationStore.getState().reset();
     set({ role: null, account: null, accessToken: null });
   },
 }));

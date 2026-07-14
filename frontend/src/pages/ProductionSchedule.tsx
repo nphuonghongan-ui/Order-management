@@ -6,7 +6,6 @@ import {
   CircleDot,
   X,
   AlertCircle,
-  Inbox,
   AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -521,19 +520,17 @@ export default function ProductionSchedule() {
         emptyMessage={
           items.length === 0 ? (
             q ? (
-              <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                <Inbox size={32} className="opacity-40" />
-                <span className="text-sm">No items match &ldquo;{q}&rdquo;</span>
+              <span className="flex flex-col items-center gap-1">
+                <span>No items match &ldquo;{q}&rdquo;</span>
                 <span className="text-xs">Try a different PO number.</span>
-              </div>
+              </span>
             ) : (
-              <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                <Inbox size={32} className="opacity-40" />
-                <span className="text-sm">No line items yet</span>
+              <span className="flex flex-col items-center gap-1">
+                <span>No line items yet</span>
                 <span className="text-xs">
                   Submit a purchase order to see items here.
                 </span>
-              </div>
+              </span>
             )
           ) : (
             "No items on this page"

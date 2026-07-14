@@ -33,8 +33,19 @@ router.use(requireAuth);
  *         description: Case-insensitive prefix match on `poNum`.
  *       - in: query
  *         name: mode
- *         schema: { type: string, enum: [SEA, AIR, ROAD, RAIL] }
+ *         schema: { type: 'string', enum: [SEA, AIR, ROAD, RAIL] }
  *         description: Filter by transport mode.
+ *       - in: query
+ *         name: ready
+ *         schema: { type: boolean }
+ *         description: |
+ *           If true, returns only orders that have been "ready" by Manufacture —
+ *           i.e. `exWorkDate` is set (non-null) AND `quantityPerCont` > 0.
+ *           Used by the Sale-side packing-list picker. Off by default.
+ *       - in: query
+ *         name: customerCustId
+ *         schema: { type: string }
+ *         description: Filter to orders belonging to this customer (case-insensitive). Used by the PO role to scope to the logged-in account.
  *     responses:
  *       200:
  *         description: A page of items
@@ -45,7 +56,7 @@ router.use(requireAuth);
  *               properties:
  *                 items:
  *                   type: array
- *                   items: { $ref: '#/components/schemas/ItemPublic' }
+ *                   items: { $ref: '#/components/schemas/OrderPublic' }
  *                 nextCursor:
  *                   type: string
  *                   nullable: true
@@ -74,20 +85,20 @@ router.get('/', requireRole('PO', 'Manufacture', 'Sale'), listLineItems);
  *       required: true
  *       content:
  *         application/json:
- *           schema: { $ref: '#/components/schemas/ItemExWorkPatch' }
+ *           schema: { $ref: '#/components/schemas/OrderExWorkPatch' }
  *     responses:
  *       200:
- *         description: Item updated
+ *         description: Order updated
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 item: { $ref: '#/components/schemas/ItemPublic' }
+ *                 item: { $ref: '#/components/schemas/OrderPublic' }
  *       400: { description: Invalid date }
  *       401: { description: Not authenticated }
  *       403: { description: Forbidden (insufficient role) }
- *       404: { description: Item not found }
+ *       404: { description: Order not found }
  */
 router.patch('/:id', requireRole('Manufacture'), updateLineItem);
 

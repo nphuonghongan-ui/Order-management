@@ -19,6 +19,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { listLineItems } from "@/lib/lineItemApi";
+import { useAuthStore } from "@/stores/authStore";
 import { calcContainers, fmt } from "@/components/po/utils";
 import type { ManufactureItem, Mode } from "@/components/po/types";
 import {
@@ -60,6 +61,8 @@ export default function MyOrders() {
 
   const requestSeq = useRef(0);
 
+  const customerCustId = useAuthStore((s) => s.account?.customerCustId);
+
   const loadPage = useCallback(
     async (opts: {
       reset: boolean;
@@ -80,6 +83,7 @@ export default function MyOrders() {
           q: opts.search || undefined,
           mode:
             opts.mode && opts.mode !== "ALL" ? (opts.mode as Mode) : null,
+          customerCustId,
         });
         if (seq !== requestSeq.current) return;
         setItems(result.items);
@@ -106,7 +110,7 @@ export default function MyOrders() {
         }
       }
     },
-    []
+    [customerCustId]
   );
 
   useEffect(() => {
@@ -117,8 +121,9 @@ export default function MyOrders() {
   }, [qDraft]);
 
   useEffect(() => {
+    if (!customerCustId) return;
     loadPage({ reset: true, search: q, mode: activeMode });
-  }, [q, activeMode, loadPage]);
+  }, [q, activeMode, customerCustId, loadPage]);
 
   const handlePrev = () => {
     if (cursorStack.length === 0) return;

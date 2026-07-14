@@ -139,7 +139,7 @@ const options = {
             },
           },
         },
-        ItemPublic: {
+        OrderPublic: {
           allOf: [
             { $ref: '#/components/schemas/POLinePublic' },
             {
@@ -150,7 +150,7 @@ const options = {
             },
           ],
         },
-        ItemExWorkPatch: {
+        OrderExWorkPatch: {
           type: 'object',
           required: ['exWorkDate'],
           properties: {
@@ -162,12 +162,12 @@ const options = {
             },
           },
         },
-        ItemListResponse: {
+        OrderListResponse: {
           type: 'object',
           properties: {
             items: {
               type: 'array',
-              items: { $ref: '#/components/schemas/ItemPublic' },
+              items: { $ref: '#/components/schemas/OrderPublic' },
             },
           },
         },
@@ -202,7 +202,7 @@ const options = {
           properties: {
             lineId: {
               type: 'string',
-              description: 'MongoDB _id of the source Item document this line references.',
+              description: 'MongoDB _id of the source Order document this line references.',
             },
             poNum: { type: 'string' },
             partNum: { type: 'string' },

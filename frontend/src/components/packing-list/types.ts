@@ -3,13 +3,17 @@ import type { Mode } from "@/components/po/types";
 export type AvailableLine = {
   _id: string;
   poNum: string;
+  orderLine: number;
   shipToNum: string;
+  needByDate: string;
+  requestDate: string;
   mode: Mode;
   partNum: string;
   sellingQuantity: number;
+  quantityPerCont: number;
   unitPrice: number;
   total: number;
-  needByDate: string;
+  exWorkDate: string | null;
 };
 
 export interface PickedItem {

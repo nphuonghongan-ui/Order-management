@@ -42,7 +42,7 @@ router.use(requireAuth, requireRole('Manufacture'));
  *               properties:
  *                 items:
  *                   type: array
- *                   items: { $ref: '#/components/schemas/ItemPublic' }
+ *                   items: { $ref: '#/components/schemas/OrderPublic' }
  *                 nextCursor:
  *                   type: string
  *                   nullable: true
@@ -71,20 +71,20 @@ router.get('/items', listManufactureItems);
  *       required: true
  *       content:
  *         application/json:
- *           schema: { $ref: '#/components/schemas/ItemExWorkPatch' }
+ *           schema: { $ref: '#/components/schemas/OrderExWorkPatch' }
  *     responses:
  *       200:
- *         description: Item updated
+ *         description: Order updated
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 item: { $ref: '#/components/schemas/ItemPublic' }
+ *                 item: { $ref: '#/components/schemas/OrderPublic' }
  *       400: { description: Invalid date }
  *       401: { description: Not authenticated }
  *       403: { description: Forbidden (insufficient role) }
- *       404: { description: Item not found }
+ *       404: { description: Order not found }
  */
 router.patch('/items/:id', patchManufactureItem);
 
