@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import Account from '../models/Account.js';
-import Item from '../models/Item.js';
+import Order from '../models/Order.js';
 import PackingList from '../models/PackingList.js';
 
 const MODE_VALUES = ['SEA', 'AIR', 'ROAD', 'RAIL'];
@@ -125,7 +125,7 @@ export const createPackingList = async (req, res) => {
   }
 
   const objectIds = items.map((it) => it.lineId).filter(isObjectId);
-  const found = await Item.find({ _id: { $in: objectIds } }).select('_id');
+  const found = await Order.find({ _id: { $in: objectIds } }).select('_id');
   if (found.length !== objectIds.length) {
     const foundIds = new Set(found.map((doc) => String(doc._id)));
     const missing = items

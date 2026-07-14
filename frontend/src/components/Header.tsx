@@ -2,6 +2,7 @@ import { useLocation } from "react-router";
 import { useAuthStore } from "@/stores/authStore";
 import { MENU_BY_ROLE, type Role } from "@/lib/roles";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "@/components/notification/NotificationBell";
 
 const ROLE_BADGE_STYLES: Record<Role, string> = {
   PO: "bg-blue-100 text-blue-800",
@@ -31,6 +32,7 @@ export default function Header() {
             {role}
           </span>
         )}
+        {role && <NotificationBell />}
         <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground text-xs font-medium cursor-pointer">
           {role?.charAt(0).toUpperCase()}
         </div>

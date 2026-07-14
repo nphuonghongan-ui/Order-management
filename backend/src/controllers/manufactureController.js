@@ -1,4 +1,4 @@
-import Item from '../models/Item.js';
+import Order from '../models/Order.js';
 
 const toDate = (s) => {
   if (s === undefined || s === null || s === '') return null;
@@ -53,7 +53,7 @@ export const listManufactureItems = async (req, res) => {
     ];
   }
 
-  const docs = await Item.find(filter)
+  const docs = await Order.find(filter)
     .sort({ createdAt: -1, _id: -1 })
     .limit(limit + 1);
 
@@ -63,7 +63,7 @@ export const listManufactureItems = async (req, res) => {
   const nextCursor = hasMore && last ? encodeCursor(last.createdAt, last._id) : null;
 
   return res.status(200).json({
-    items: page.map(Item.toClient),
+    items: page.map(Order.toClient),
     nextCursor,
     hasMore,
   });
@@ -72,38 +72,42 @@ export const listManufactureItems = async (req, res) => {
 export const patchManufactureItem = async (req, res) => {
   const { id } = req.params;
   const { exWorkDate, quantityPerCont } = req.body || {};
+  const body = req.body || {};
 
-  if (!('exWorkDate' in (req.body || {})) && !('quantityPerCont' in (req.body || {}))) {
+  if (!('exWorkDate' in body) && !('quantityPerCont' in body)) {
     return res.status(400).json({ message: 'At least one of exWorkDate or quantityPerCont is required' });
   }
 
   const $set = {};
+  const modifier = req.user?.customerCustId ?? null;
 
-  if ('exWorkDate' in (req.body || {})) {
+  if ('exWorkDate' in body) {
     const next = toOptionalDate(exWorkDate);
     if (exWorkDate !== null && exWorkDate !== '' && next === null) {
       return res.status(400).json({ message: 'exWorkDate must be a valid date or null' });
     }
     $set.exWorkDate = next;
+    $set.exWorkDateModifiedBy = modifier;
   }
 
-  if ('quantityPerCont' in (req.body || {})) {
+  if ('quantityPerCont' in body) {
     const n = typeof quantityPerCont === 'string' ? parseInt(quantityPerCont, 10) : quantityPerCont;
     if (!Number.isInteger(n) || n < 0) {
       return res.status(400).json({ message: 'quantityPerCont must be a non-negative integer' });
     }
     $set.quantityPerCont = n;
+    $set.quantityPerContModifiedBy = modifier;
   }
 
-  const updated = await Item.findOneAndUpdate(
+  const updated = await Order.findOneAndUpdate(
     { _id: id },
     { $set },
     { new: true }
   );
 
   if (!updated) {
-    return res.status(404).json({ message: 'Item not found' });
+    return res.status(404).json({ message: 'Order not found' });
   }
 
-  return res.status(200).json({ item: Item.toClient(updated) });
+  return res.status(200).json({ item: Order.toClient(updated) });
 };

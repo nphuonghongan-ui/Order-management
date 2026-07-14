@@ -77,7 +77,7 @@ router.get('/:id', getPackingList);
  *       `PL-{Account.customerCustId}-{ms-timestamp}` — any client-supplied
  *       `plNumber` is ignored.
  *
- *       `items[].lineId` must reference an existing `Item` document; the
+ *       `items[].lineId` must reference an existing `Order` document; the
  *       `itemsCount` and `total` fields are server-computed from the supplied
  *       items. Zero items is rejected at validation time.
  *     tags: [PackingList]

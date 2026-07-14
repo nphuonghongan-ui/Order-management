@@ -350,9 +350,9 @@ export default function NewPackingList() {
               <ClipboardCheck size={15} className="text-primary-light" />
             </div>
             <div>
-              <CardTitle>Order Details</CardTitle>
+              <CardTitle>Details</CardTitle>
               <CardDescription>
-                Line items included in this packing list
+                Order included in this packing list
               </CardDescription>
             </div>
           </CardHeader>

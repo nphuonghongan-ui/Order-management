@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  Bell,
   CheckSquare,
   ChevronLeft,
   ChevronRight,
@@ -19,23 +20,70 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 import { listLineItems } from "@/lib/lineItemApi";
-import { fmt } from "@/components/po/utils";
-import { MODE_ICONS, formatNumber } from "@/components/po/lineItemColumns";
+import { listPartNums } from "@/lib/partNumApi";
+import { calcContainers, fmt } from "@/components/po/utils";
+import {
+  currencyCell,
+  exWorkDateCell,
+  formatDisplay,
+  formatNumber,
+  modePill,
+  monoCell,
+  partNumCell,
+} from "@/components/po/lineItemColumns";
 import type { ManufactureItem } from "@/components/po/types";
+import { useAuthStore } from "@/stores/authStore";
+import { NotifyManufactureDialog } from "@/components/notification/NotifyManufactureDialog";
 import type { AvailableLine, PickedItem } from "./types";
+import DataTable, { type Column } from "@/components/DataTable";
 
-const toAvailableLine = (it: ManufactureItem): AvailableLine => ({
-  _id: it._id,
-  poNum: it.poNum,
-  shipToNum: it.shipToNum,
-  mode: it.mode,
-  partNum: it.orderDtl.partNum,
-  sellingQuantity: it.orderDtl.sellingQuantity,
-  unitPrice: it.unitPrice,
-  total: it.total,
-  needByDate: it.needByDate,
+const toAvailableLine = (
+  it: ManufactureItem,
+  dimMap: Map<string, { length: number; width: number; height: number }>
+): AvailableLine => {
+  const dim = dimMap.get(it.orderDtl.partNum) ?? {
+    length: 0,
+    width: 0,
+    height: 0,
+  };
+  return {
+    _id: it._id,
+    poNum: it.poNum,
+    orderLine: it.orderDtl.orderLine,
+    shipToNum: it.shipToNum,
+    needByDate: it.needByDate,
+    requestDate: it.requestDate,
+    mode: it.mode,
+    partNum: it.orderDtl.partNum,
+    sellingQuantity: it.orderDtl.sellingQuantity,
+    quantityPerCont: it.quantityPerCont,
+    unitPrice: it.unitPrice,
+    total: it.total,
+    exWorkDate: it.exWorkDate,
+    length: dim.length,
+    width: dim.width,
+    height: dim.height,
+  };
+};
+
+const toAvailableLineFromPicked = (p: PickedItem): AvailableLine => ({
+  _id: p.lineId,
+  poNum: p.poNum,
+  orderLine: 0,
+  shipToNum: p.shipToNum,
+  needByDate: "",
+  requestDate: "",
+  mode: p.mode,
+  partNum: p.partNum,
+  sellingQuantity: p.qty,
+  quantityPerCont: 0,
+  unitPrice: p.unitPrice,
+  total: p.qty * p.unitPrice,
+  exWorkDate: null,
+  length: p.length,
+  width: p.width,
+  height: p.height,
 });
 
 const toPickedItem = (l: AvailableLine): PickedItem => ({
@@ -46,7 +94,164 @@ const toPickedItem = (l: AvailableLine): PickedItem => ({
   mode: l.mode,
   qty: l.sellingQuantity,
   unitPrice: l.unitPrice,
+  length: l.length,
+  width: l.width,
+  height: l.height,
+  cbm: l.length * l.width * l.height * l.sellingQuantity,
 });
+
+async function loadPartNumsCached() {
+  const cached = sessionStorage.getItem("partNums");
+  if (cached) {
+    try {
+      return JSON.parse(cached) as Awaited<ReturnType<typeof listPartNums>>;
+    } catch {
+      sessionStorage.removeItem("partNums");
+    }
+  }
+  const res = await listPartNums();
+  sessionStorage.setItem("partNums", JSON.stringify(res));
+  return res;
+}
+
+const buildColumns = (): Column<AvailableLine>[] => [
+  {
+    key: "poNum",
+    label: "PO Number",
+    sortable: true,
+    mono: true,
+    render: (row) => monoCell(row.poNum),
+  },
+  {
+    key: "partNum",
+    label: "Part Num",
+    sortable: true,
+    sortValue: (row) => row.partNum,
+    render: (row) => partNumCell(row.partNum),
+  },
+  {
+    key: "orderLine",
+    label: "Order Line",
+    align: "right",
+    sortable: true,
+    sortValue: (row) => row.orderLine,
+    render: (row) => monoCell(row.orderLine),
+  },
+  {
+    key: "sellingQuantity",
+    label: "Sell Qty",
+    align: "right",
+    sortable: true,
+    sortValue: (row) => row.sellingQuantity,
+    render: (row) => monoCell(formatNumber(row.sellingQuantity)),
+  },
+  {
+    key: "quantityPerCont",
+    label: "Qty per Cont",
+    align: "right",
+    sortable: true,
+    sortValue: (row) => row.quantityPerCont,
+    render: (row) => monoCell(formatNumber(row.quantityPerCont)),
+  },
+  {
+    key: "noOfContainers",
+    label: "No. cont",
+    align: "right",
+    sortable: true,
+    sortValue: (row) =>
+      calcContainers(row.sellingQuantity, row.quantityPerCont),
+    render: (row) =>
+      monoCell(
+        formatNumber(calcContainers(row.sellingQuantity, row.quantityPerCont))
+      ),
+  },
+  {
+    key: "unitPrice",
+    label: "Unit Price",
+    align: "right",
+    sortable: true,
+    sortValue: (row) => row.unitPrice,
+    render: (row) => currencyCell(row.unitPrice),
+  },
+  {
+    key: "total",
+    label: "Total",
+    align: "right",
+    sortable: true,
+    sortValue: (row) => row.total,
+    render: (row) => currencyCell(row.total, { bold: true, primary: true }),
+  },
+  {
+    key: "shipToNum",
+    label: "Ship To",
+    sortable: true,
+    render: (row) => monoCell(row.shipToNum),
+  },
+  {
+    key: "mode",
+    label: "Mode",
+    sortable: true,
+    render: (row) => modePill(row.mode),
+  },
+  {
+    key: "needByDate",
+    label: "Need By",
+    sortable: true,
+    sortValue: (row) => row.needByDate,
+    render: (row) => formatDisplay(row.needByDate),
+  },
+  {
+    key: "requestDate",
+    label: "Request",
+    sortable: true,
+    sortValue: (row) => row.requestDate,
+    render: (row) => formatDisplay(row.requestDate),
+  },
+  {
+    key: "exWorkDate",
+    label: "ExWorkDate",
+    sortable: true,
+    nullsSort: "direction-aware",
+    sortValue: (row) => row.exWorkDate,
+    render: (row) => exWorkDateCell(row.exWorkDate),
+  },
+  {
+    key: "length",
+    label: "Length",
+    align: "right",
+    sortable: true,
+    sortValue: (row) => row.length,
+    render: (row) => monoCell(formatNumber(row.length)),
+  },
+  {
+    key: "width",
+    label: "Width",
+    align: "right",
+    sortable: true,
+    sortValue: (row) => row.width,
+    render: (row) => monoCell(formatNumber(row.width)),
+  },
+  {
+    key: "height",
+    label: "Height",
+    align: "right",
+    sortable: true,
+    sortValue: (row) => row.height,
+    render: (row) => monoCell(formatNumber(row.height)),
+  },
+  {
+    key: "cbm",
+    label: "CBM",
+    align: "right",
+    sortable: true,
+    sortValue: (row) =>
+      row.length * row.width * row.height * row.sellingQuantity,
+    render: (row) =>
+      monoCell(
+        formatNumber(row.length * row.width * row.height * row.sellingQuantity)
+      ),
+  },
+];
 
 interface ItemPickerProps {
   open: boolean;
@@ -54,8 +259,6 @@ interface ItemPickerProps {
   initialPicked: PickedItem[];
   onConfirm: (items: PickedItem[]) => void;
 }
-
-const COL = "1fr 90px 90px 100px";
 
 export function ItemPicker({
   open,
@@ -70,8 +273,10 @@ export function ItemPicker({
   const [leftSel, setLeftSel] = useState<Set<string>>(new Set());
   const [rightSel, setRightSel] = useState<Set<string>>(new Set());
   const [q, setQ] = useState("");
+  const role = useAuthStore((s) => s.role);
 
   const fetchLineItemLimit = 50;
+  const columns = useMemo(() => buildColumns(), []);
 
   useEffect(() => {
     if (!open) return;
@@ -84,9 +289,19 @@ export function ItemPicker({
       setLoading(true);
       setLoadError(null);
       try {
-        const result = await listLineItems({ limit: fetchLineItemLimit });
+        const [result, partNums] = await Promise.all([
+          listLineItems({
+            limit: fetchLineItemLimit,
+            ready: true,
+            excludePacked: true,
+          }),
+          loadPartNumsCached(),
+        ]);
         if (cancelled) return;
-        setAvailable(result.items.map(toAvailableLine));
+        const map = new Map(
+          partNums.map((p) => [p.partNum, p.dimension])
+        );
+        setAvailable(result.items.map((it) => toAvailableLine(it, map)));
       } catch (err) {
         if (cancelled) return;
         setLoadError(
@@ -119,24 +334,37 @@ export function ItemPicker({
     );
   }, [available, pickedIds, q]);
 
+  const pickedAsLines = useMemo<AvailableLine[]>(() => {
+    return localPicked.map((p) => {
+      const found = available.find((a) => a._id === p.lineId);
+      return found ?? toAvailableLineFromPicked(p);
+    });
+  }, [localPicked, available]);
+
   const pickedTotal = useMemo(
     () => localPicked.reduce((s, it) => s + it.qty * it.unitPrice, 0),
     [localPicked]
   );
 
-  const toggleLeft = (id: string) =>
+  const emptyMessage = useMemo(() => {
+    if (q) return "No lines match your search";
+    if (localPicked.length > 0) return "All items moved";
+    return "No orders ready for packing yet";
+  }, [q, localPicked.length]);
+
+  const toggleLeft = (row: AvailableLine) =>
     setLeftSel((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(row._id)) next.delete(row._id);
+      else next.add(row._id);
       return next;
     });
 
-  const toggleRight = (id: string) =>
+  const toggleRight = (row: AvailableLine) =>
     setRightSel((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(row._id)) next.delete(row._id);
+      else next.add(row._id);
       return next;
     });
 
@@ -192,9 +420,9 @@ export function ItemPicker({
 
         <div className="flex-1 flex items-stretch gap-4 min-h-0 px-6 py-5">
 
-          {/* Left side: Available Line Items */}
+          {/* Left side: Available Orders */}
           <Box
-            title="Available Line Items"
+            title="Available Orders"
             count={filteredAvailable.length}
             toolbar={
               <div className="flex items-center gap-2 px-4 py-2 border-b border-border">
@@ -234,53 +462,27 @@ export function ItemPicker({
                 <p className="text-sm text-destructive">{loadError}</p>
               </div>
             ) : filteredAvailable.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full gap-2 text-slate">
+              <div className="flex flex-col items-center justify-center h-full gap-3 text-slate">
                 <Inbox size={24} className="opacity-40" />
-                <p className="text-sm">
-                  {q ? "No lines match your search" : "All items moved"}
-                </p>
+                <p className="text-sm">{emptyMessage}</p>
+                {role === "Sale" && !q && (
+                  <NotifyManufactureDialog
+                    trigger={
+                      <Button type="button" variant="default" size="sm">
+                        <Bell />
+                        Notify Manufacture
+                      </Button>
+                    }
+                  />
+                )}
               </div>
             ) : (
-              filteredAvailable.map((line) => {
-                const sel = leftSel.has(line._id);
-                const ModeIcon = MODE_ICONS[line.mode];
-                return (
-                  <button
-                    key={line._id}
-                    type="button"
-                    onClick={() => toggleLeft(line._id)}
-                    className={cn(
-                      "grid w-full text-left items-center px-4 py-2.5 border-b border-border transition-colors",
-                      sel
-                        ? "bg-primary/10"
-                        : "hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
-                    )}
-                    style={{ gridTemplateColumns: COL }}
-                  >
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold font-mono truncate">
-                        {line.partNum}
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
-                        <span className="px-1.5 py-px rounded bg-muted font-mono">
-                          {line.poNum.replace(/^POSRS0?/, "#")}
-                        </span>
-                        <ModeIcon size={10} />
-                        <span>{line.shipToNum}</span>
-                      </div>
-                    </div>
-                    <div className="text-right text-sm font-mono">
-                      {formatNumber(line.sellingQuantity)}
-                    </div>
-                    <div className="text-right text-sm font-mono">
-                      {fmt(line.unitPrice)}
-                    </div>
-                    <div className="text-right text-sm font-semibold font-mono text-primary-light">
-                      {fmt(line.total)}
-                    </div>
-                  </button>
-                );
-              })
+              <DataTable
+                columns={columns}
+                data={filteredAvailable}
+                onRowClick={toggleLeft}
+                selectedRowIds={leftSel}
+              />
             )}
           </Box>
 
@@ -344,50 +546,18 @@ export function ItemPicker({
               ) : null
             }
           >
-            {localPicked.length === 0 ? (
+            {pickedAsLines.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full gap-2 text-slate">
                 <Inbox size={24} className="opacity-40" />
                 <p className="text-sm">No items selected yet</p>
               </div>
             ) : (
-              localPicked.map((it) => {
-                const sel = rightSel.has(it.lineId);
-                const ModeIcon = MODE_ICONS[it.mode];
-                const amount = it.qty * it.unitPrice;
-                return (
-                  <button
-                    key={it.lineId}
-                    type="button"
-                    onClick={() => toggleRight(it.lineId)}
-                    className={cn(
-                      "grid w-full text-left items-center px-4 py-2.5 border-b border-border transition-colors",
-                      sel
-                        ? "bg-primary/10"
-                        : "hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
-                    )}
-                    style={{ gridTemplateColumns: COL }}
-                  >
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold font-mono truncate">
-                        {it.partNum}
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
-                        <ModeIcon size={10} />
-                        <span>{it.shipToNum}</span>
-                      </div>
-                    </div>
-                    <div className="text-right text-sm font-mono">
-                      {formatNumber(it.qty)}
-                    </div>
-                    <div className="text-right text-sm font-mono">
-                      {fmt(it.unitPrice)}
-                    </div>
-                    <div className="text-right text-sm font-semibold font-mono text-primary-light">
-                      {fmt(amount)}
-                    </div>
-                  </button>
-                );
-              })
+              <DataTable
+                columns={columns}
+                data={pickedAsLines}
+                onRowClick={toggleRight}
+                selectedRowIds={rightSel}
+              />
             )}
           </Box>
         </div>
@@ -414,19 +584,12 @@ function Box({
       <div className="flex items-center justify-between mb-2 flex-shrink-0">
         <p className="text-sm font-semibold">{title}</p>
         <span className="text-xs text-slate">
-          {count} item{count !== 1 ? "s" : ""}
+          {count} order{count !== 1 ? "s" : ""}
         </span>
       </div>
       <div className="flex-1 rounded-lg overflow-hidden border border-border bg-card flex flex-col min-h-0">
         {toolbar}
-        <div className="grid px-4 py-2 border-b border-border text-xs font-semibold uppercase tracking-wide text-slate flex-shrink-0"
-          style={{ gridTemplateColumns: COL }}>
-          <span>Part / PO</span>
-          <span className="text-right">Qty</span>
-          <span className="text-right">Unit $</span>
-          <span className="text-right">Total</span>
-        </div>
-        <div className="flex-1 overflow-y-auto">{children}</div>
+        <div className="flex-1 min-h-0">{children}</div>
         {footer !== undefined && (
           <div className="px-4 py-2 border-t border-border text-xs flex items-center justify-between text-slate flex-shrink-0">
             <span>Subtotal</span>

@@ -1,5 +1,7 @@
+import mongoose from 'mongoose';
 import Account from '../models/Account.js';
-import Item from '../models/Item.js';
+import Order from '../models/Order.js';
+import PackingList from '../models/PackingList.js';
 
 const MODE_VALUES = ['SEA', 'AIR', 'ROAD', 'RAIL'];
 
@@ -43,12 +45,37 @@ export const listLineItems = async (req, res) => {
     filter.accountId = account._id;
   }
 
+  if (typeof req.query.customerCustId === 'string' && req.query.customerCustId.trim()) {
+    filter.customerCustId = req.query.customerCustId.trim().toUpperCase();
+  }
+
   if (typeof req.query.q === 'string' && req.query.q.trim()) {
     filter.poNum = { $regex: `^${escapeRegex(req.query.q.trim())}`, $options: 'i' };
   }
 
   if (typeof req.query.mode === 'string' && MODE_VALUES.includes(req.query.mode)) {
     filter.mode = req.query.mode;
+  }
+
+  if (req.query.ready === 'true') {
+    filter.exWorkDate = { $ne: null };
+    filter.quantityPerCont = { $gt: 0 };
+  }
+
+  if (req.query.excludePacked === 'true') {
+    const packedDocs = await PackingList.find({}, { 'items.lineId': 1 }).lean();
+    const packedIds = [
+      ...new Set(
+        packedDocs.flatMap((pl) =>
+          (pl.items || []).map((it) => String(it.lineId))
+        )
+      ),
+    ];
+    if (packedIds.length > 0) {
+      filter._id = {
+        $nin: packedIds.map((s) => new mongoose.Types.ObjectId(s)),
+      };
+    }
   }
 
   if (req.query.cursor) {
@@ -62,7 +89,7 @@ export const listLineItems = async (req, res) => {
     ];
   }
 
-  const docs = await Item.find(filter)
+  const docs = await Order.find(filter)
     .sort({ createdAt: -1, _id: -1 })
     .limit(limit + 1);
 
@@ -72,7 +99,7 @@ export const listLineItems = async (req, res) => {
   const nextCursor = hasMore && last ? encodeCursor(last.createdAt, last._id) : null;
 
   return res.status(200).json({
-    items: page.map(Item.toClient),
+    items: page.map(Order.toClient),
     nextCursor,
     hasMore,
   });
@@ -81,8 +108,9 @@ export const listLineItems = async (req, res) => {
 export const updateLineItem = async (req, res) => {
   const { id } = req.params;
   const { exWorkDate } = req.body || {};
+  const body = req.body || {};
 
-  if (!('exWorkDate' in (req.body || {}))) {
+  if (!('exWorkDate' in body)) {
     return res.status(400).json({ message: 'exWorkDate field is required' });
   }
 
@@ -91,15 +119,17 @@ export const updateLineItem = async (req, res) => {
     return res.status(400).json({ message: 'exWorkDate must be a valid date or null' });
   }
 
-  const updated = await Item.findOneAndUpdate(
+  const modifier = req.user?.customerCustId ?? null;
+
+  const updated = await Order.findOneAndUpdate(
     { _id: id },
-    { $set: { exWorkDate: next } },
+    { $set: { exWorkDate: next, exWorkDateModifiedBy: modifier } },
     { new: true }
   );
 
   if (!updated) {
-    return res.status(404).json({ message: 'Item not found' });
+    return res.status(404).json({ message: 'Order not found' });
   }
 
-  return res.status(200).json({ item: Item.toClient(updated) });
+  return res.status(200).json({ item: Order.toClient(updated) });
 };

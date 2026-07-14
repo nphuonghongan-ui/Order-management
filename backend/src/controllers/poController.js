@@ -1,5 +1,5 @@
 import Account from '../models/Account.js';
-import Item from '../models/Item.js';
+import Order from '../models/Order.js';
 import PartNum from '../models/PartNum.js';
 
 const MODE_VALUES = ['SEA', 'AIR', 'ROAD', 'RAIL'];
@@ -113,7 +113,7 @@ export const createPO = async (req, res) => {
     poNum: String(l.poNum).trim(),
     'orderDtl.orderLine': parseInt(l.orderDtl.orderLine, 10),
   }));
-  const existing = await Item.find({
+  const existing = await Order.find({
     accountId: account._id,
     $or: orClauses,
   }).select('poNum orderDtl.orderLine');
@@ -150,8 +150,8 @@ export const createPO = async (req, res) => {
   });
 
   try {
-    const created = await Item.insertMany(docs, { ordered: true });
-    return res.status(201).json({ created: created.map(Item.toClient) });
+    const created = await Order.insertMany(docs, { ordered: true });
+    return res.status(201).json({ created: created.map(Order.toClient) });
   } catch (err) {
     return res.status(500).json({ message: 'Failed to create PO lines', error: String(err) });
   }
@@ -167,7 +167,7 @@ export const getNextPONum = async (req, res) => {
   // existing POs with the new POSRS-{5-digit}-{ts} format. Old-format POs
   // (POSRS0xxxx) are structurally distinct and ignored.
   if (!account.poCounter) {
-    const maxExisting = await Item.findOne({
+    const maxExisting = await Order.findOne({
       accountId: account._id,
       poNum: { $regex: /^POSRS-\d{5}-/ },
     })

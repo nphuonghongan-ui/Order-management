@@ -25,6 +25,8 @@ interface DataTableProps<T> {
   data: T[];
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
+  onRowClick?: (row: T) => void;
+  selectedRowIds?: Iterable<string>;
   emptyMessage?: ReactNode;
   rowClassName?: (row: T) => string;
 }
@@ -34,9 +36,15 @@ export default function DataTable<T extends { _id: string }>({
   data = [],
   onEdit,
   onDelete,
+  onRowClick,
+  selectedRowIds,
   emptyMessage = "No data available",
   rowClassName,
 }: DataTableProps<T>) {
+  const selectedSet = useMemo(
+    () => (selectedRowIds ? new Set(selectedRowIds) : null),
+    [selectedRowIds]
+  );
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
@@ -76,7 +84,7 @@ export default function DataTable<T extends { _id: string }>({
   const colCount = columns.length + (hasActions ? 1 : 0);
 
   return (
-    <div className="w-full overflow-x-auto bg-card">
+    <div className="h-full w-full overflow-auto bg-card">
       <table className="w-full text-sm">
         <thead className="sticky top-0 bg-muted z-10">
           <tr>
@@ -122,11 +130,18 @@ export default function DataTable<T extends { _id: string }>({
               </td>
             </tr>
           ) : (
-            sortedData.map((row) => (
+            sortedData.map((row) => {
+              const isSelected = selectedSet?.has(row._id) ?? false;
+              return (
               <tr
                 key={row._id}
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
                 className={cn(
-                  "border-t border-border hover:bg-muted/50 transition-colors",
+                  "border-t border-border transition-colors",
+                  onRowClick && "cursor-pointer",
+                  isSelected
+                    ? "bg-primary/10"
+                    : "hover:bg-muted/50",
                   rowClassName?.(row)
                 )}
               >
@@ -147,7 +162,10 @@ export default function DataTable<T extends { _id: string }>({
                     <div className="flex items-center justify-end gap-1">
                       {onEdit && (
                         <button
-                          onClick={() => onEdit(row)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(row);
+                          }}
                           className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                         >
                           <SquarePen size={16} />
@@ -155,7 +173,10 @@ export default function DataTable<T extends { _id: string }>({
                       )}
                       {onDelete && (
                         <button
-                          onClick={() => onDelete(row)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(row);
+                          }}
                           className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                         >
                           <Trash2 size={16} />
@@ -165,7 +186,8 @@ export default function DataTable<T extends { _id: string }>({
                   </td>
                 )}
               </tr>
-            ))
+              );
+            })
           )}
         </tbody>
       </table>

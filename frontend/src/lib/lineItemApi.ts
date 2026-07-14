@@ -6,6 +6,9 @@ export interface ListLineItemsParams {
   limit?: number;
   q?: string;
   mode?: Mode | null;
+  customerCustId?: string;
+  ready?: boolean;
+  excludePacked?: boolean;
 }
 
 export interface ListLineItemsResult {
@@ -22,6 +25,9 @@ export async function listLineItems(
   if (typeof params?.limit === "number") query.limit = String(params.limit);
   if (params?.q) query.q = params.q;
   if (params?.mode) query.mode = params.mode;
+  if (params?.customerCustId) query.customerCustId = params.customerCustId;
+  if (params?.ready) query.ready = "true";
+  if (params?.excludePacked) query.excludePacked = "true";
   const { data } = await api.get<{
     items: ManufactureItem[];
     nextCursor: string | null;
