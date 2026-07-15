@@ -14,6 +14,9 @@ export type AvailableLine = {
   unitPrice: number;
   total: number;
   exWorkDate: string | null;
+  length: number;
+  width: number;
+  height: number;
 };
 
 export interface PickedItem {
@@ -24,6 +27,10 @@ export interface PickedItem {
   mode: Mode;
   qty: number;
   unitPrice: number;
+  length: number;
+  width: number;
+  height: number;
+  cbm: number;
 }
 
 export interface CustomerInfo {

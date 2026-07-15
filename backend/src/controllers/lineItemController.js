@@ -1,5 +1,7 @@
+import mongoose from 'mongoose';
 import Account from '../models/Account.js';
 import Order from '../models/Order.js';
+import PackingList from '../models/PackingList.js';
 
 const MODE_VALUES = ['SEA', 'AIR', 'ROAD', 'RAIL'];
 
@@ -58,6 +60,22 @@ export const listLineItems = async (req, res) => {
   if (req.query.ready === 'true') {
     filter.exWorkDate = { $ne: null };
     filter.quantityPerCont = { $gt: 0 };
+  }
+
+  if (req.query.excludePacked === 'true') {
+    const packedDocs = await PackingList.find({}, { 'items.lineId': 1 }).lean();
+    const packedIds = [
+      ...new Set(
+        packedDocs.flatMap((pl) =>
+          (pl.items || []).map((it) => String(it.lineId))
+        )
+      ),
+    ];
+    if (packedIds.length > 0) {
+      filter._id = {
+        $nin: packedIds.map((s) => new mongoose.Types.ObjectId(s)),
+      };
+    }
   }
 
   if (req.query.cursor) {

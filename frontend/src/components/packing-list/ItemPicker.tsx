@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { listLineItems } from "@/lib/lineItemApi";
+import { listPartNums } from "@/lib/partNumApi";
 import { calcContainers, fmt } from "@/components/po/utils";
 import {
   currencyCell,
@@ -37,21 +38,34 @@ import { NotifyManufactureDialog } from "@/components/notification/NotifyManufac
 import type { AvailableLine, PickedItem } from "./types";
 import DataTable, { type Column } from "@/components/DataTable";
 
-const toAvailableLine = (it: ManufactureItem): AvailableLine => ({
-  _id: it._id,
-  poNum: it.poNum,
-  orderLine: it.orderDtl.orderLine,
-  shipToNum: it.shipToNum,
-  needByDate: it.needByDate,
-  requestDate: it.requestDate,
-  mode: it.mode,
-  partNum: it.orderDtl.partNum,
-  sellingQuantity: it.orderDtl.sellingQuantity,
-  quantityPerCont: it.quantityPerCont,
-  unitPrice: it.unitPrice,
-  total: it.total,
-  exWorkDate: it.exWorkDate,
-});
+const toAvailableLine = (
+  it: ManufactureItem,
+  dimMap: Map<string, { length: number; width: number; height: number }>
+): AvailableLine => {
+  const dim = dimMap.get(it.orderDtl.partNum) ?? {
+    length: 0,
+    width: 0,
+    height: 0,
+  };
+  return {
+    _id: it._id,
+    poNum: it.poNum,
+    orderLine: it.orderDtl.orderLine,
+    shipToNum: it.shipToNum,
+    needByDate: it.needByDate,
+    requestDate: it.requestDate,
+    mode: it.mode,
+    partNum: it.orderDtl.partNum,
+    sellingQuantity: it.orderDtl.sellingQuantity,
+    quantityPerCont: it.quantityPerCont,
+    unitPrice: it.unitPrice,
+    total: it.total,
+    exWorkDate: it.exWorkDate,
+    length: dim.length,
+    width: dim.width,
+    height: dim.height,
+  };
+};
 
 const toAvailableLineFromPicked = (p: PickedItem): AvailableLine => ({
   _id: p.lineId,
@@ -67,6 +81,9 @@ const toAvailableLineFromPicked = (p: PickedItem): AvailableLine => ({
   unitPrice: p.unitPrice,
   total: p.qty * p.unitPrice,
   exWorkDate: null,
+  length: p.length,
+  width: p.width,
+  height: p.height,
 });
 
 const toPickedItem = (l: AvailableLine): PickedItem => ({
@@ -77,7 +94,25 @@ const toPickedItem = (l: AvailableLine): PickedItem => ({
   mode: l.mode,
   qty: l.sellingQuantity,
   unitPrice: l.unitPrice,
+  length: l.length,
+  width: l.width,
+  height: l.height,
+  cbm: l.length * l.width * l.height * l.sellingQuantity,
 });
+
+async function loadPartNumsCached() {
+  const cached = sessionStorage.getItem("partNums");
+  if (cached) {
+    try {
+      return JSON.parse(cached) as Awaited<ReturnType<typeof listPartNums>>;
+    } catch {
+      sessionStorage.removeItem("partNums");
+    }
+  }
+  const res = await listPartNums();
+  sessionStorage.setItem("partNums", JSON.stringify(res));
+  return res;
+}
 
 const buildColumns = (): Column<AvailableLine>[] => [
   {
@@ -180,6 +215,42 @@ const buildColumns = (): Column<AvailableLine>[] => [
     sortValue: (row) => row.exWorkDate,
     render: (row) => exWorkDateCell(row.exWorkDate),
   },
+  {
+    key: "length",
+    label: "Length",
+    align: "right",
+    sortable: true,
+    sortValue: (row) => row.length,
+    render: (row) => monoCell(formatNumber(row.length)),
+  },
+  {
+    key: "width",
+    label: "Width",
+    align: "right",
+    sortable: true,
+    sortValue: (row) => row.width,
+    render: (row) => monoCell(formatNumber(row.width)),
+  },
+  {
+    key: "height",
+    label: "Height",
+    align: "right",
+    sortable: true,
+    sortValue: (row) => row.height,
+    render: (row) => monoCell(formatNumber(row.height)),
+  },
+  {
+    key: "cbm",
+    label: "CBM",
+    align: "right",
+    sortable: true,
+    sortValue: (row) =>
+      row.length * row.width * row.height * row.sellingQuantity,
+    render: (row) =>
+      monoCell(
+        formatNumber(row.length * row.width * row.height * row.sellingQuantity)
+      ),
+  },
 ];
 
 interface ItemPickerProps {
@@ -218,9 +289,19 @@ export function ItemPicker({
       setLoading(true);
       setLoadError(null);
       try {
-        const result = await listLineItems({ limit: fetchLineItemLimit, ready: true });
+        const [result, partNums] = await Promise.all([
+          listLineItems({
+            limit: fetchLineItemLimit,
+            ready: true,
+            excludePacked: true,
+          }),
+          loadPartNumsCached(),
+        ]);
         if (cancelled) return;
-        setAvailable(result.items.map(toAvailableLine));
+        const map = new Map(
+          partNums.map((p) => [p.partNum, p.dimension])
+        );
+        setAvailable(result.items.map((it) => toAvailableLine(it, map)));
       } catch (err) {
         if (cancelled) return;
         setLoadError(

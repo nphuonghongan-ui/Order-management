@@ -1,21 +1,23 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import {
   AlertCircle,
-  ChevronRight,
+  Box,
+  Code2,
   Inbox,
   Loader2,
   Trash2,
+  X,
 } from "lucide-react";
 import ActionToolbar from "@/components/ActionToolbar";
 import DataTable, { type Column } from "@/components/DataTable";
 import { PageShell } from "@/components/PageShell";
-import { Button } from "@/components/ui/button";
+import { MetaField } from "@/components/Detail/MetaField";
+import { SectionCard } from "@/components/Detail/SectionCard";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -31,6 +33,7 @@ import {
   listPackingLists,
 } from "@/lib/packingListApi";
 import type { PackingListRecord } from "@/components/packing-list/types";
+import { ExportButtons } from "@/components/packing-list/ExportButtons";
 
 const isAxiosError = (
   e: unknown
@@ -97,6 +100,21 @@ export default function PackingList() {
     }
   };
 
+  const groupedByPo = useMemo(() => {
+    if (!selected) return [];
+    const map = new Map<string, typeof selected.items>();
+    for (const it of selected.items) {
+      const arr = map.get(it.poNum) ?? [];
+      arr.push(it);
+      map.set(it.poNum, arr);
+    }
+    return [...map.entries()].map(([poNum, items]) => ({
+      poNum,
+      items,
+      subTotal: items.reduce((s, it) => s + it.qty * it.unitPrice, 0),
+    }));
+  }, [selected]);
+
   const columns: Column<PackingListRecord>[] = [
     {
       key: "plNumber",
@@ -104,9 +122,17 @@ export default function PackingList() {
       sortable: false,
       render: (row) => (
         <div className="flex flex-col">
-          <span className="text-sm font-semibold font-mono text-primary">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelected(row);
+            }}
+            className="text-sm font-semibold font-mono text-primary cursor-pointer hover:underline text-left w-fit"
+            title="View packing list detail"
+          >
             {row.plNumber}
-          </span>
+          </button>
           <span className="text-xs text-muted-foreground">
             {formatDisplay(row.createdAt)}
           </span>
@@ -172,42 +198,35 @@ export default function PackingList() {
       render: (row) => currencyCell(row.total, { bold: true, primary: true }),
     },
     {
+      key: "export",
+      label: "Export",
+      sortable: false,
+      align: "right",
+      render: (row) => <ExportButtons record={row} />,
+    },
+    {
       key: "_action",
       label: "",
       sortable: false,
       align: "right",
       render: (row) => (
-        <div className="flex items-center justify-end gap-1">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelected(row);
-            }}
-            className="p-1.5 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            title="View details"
-            aria-label="View details"
-          >
-            <ChevronRight size={16} />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row._id);
-            }}
-            disabled={deletingId === row._id}
-            className="p-1.5 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50"
-            title="Delete"
-            aria-label="Delete"
-          >
-            {deletingId === row._id ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <Trash2 size={14} />
-            )}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDelete(row._id);
+          }}
+          disabled={deletingId === row._id}
+          className="p-1.5 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50"
+          title="Delete"
+          aria-label="Delete"
+        >
+          {deletingId === row._id ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Trash2 size={14} />
+          )}
+        </button>
       ),
     },
   ];
@@ -292,163 +311,167 @@ export default function PackingList() {
       >
         <SheetContent
           side="right"
-          className="w-full sm:max-w-md overflow-y-auto"
+          showCloseButton={false}
+          className="w-full sm:max-w-md overflow-y-auto p-0"
         >
           {selected && (
-            <>
-              <SheetHeader>
-                <SheetTitle className="flex items-center gap-2">
-                  <span className="font-mono">{selected.plNumber}</span>
-                  <span className="text-muted-foreground">·</span>
-                  <span className="text-muted-foreground font-normal text-sm">
-                    {formatDisplay(selected.createdAt)}
+            <div className="flex flex-col">
+              {/* Header */}
+              <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-4">
+                <SheetHeader className="p-0">
+                  <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    Packing List
                   </span>
-                </SheetTitle>
-                <SheetDescription>Packing list details</SheetDescription>
-              </SheetHeader>
+                  <SheetTitle className="font-mono text-xl mt-1">
+                    {selected.plNumber}
+                  </SheetTitle>
+                </SheetHeader>
+                <button
+                  type="button"
+                  onClick={() => setSelected(null)}
+                  className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  aria-label="Close"
+                >
+                  <X size={16} />
+                </button>
+              </div>
 
-              <div className="mt-4 flex flex-col gap-5 text-sm">
-                <Section title="Customer">
-                  <DetailRow label="Name" value={selected.customer.name} />
-                  <DetailRow label="Contact" value={selected.customer.contact} />
-                  <DetailRow label="Email" value={selected.customer.email} mono />
-                  <DetailRow label="Address" value={selected.customer.address} />
-                </Section>
+              <div className="flex flex-col gap-3 px-5 pb-5 text-sm">
+                {/* Meta card */}
+                <div className="rounded-lg border border-border bg-card p-4">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <MetaField
+                      label="Submitted"
+                      value={formatDisplay(selected.createdAt)}
+                    />
+                  </div>
+                </div>
 
-                <Section title="Delivery">
-                  <DetailRow label="Recipient" value={selected.delivery.name} />
-                  <DetailRow
-                    label="Address"
-                    value={selected.delivery.address}
-                  />
-                  <DetailRow
-                    label="Expected Date"
-                    value={formatDisplay(selected.delivery.shipDate)}
-                  />
-                  <DetailRow label="Notes" value={selected.delivery.notes} />
-                </Section>
-
-                <Section title="Items">
-                  <div className="rounded-md border border-border overflow-hidden">
-                    <div
-                      className="grid px-3 py-1.5 bg-muted/40 border-b border-border text-xs font-semibold uppercase tracking-wide text-slate"
-                      style={{ gridTemplateColumns: "1fr 70px 90px" }}
-                    >
-                      <span>Part</span>
-                      <span className="text-right">Qty</span>
-                      <span className="text-right">Amount</span>
+                {/* CUSTOMER */}
+                <SectionCard title="Customer" icon={Code2}>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <MetaField label="Name" value={selected.customer.name} />
+                    <MetaField
+                      label="Contact"
+                      value={selected.customer.contact}
+                    />
+                    <MetaField
+                      label="Email"
+                      value={selected.customer.email}
+                      mono
+                    />
+                    <div className="col-span-2">
+                      <MetaField
+                        label="Address"
+                        value={selected.customer.address}
+                      />
                     </div>
-                    {selected.items.length === 0 ? (
-                      <div className="px-3 py-4 text-center text-xs text-muted-foreground">
-                        No items
+                  </div>
+                </SectionCard>
+
+                {/* DELIVERY */}
+                <SectionCard title="Delivery" icon={Code2}>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <MetaField
+                      label="Recipient"
+                      value={selected.delivery.name}
+                    />
+                    <MetaField
+                      label="Expected Date"
+                      value={formatDisplay(selected.delivery.shipDate)}
+                    />
+                    <div className="col-span-2">
+                      <MetaField
+                        label="Address"
+                        value={selected.delivery.address}
+                      />
+                    </div>
+                    {selected.delivery.notes && (
+                      <div className="col-span-2">
+                        <MetaField
+                          label="Notes"
+                          value={selected.delivery.notes}
+                        />
                       </div>
-                    ) : (
-                      selected.items.map((it) => {
-                        const ModeIcon = MODE_ICONS[it.mode];
-                        return (
-                          <div
-                            key={it.lineId}
-                            className="grid px-3 py-1.5 border-b last:border-b-0 border-border items-center"
-                            style={{ gridTemplateColumns: "1fr 70px 90px" }}
-                          >
-                            <div className="min-w-0">
-                              <div className="text-xs font-mono truncate">
-                                {it.partNum}
-                              </div>
-                              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                <ModeIcon size={9} />
-                                <span className="truncate">{it.shipToNum}</span>
-                              </div>
-                            </div>
-                            <div className="text-right text-xs font-mono">
-                              {formatNumber(it.qty)}
-                            </div>
-                            <div className="text-right text-xs font-mono">
-                              {fmt(it.qty * it.unitPrice)}
-                            </div>
-                          </div>
-                        );
-                      })
                     )}
                   </div>
-                  <DetailRow
-                    label="Total"
-                    value={`$ ${fmt(selected.total)}`}
-                    mono
-                    highlight
-                  />
-                </Section>
+                </SectionCard>
 
-                <div className="flex justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDelete(selected._id)}
-                    disabled={deletingId === selected._id}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    {deletingId === selected._id ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <Trash2 size={14} />
-                    )}
-                    Delete
-                  </Button>
+                {/* PACKING LIST DETAIL */}
+                <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Packing List Detail
+                    </span>
+                  </div>
+                  {selected.items.length === 0 ? (
+                    <div className="rounded-md border border-border bg-background px-4 py-6 text-center text-xs text-muted-foreground">
+                      No items
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      {groupedByPo.map((group) => (
+                        <div
+                          key={group.poNum}
+                          className="rounded-md border border-border bg-background overflow-hidden"
+                        >
+                          <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/40">
+                            <span className="font-mono text-sm font-semibold">
+                              {group.poNum}
+                            </span>
+                            <span className="font-mono text-sm font-semibold text-primary">
+                              $ {fmt(group.subTotal)}
+                            </span>
+                          </div>
+                          <div className="divide-y divide-border">
+                            {group.items.map((it) => {
+                              const ModeIcon = MODE_ICONS[it.mode];
+                              return (
+                                <div
+                                  key={it.lineId}
+                                  className="flex items-center gap-3 px-4 py-3"
+                                >
+                                  <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary-light">
+                                    <Box size={14} />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-sm font-mono font-semibold truncate">
+                                      {it.partNum}
+                                    </div>
+                                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5">
+                                      <ModeIcon size={10} />
+                                      <span className="truncate">
+                                        {it.mode} · {it.shipToNum}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <span className="font-mono text-sm font-semibold shrink-0">
+                                    {formatNumber(it.qty)} × $ {fmt(it.unitPrice)}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Total card */}
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-primary-light">
+                    Total
+                  </span>
+                  <span className="font-mono text-sm font-semibold text-primary-light">
+                    $ {fmt(selected.total)}
+                  </span>
                 </div>
               </div>
-            </>
+            </div>
           )}
         </SheetContent>
       </Sheet>
     </PageShell>
-  );
-}
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-        {title}
-      </p>
-      <div className="flex flex-col gap-1.5">{children}</div>
-    </div>
-  );
-}
-
-function DetailRow({
-  label,
-  value,
-  mono,
-  highlight,
-}: {
-  label: string;
-  value: React.ReactNode;
-  mono?: boolean;
-  highlight?: boolean;
-}) {
-  if (!value) return null;
-  return (
-    <div className="flex items-start justify-between gap-3">
-      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        {label}
-      </span>
-      <span
-        className={[
-          "text-right",
-          mono ? "font-mono text-xs" : "",
-          highlight ? "text-primary font-semibold" : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        {value}
-      </span>
-    </div>
   );
 }

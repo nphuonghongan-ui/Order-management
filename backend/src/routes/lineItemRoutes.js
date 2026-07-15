@@ -46,6 +46,14 @@ router.use(requireAuth);
  *         name: customerCustId
  *         schema: { type: string }
  *         description: Filter to orders belonging to this customer (case-insensitive). Used by the PO role to scope to the logged-in account.
+ *       - in: query
+ *         name: excludePacked
+ *         schema: { type: boolean }
+ *         description: |
+ *           If true, returns only orders whose `_id` is NOT referenced as `lineId`
+ *           in any PackingList (across all accounts). Used by the Sale-side
+ *           packing-list picker to hide orders that have already been packed.
+ *           Off by default.
  *     responses:
  *       200:
  *         description: A page of items

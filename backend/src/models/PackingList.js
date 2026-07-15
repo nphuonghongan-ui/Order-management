@@ -72,6 +72,7 @@ const packingListSchema = new mongoose.Schema(
 );
 
 packingListSchema.index({ createdAt: -1, _id: -1 });
+packingListSchema.index({ 'items.lineId': 1 });
 
 packingListSchema.statics.toClient = (doc) => ({
   _id: doc._id,

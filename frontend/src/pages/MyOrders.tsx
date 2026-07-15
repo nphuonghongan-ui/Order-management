@@ -1,20 +1,29 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Box,
+  Boxes,
+  CalendarCheck,
   ChevronRight,
+  Code2,
+  DollarSign,
   Hash,
   Inbox,
+  Layers,
   Loader2,
   AlertCircle,
+  PackageOpen,
+  X,
 } from "lucide-react";
 import ActionToolbar from "@/components/ActionToolbar";
 import DataTable, { type Column } from "@/components/DataTable";
 import PagePagination from "@/components/PagePagination";
 import { PageShell } from "@/components/PageShell";
-import { cn } from "@/lib/utils";
+import { IconField } from "@/components/Detail/IconField";
+import { MetaField } from "@/components/Detail/MetaField";
+import { SectionCard } from "@/components/Detail/SectionCard";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -185,6 +194,14 @@ export default function MyOrders() {
   const totalValue = useMemo(
     () => items.reduce((s, it) => s + it.total, 0),
     [items]
+  );
+
+  const selectedPoLineCount = useMemo(
+    () =>
+      selectedItem
+        ? items.filter((it) => it.poNum === selectedItem.poNum).length
+        : 0,
+    [items, selectedItem]
   );
 
   const buildColumns = (): Column<ManufactureItem>[] => [
@@ -439,119 +456,119 @@ export default function MyOrders() {
 
       {/* Detail drawer */}
       <Sheet open={!!selectedItem} onOpenChange={(o) => !o && setSelectedItem(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+        <SheetContent side="right" showCloseButton={false} className="w-full sm:max-w-md overflow-y-auto p-0">
           {selectedItem && (
-            <>
-              <SheetHeader>
-                <SheetTitle className="flex items-center gap-2">
-                  <span className="font-mono">{selectedItem.poNum}</span>
-                  <span className="text-muted-foreground">·</span>
-                  <span className="text-muted-foreground font-normal text-sm">
-                    Line {selectedItem.orderDtl.orderLine}
+            <div className="flex flex-col">
+              {/* Header */}
+              <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-4">
+                <SheetHeader className="p-0">
+                  <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    Order Detail
                   </span>
-                </SheetTitle>
-                <SheetDescription>Line item details</SheetDescription>
-              </SheetHeader>
-
-              <div className="mt-4 flex flex-col gap-4 text-sm">
-                <DetailRow label="Part Number" value={selectedItem.orderDtl.partNum} mono />
-                <DetailRow label="Ship To" value={selectedItem.shipToNum} mono />
-                <DetailRow
-                  label="Mode"
-                  value={modePill(selectedItem.mode)}
-                />
-                <DetailRow label="Need By Date" value={formatDisplay(selectedItem.needByDate)} />
-                <DetailRow label="Request Date" value={formatDisplay(selectedItem.requestDate)} />
-                <DetailRow
-                  label="Selling Quantity"
-                  value={selectedItem.orderDtl.sellingQuantity.toLocaleString()}
-                  mono
-                  align="right"
-                />
-                <DetailRow
-                  label="Unit Price"
-                  value={selectedItem.unitPrice.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                  mono
-                  align="right"
-                />
-                <DetailRow
-                  label="Qty per Container"
-                  value={selectedItem.quantityPerCont.toLocaleString()}
-                  mono
-                  align="right"
-                />
-                <DetailRow
-                  label="No. cont"
-                  value={calcContainers(
-                    selectedItem.orderDtl.sellingQuantity,
-                    selectedItem.quantityPerCont
-                  ).toLocaleString()}
-                  mono
-                  align="right"
-                />
-                <DetailRow
-                  label="Total"
-                  value={selectedItem.total.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                  mono
-                  align="right"
-                  highlight
-                />
-                <DetailRow
-                  label="ExWork Date"
-                  value={formatDisplay(selectedItem.exWorkDate)}
-                  caption="Set by Manufacture"
-                />
+                  <SheetTitle className="font-mono text-xl mt-1">
+                    {selectedItem.poNum}
+                  </SheetTitle>
+                </SheetHeader>
+                <button
+                  type="button"
+                  onClick={() => setSelectedItem(null)}
+                  className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  aria-label="Close"
+                >
+                  <X size={16} />
+                </button>
               </div>
-            </>
+
+              <div className="flex flex-col gap-3 px-5 pb-5 text-sm">
+                {/* Meta card */}
+                <div className="rounded-lg border border-border bg-card p-4">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <MetaField
+                      label="Order Lines"
+                      value={formatNumber(selectedPoLineCount)}
+                      mono
+                    />
+                    <MetaField label="Customer ID" value={selectedItem.customerCustId} mono />
+                    <MetaField label="Submitted" value={formatDisplay(selectedItem.createdAt)} />
+                  </div>
+                </div>
+
+                {/* SHARED FIELDS */}
+                <SectionCard title="Shared Fields" icon={Code2}>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <MetaField label="Ship To Num" value={selectedItem.shipToNum} mono />
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                        Mode
+                      </span>
+                      <div>{modePill(selectedItem.mode)}</div>
+                    </div>
+                    <MetaField label="Request Date" value={formatDisplay(selectedItem.requestDate)} />
+                    <MetaField label="Need By Date" value={formatDisplay(selectedItem.needByDate)} />
+                  </div>
+                </SectionCard>
+
+                {/* LINE FIELDS */}
+                <div className="rounded-lg border border-border bg-card overflow-hidden">
+                  <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-muted/40">
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Line Fields
+                    </span>
+                  </div>
+                  <div className="divide-y divide-border">
+                    <IconField icon={Box} label="Part Number" value={selectedItem.orderDtl.partNum} mono />
+                    <IconField icon={Hash} label="Order Line" value={String(selectedItem.orderDtl.orderLine)} mono />
+                    <IconField
+                      icon={PackageOpen}
+                      label="Selling Qty"
+                      value={formatNumber(selectedItem.orderDtl.sellingQuantity)}
+                      mono
+                    />
+                    <IconField
+                      icon={Layers}
+                      label="Qty per Container"
+                      value={formatNumber(selectedItem.quantityPerCont)}
+                      mono
+                    />
+                    <IconField
+                      icon={Boxes}
+                      label="No. cont"
+                      value={formatNumber(
+                        calcContainers(
+                          selectedItem.orderDtl.sellingQuantity,
+                          selectedItem.quantityPerCont
+                        )
+                      )}
+                      mono
+                    />
+                    <IconField
+                      icon={DollarSign}
+                      label="Unit Price"
+                      value={fmt(selectedItem.unitPrice)}
+                      mono
+                    />
+                    <IconField
+                      icon={CalendarCheck}
+                      label="ExWork Date"
+                      value={formatDisplay(selectedItem.exWorkDate)}
+                    />
+                  </div>
+                </div>
+
+                {/* Total card */}
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-primary-light">
+                    Total
+                  </span>
+                  <span className="font-mono text-sm font-semibold text-primary-light">
+                    $ {fmt(selectedItem.total)}
+                  </span>
+                </div>
+              </div>
+            </div>
           )}
         </SheetContent>
       </Sheet>
     </PageShell>
-  );
-}
-
-function DetailRow({
-  label,
-  value,
-  mono,
-  align,
-  highlight,
-  caption,
-}: {
-  label: string;
-  value: React.ReactNode;
-  mono?: boolean;
-  align?: "left" | "right";
-  highlight?: boolean;
-  caption?: string;
-}) {
-  return (
-    <div className="flex items-start justify-between gap-3">
-      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        {label}
-      </span>
-      <div
-        className={cn(
-          "flex flex-col items-end gap-0.5",
-          align === "right" ? "items-end" : "items-end"
-        )}
-      >
-        <span
-          className={cn(
-            mono && "font-mono text-xs",
-            highlight && "text-primary font-semibold"
-          )}
-        >
-          {value}
-        </span>
-        {caption && <span className="text-[10px] text-muted-foreground">{caption}</span>}
-      </div>
-    </div>
   );
 }
