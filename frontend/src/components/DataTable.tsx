@@ -1,4 +1,4 @@
-import { useState, useMemo, type ReactNode } from "react";
+import { useState, useMemo, type ReactNode, type MouseEvent } from "react";
 import {
   SquarePen,
   Trash2,
@@ -26,6 +26,7 @@ interface DataTableProps<T> {
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
   onRowClick?: (row: T) => void;
+  onContextMenu?: (e: MouseEvent, row: T) => void;
   selectedRowIds?: Iterable<string>;
   emptyMessage?: ReactNode;
   rowClassName?: (row: T) => string;
@@ -37,6 +38,7 @@ export default function DataTable<T extends { _id: string }>({
   onEdit,
   onDelete,
   onRowClick,
+  onContextMenu,
   selectedRowIds,
   emptyMessage = "No data available",
   rowClassName,
@@ -136,9 +138,13 @@ export default function DataTable<T extends { _id: string }>({
               <tr
                 key={row._id}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
+                onContextMenu={
+                  onContextMenu ? (e) => onContextMenu(e, row) : undefined
+                }
                 className={cn(
                   "border-t border-border transition-colors",
                   onRowClick && "cursor-pointer",
+                  onContextMenu && "context-menu",
                   isSelected
                     ? "bg-primary/10"
                     : "hover:bg-muted/50",

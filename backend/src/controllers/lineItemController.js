@@ -62,19 +62,40 @@ export const listLineItems = async (req, res) => {
     filter.quantityPerCont = { $gt: 0 };
   }
 
+  let packedQtyByLine = new Map();
+
   if (req.query.excludePacked === 'true') {
-    const packedDocs = await PackingList.find({}, { 'items.lineId': 1 }).lean();
-    const packedIds = [
-      ...new Set(
-        packedDocs.flatMap((pl) =>
-          (pl.items || []).map((it) => String(it.lineId))
-        )
-      ),
-    ];
-    if (packedIds.length > 0) {
-      filter._id = {
-        $nin: packedIds.map((s) => new mongoose.Types.ObjectId(s)),
-      };
+    const packedAgg = await PackingList.aggregate([
+      { $unwind: '$items' },
+      { $group: { _id: '$items.lineId', packedQty: { $sum: '$items.qty' } } },
+    ]);
+    packedQtyByLine = new Map(
+      packedAgg.map((p) => [String(p._id), p.packedQty || 0])
+    );
+    const fullyPackedIds = await PackingList.aggregate([
+      { $unwind: '$items' },
+      { $group: { _id: '$items.lineId', packedQty: { $sum: '$items.qty' } } },
+      {
+        $lookup: {
+          from: 'orders',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'order',
+          pipeline: [
+            { $project: { sellingQuantity: '$orderDtl.sellingQuantity' } },
+          ],
+        },
+      },
+      { $unwind: '$order' },
+      {
+        $match: {
+          $expr: { $gte: ['$packedQty', '$order.sellingQuantity'] },
+        },
+      },
+      { $project: { _id: 1 } },
+    ]).then((rows) => rows.map((r) => new mongoose.Types.ObjectId(r._id)));
+    if (fullyPackedIds.length > 0) {
+      filter._id = { $nin: fullyPackedIds };
     }
   }
 
@@ -99,7 +120,9 @@ export const listLineItems = async (req, res) => {
   const nextCursor = hasMore && last ? encodeCursor(last.createdAt, last._id) : null;
 
   return res.status(200).json({
-    items: page.map(Order.toClient),
+    items: page.map((d) =>
+      Order.toClient(d, packedQtyByLine.get(String(d._id)) || 0)
+    ),
     nextCursor,
     hasMore,
   });

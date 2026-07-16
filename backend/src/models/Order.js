@@ -56,7 +56,7 @@ orderSchema.index(
   { unique: true, name: 'uniq_account_po_line' }
 );
 
-orderSchema.statics.toClient = (doc) => ({
+orderSchema.statics.toClient = (doc, packedQty = 0) => ({
   _id: doc._id,
   customerCustId: doc.customerCustId,
   poNum: doc.poNum,
@@ -69,6 +69,7 @@ orderSchema.statics.toClient = (doc) => ({
   total: doc.total,
   quantityPerCont: doc.quantityPerCont,
   exWorkDate: doc.exWorkDate ?? null,
+  packedQty,
   createdAt: doc.createdAt,
   updatedAt: doc.updatedAt,
 });

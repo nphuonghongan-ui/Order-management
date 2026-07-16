@@ -130,6 +130,24 @@ export const markAllRead = async (req, res) => {
   return res.status(200).json({ modified: result.modifiedCount ?? 0 });
 };
 
+export const deleteNotification = async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Invalid notification id' });
+  }
+
+  const deleted = await Notification.findOneAndDelete({
+    _id: id,
+    recipientCustomerCustId: req.user.customerCustId,
+  });
+
+  if (!deleted) {
+    return res.status(404).json({ message: 'Notification not found' });
+  }
+
+  return res.status(200).json({ item: Notification.toClient(deleted) });
+};
+
 export const listManufactureRecipients = async (_req, res) => {
   const docs = await Account.find({ role: 'Manufacture' })
     .select('customerCustId userName role')

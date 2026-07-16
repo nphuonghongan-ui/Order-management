@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Bell,
   CheckSquare,
@@ -8,6 +8,8 @@ import {
   ChevronsRight,
   Inbox,
   Loader2,
+  Minus,
+  Plus,
   Search,
   X,
 } from "lucide-react";
@@ -57,6 +59,7 @@ const toAvailableLine = (
     mode: it.mode,
     partNum: it.orderDtl.partNum,
     sellingQuantity: it.orderDtl.sellingQuantity,
+    packedQty: it.packedQty ?? 0,
     quantityPerCont: it.quantityPerCont,
     unitPrice: it.unitPrice,
     total: it.total,
@@ -77,6 +80,7 @@ const toAvailableLineFromPicked = (p: PickedItem): AvailableLine => ({
   mode: p.mode,
   partNum: p.partNum,
   sellingQuantity: p.qty,
+  packedQty: 0,
   quantityPerCont: 0,
   unitPrice: p.unitPrice,
   total: p.qty * p.unitPrice,
@@ -86,19 +90,74 @@ const toAvailableLineFromPicked = (p: PickedItem): AvailableLine => ({
   height: p.height,
 });
 
-const toPickedItem = (l: AvailableLine): PickedItem => ({
+const toPickedItem = (l: AvailableLine, qty: number): PickedItem => ({
   lineId: l._id,
   poNum: l.poNum,
   partNum: l.partNum,
   shipToNum: l.shipToNum,
   mode: l.mode,
-  qty: l.sellingQuantity,
+  qty,
   unitPrice: l.unitPrice,
   length: l.length,
   width: l.width,
   height: l.height,
-  cbm: l.length * l.width * l.height * l.sellingQuantity,
+  cbm: l.length * l.width * l.height * qty,
 });
+
+function QtyCell({
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  onChange: (n: number) => void;
+}) {
+  const maxForClamp = Math.max(min, max);
+  const clamp = (n: number) => Math.min(Math.max(min, Math.floor(n)), maxForClamp);
+  return (
+    <div className="flex items-center justify-end gap-1">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onChange(clamp(value - 1));
+        }}
+        disabled={value <= min}
+        className="p-0.5 rounded border border-border text-slate hover:text-foreground hover:bg-muted disabled:opacity-30"
+        aria-label="decrease"
+      >
+        <Minus size={12} />
+      </button>
+      <Input
+        type="number"
+        value={value}
+        min={min}
+        max={max}
+        onClick={(e) => e.stopPropagation()}
+        onChange={(e) => {
+          const n = parseInt(e.target.value, 10);
+          if (Number.isFinite(n)) onChange(clamp(n));
+        }}
+        className="h-7 w-16 text-right font-mono text-xs px-1"
+      />
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onChange(clamp(value + 1));
+        }}
+        disabled={value >= maxForClamp}
+        className="p-0.5 rounded border border-border text-slate hover:text-foreground hover:bg-muted disabled:opacity-30"
+        aria-label="increase"
+      >
+        <Plus size={12} />
+      </button>
+    </div>
+  );
+}
 
 async function loadPartNumsCached() {
   const cached = sessionStorage.getItem("partNums");
@@ -114,7 +173,11 @@ async function loadPartNumsCached() {
   return res;
 }
 
-const buildColumns = (): Column<AvailableLine>[] => [
+const buildColumns = (
+  qtyRender: (row: AvailableLine) => ReactNode,
+  qtySortValue: (row: AvailableLine) => number,
+  cbmQty: (row: AvailableLine) => number
+): Column<AvailableLine>[] => [
   {
     key: "poNum",
     label: "PO Number",
@@ -142,8 +205,8 @@ const buildColumns = (): Column<AvailableLine>[] => [
     label: "Sell Qty",
     align: "right",
     sortable: true,
-    sortValue: (row) => row.sellingQuantity,
-    render: (row) => monoCell(formatNumber(row.sellingQuantity)),
+    sortValue: qtySortValue,
+    render: qtyRender,
   },
   {
     key: "quantityPerCont",
@@ -244,12 +307,8 @@ const buildColumns = (): Column<AvailableLine>[] => [
     label: "CBM",
     align: "right",
     sortable: true,
-    sortValue: (row) =>
-      row.length * row.width * row.height * row.sellingQuantity,
-    render: (row) =>
-      monoCell(
-        formatNumber(row.length * row.width * row.height * row.sellingQuantity)
-      ),
+    sortValue: cbmQty,
+    render: (row) => monoCell(formatNumber(cbmQty(row))),
   },
 ];
 
@@ -273,10 +332,18 @@ export function ItemPicker({
   const [leftSel, setLeftSel] = useState<Set<string>>(new Set());
   const [rightSel, setRightSel] = useState<Set<string>>(new Set());
   const [q, setQ] = useState("");
+  const [ctxMenu, setCtxMenu] = useState<{
+    x: number;
+    y: number;
+    line: AvailableLine;
+    sel: Set<string>;
+  } | null>(null);
+  const [qtyPrompt, setQtyPrompt] = useState<
+    { targets: AvailableLine[]; value: number } | null
+  >(null);
   const role = useAuthStore((s) => s.role);
 
   const fetchLineItemLimit = 50;
-  const columns = useMemo(() => buildColumns(), []);
 
   useEffect(() => {
     if (!open) return;
@@ -284,6 +351,8 @@ export function ItemPicker({
     setLeftSel(new Set());
     setRightSel(new Set());
     setQ("");
+    setCtxMenu(null);
+    setQtyPrompt(null);
     let cancelled = false;
     const load = async () => {
       setLoading(true);
@@ -317,13 +386,46 @@ export function ItemPicker({
     };
   }, [open, initialPicked]);
 
-  const pickedIds = useMemo(
-    () => new Set(localPicked.map((p) => p.lineId)),
+  useEffect(() => {
+    if (!ctxMenu) return;
+    const close = () => setCtxMenu(null);
+    window.addEventListener("click", close);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      window.removeEventListener("click", close);
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [ctxMenu]);
+
+  const pickedQtyByLineId = useMemo(
+    () => new Map(localPicked.map((p) => [p.lineId, p.qty])),
     [localPicked]
   );
 
+  const remainingFor = (l: AvailableLine) =>
+    Math.max(
+      0,
+      l.sellingQuantity - l.packedQty - (pickedQtyByLineId.get(l._id) ?? 0)
+    );
+
+  const sourceMap = useMemo(
+    () => new Map(available.map((a) => [a._id, a] as const)),
+    [available]
+  );
+
+  const packableLineMax = (lineId: string) => {
+    const src = sourceMap.get(lineId);
+    if (!src) return 0;
+    return Math.max(
+      0,
+      src.sellingQuantity - src.packedQty
+    );
+  };
+
   const filteredAvailable = useMemo(() => {
-    const rows = available.filter((l) => !pickedIds.has(l._id));
+    const rows = available.filter((l) => remainingFor(l) > 0);
     if (!q) return rows;
     const needle = q.toLowerCase();
     return rows.filter(
@@ -332,7 +434,8 @@ export function ItemPicker({
         l.poNum.toLowerCase().includes(needle) ||
         l.shipToNum.toLowerCase().includes(needle)
     );
-  }, [available, pickedIds, q]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [available, pickedQtyByLineId, q]);
 
   const pickedAsLines = useMemo<AvailableLine[]>(() => {
     return localPicked.map((p) => {
@@ -352,6 +455,58 @@ export function ItemPicker({
     return "No orders ready for packing yet";
   }, [q, localPicked.length]);
 
+  const availableColumns = useMemo(
+    () =>
+      buildColumns(
+        (row) => monoCell(formatNumber(remainingFor(row))),
+        (row) => remainingFor(row),
+        (row) => row.length * row.width * row.height * remainingFor(row)
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pickedQtyByLineId]
+  );
+
+  const setPickedQtyForLine = (lineId: string, nextQty: number) => {
+    setLocalPicked((prev) => {
+      const idx = prev.findIndex((p) => p.lineId === lineId);
+      if (idx === -1) return prev;
+      const src = sourceMap.get(lineId);
+      const maxQty = src ? Math.max(0, src.sellingQuantity - src.packedQty) : 0;
+      const clamped = Math.min(Math.max(1, Math.floor(nextQty)), maxQty || 1);
+      const item = prev[idx];
+      const updated: PickedItem = {
+        ...item,
+        qty: clamped,
+        cbm: item.length * item.width * item.height * clamped,
+      };
+      const copy = [...prev];
+      copy[idx] = updated;
+      return copy;
+    });
+  };
+
+  const pickedColumns = useMemo(
+    () =>
+      buildColumns(
+        (row) => (
+          <QtyCell
+            value={pickedQtyByLineId.get(row._id) ?? row.sellingQuantity}
+            min={1}
+            max={packableLineMax(row._id)}
+            onChange={(n) => setPickedQtyForLine(row._id, n)}
+          />
+        ),
+        (row) => pickedQtyByLineId.get(row._id) ?? row.sellingQuantity,
+        (row) =>
+          row.length *
+          row.width *
+          row.height *
+          (pickedQtyByLineId.get(row._id) ?? row.sellingQuantity)
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pickedQtyByLineId, sourceMap]
+  );
+
   const toggleLeft = (row: AvailableLine) =>
     setLeftSel((prev) => {
       const next = new Set(prev);
@@ -368,14 +523,43 @@ export function ItemPicker({
       return next;
     });
 
+  const addPickedQty = (line: AvailableLine, qty: number) => {
+    const maxQty = Math.max(
+      0,
+      line.sellingQuantity - line.packedQty
+    );
+    const remaining = Math.max(
+      0,
+      maxQty - (pickedQtyByLineId.get(line._id) ?? 0)
+    );
+    if (remaining <= 0) return;
+    const addQty = Math.min(Math.max(1, Math.floor(qty)), remaining);
+    setLocalPicked((prev) => {
+      const idx = prev.findIndex((p) => p.lineId === line._id);
+      if (idx === -1) {
+        return [...prev, toPickedItem(line, addQty)];
+      }
+      const existing = prev[idx];
+      const newQty = Math.min(maxQty, existing.qty + addQty);
+      const updated: PickedItem = {
+        ...existing,
+        qty: newQty,
+        cbm: existing.length * existing.width * existing.height * newQty,
+      };
+      const copy = [...prev];
+      copy[idx] = updated;
+      return copy;
+    });
+  };
+
   const moveSelRight = () => {
     const toAdd = filteredAvailable.filter((l) => leftSel.has(l._id));
-    setLocalPicked((prev) => [...prev, ...toAdd.map(toPickedItem)]);
+    toAdd.forEach((l) => addPickedQty(l, remainingFor(l)));
     setLeftSel(new Set());
   };
 
   const moveAllRight = () => {
-    setLocalPicked((prev) => [...prev, ...filteredAvailable.map(toPickedItem)]);
+    filteredAvailable.forEach((l) => addPickedQty(l, remainingFor(l)));
     setLeftSel(new Set());
   };
 
@@ -388,6 +572,31 @@ export function ItemPicker({
     setLocalPicked([]);
     setLeftSel(new Set());
     setRightSel(new Set());
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, row: AvailableLine) => {
+    e.preventDefault();
+    const nextSel = leftSel.has(row._id)
+      ? new Set(leftSel)
+      : new Set([row._id]);
+    setLeftSel(nextSel);
+    setCtxMenu({ x: e.clientX, y: e.clientY, line: row, sel: nextSel });
+  };
+
+  const promptMaxFor = (p: NonNullable<typeof qtyPrompt>) =>
+    Math.min(...p.targets.map(remainingFor));
+
+  const openQtyPromptFor = (targets: AvailableLine[]) => {
+    if (targets.length === 0) return;
+    setCtxMenu(null);
+    const max = promptMaxFor({ targets, value: 1 });
+    setQtyPrompt({ targets, value: Math.max(1, max) });
+  };
+
+  const submitQtyPrompt = () => {
+    if (!qtyPrompt) return;
+    qtyPrompt.targets.forEach((l) => addPickedQty(l, qtyPrompt.value));
+    setQtyPrompt(null);
   };
 
   const handleConfirm = () => {
@@ -478,9 +687,10 @@ export function ItemPicker({
               </div>
             ) : (
               <DataTable
-                columns={columns}
+                columns={availableColumns}
                 data={filteredAvailable}
                 onRowClick={toggleLeft}
+                onContextMenu={handleContextMenu}
                 selectedRowIds={leftSel}
               />
             )}
@@ -553,7 +763,7 @@ export function ItemPicker({
               </div>
             ) : (
               <DataTable
-                columns={columns}
+                columns={pickedColumns}
                 data={pickedAsLines}
                 onRowClick={toggleRight}
                 selectedRowIds={rightSel}
@@ -561,8 +771,125 @@ export function ItemPicker({
             )}
           </Box>
         </div>
+
+        {ctxMenu && (
+          <ContextMenu
+            x={ctxMenu.x}
+            y={ctxMenu.y}
+            line={ctxMenu.line}
+            getRemaining={remainingFor}
+            onPickQty={() =>
+              openQtyPromptFor(
+                available.filter((l) => ctxMenu.sel.has(l._id))
+              )
+            }
+          />
+        )}
+
+        {qtyPrompt && (
+          <Dialog
+            open
+            onOpenChange={(o) => {
+              if (!o) setQtyPrompt(null);
+            }}
+          >
+            <DialogContent
+              showCloseButton={false}
+              className="sm:max-w-sm flex flex-col gap-0"
+            >
+              <DialogHeader>
+                <DialogTitle>Pick quantity</DialogTitle>
+                <DialogDescription>
+                  {qtyPrompt.targets.length === 1
+                    ? `${qtyPrompt.targets[0].poNum} · ${qtyPrompt.targets[0].partNum} (remaining ${formatNumber(remainingFor(qtyPrompt.targets[0]))})`
+                    : `Apply to ${qtyPrompt.targets.length} lines · per-line max varies`}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="flex items-center justify-center py-4">
+                <QtyCell
+                  value={qtyPrompt.value}
+                  min={1}
+                  max={promptMaxFor(qtyPrompt)}
+                  onChange={(n) =>
+                    setQtyPrompt((p) =>
+                      p ? { ...p, value: n } : p
+                    )
+                  }
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-border">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setQtyPrompt(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={submitQtyPrompt}
+                  disabled={
+                    qtyPrompt.value < 1 ||
+                    qtyPrompt.value > promptMaxFor(qtyPrompt)
+                  }
+                >
+                  <CheckSquare size={14} /> Add to packing list
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ContextMenu({
+  x,
+  y,
+  line,
+  getRemaining,
+  onPickQty,
+}: {
+  x: number;
+  y: number;
+  line: AvailableLine;
+  getRemaining: (l: AvailableLine) => number;
+  onPickQty: () => void;
+}) {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const pos = useMemo(() => {
+    const W = typeof window !== "undefined" ? window.innerWidth : 1024;
+    const H = typeof window !== "undefined" ? window.innerHeight : 768;
+    const width = 200;
+    const height = 60;
+    return {
+      x: Math.max(8, Math.min(x, W - width - 8)),
+      y: Math.max(8, Math.min(y, H - height - 8)),
+    };
+  }, [x, y]);
+  const remaining = getRemaining(line);
+  return (
+    <div
+      ref={menuRef}
+      style={{ left: pos.x, top: pos.y, maxHeight: "calc(100vh - 16px)" }}
+      onClick={(e) => e.stopPropagation()}
+      onContextMenu={(e) => e.preventDefault()}
+      className="fixed z-50 min-w-[180px] rounded-lg border border-border bg-popover shadow-lg py-1 text-sm"
+    >
+      <button
+        type="button"
+        onClick={onPickQty}
+        disabled={remaining <= 0}
+        className="w-full text-left px-3 py-2 hover:bg-muted disabled:opacity-40 flex items-center gap-2"
+      >
+        <Plus size={14} /> Pick quantity…
+      </button>
+    </div>
   );
 }
 
