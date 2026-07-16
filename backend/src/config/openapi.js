@@ -146,6 +146,12 @@ const options = {
               type: 'object',
               properties: {
                 exWorkDate: { type: 'string', format: 'date-time', nullable: true },
+                packedQty: {
+                  type: 'integer',
+                  minimum: 0,
+                  description:
+                    'Sum of qty for this line already included in PackingLists. Only populated when excludePacked=true (Sale-side picker); otherwise omitted/0.',
+                },
               },
             },
           ],

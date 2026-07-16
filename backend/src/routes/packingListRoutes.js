@@ -98,10 +98,14 @@ router.get('/:id', getPackingList);
  *                 list: { $ref: '#/components/schemas/PackingListPublic' }
  *       400:
  *         description: |
- *           Validation failed, or one or more referenced `lineId`s do not
- *           exist. The `errors` array is keyed by field path; the `missing`
- *           array (present only for the lineId-existence failure) lists the
- *           offending ObjectIds.
+ *           Validation failed, one or more referenced `lineId`s do not
+ *           exist, or one or more items would exceed the remaining unpacked
+ *           quantity for that order line (`requested.qty +
+ *           already-packed.qty > Order.orderDtl.sellingQuantity`). The
+ *           `errors` array is keyed by field path; the `missing` array
+ *           (lineId-existence failure) lists the offending ObjectIds; the
+ *           `overPacked` array (over-pack failure) lists `lineId`,
+ *           `sellingQuantity`, `alreadyPacked`, and `requested`.
  *         content:
  *           application/json:
  *             schema:
@@ -116,6 +120,15 @@ router.get('/:id', getPackingList);
  *                 missing:
  *                   type: array
  *                   items: { type: string }
+ *                 overPacked:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       lineId: { type: string }
+ *                       sellingQuantity: { type: integer }
+ *                       alreadyPacked: { type: integer }
+ *                       requested: { type: integer }
  *       401: { description: Not authenticated }
  *       403: { description: Forbidden (insufficient role) }
  *       404: { description: Caller's Account not found }

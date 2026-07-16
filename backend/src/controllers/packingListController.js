@@ -125,7 +125,9 @@ export const createPackingList = async (req, res) => {
   }
 
   const objectIds = items.map((it) => it.lineId).filter(isObjectId);
-  const found = await Order.find({ _id: { $in: objectIds } }).select('_id');
+  const found = await Order.find({ _id: { $in: objectIds } }).select(
+    '_id orderDtl.sellingQuantity'
+  );
   if (found.length !== objectIds.length) {
     const foundIds = new Set(found.map((doc) => String(doc._id)));
     const missing = items
@@ -134,6 +136,49 @@ export const createPackingList = async (req, res) => {
     return res.status(400).json({
       message: 'One or more lineIds do not exist',
       missing,
+    });
+  }
+
+  const requestedByLine = new Map();
+  for (const it of items) {
+    if (!isObjectId(it.lineId)) continue;
+    const qty = toPositiveInt(it.qty) || 0;
+    requestedByLine.set(
+      String(it.lineId),
+      (requestedByLine.get(String(it.lineId)) || 0) + qty
+    );
+  }
+
+  const packedAgg = await PackingList.aggregate([
+    { $unwind: '$items' },
+    { $match: { 'items.lineId': { $in: objectIds } } },
+    { $group: { _id: '$items.lineId', packedQty: { $sum: '$items.qty' } } },
+  ]);
+  const packedByLine = new Map(
+    packedAgg.map((p) => [String(p._id), p.packedQty || 0])
+  );
+
+  const sellingByLine = new Map(
+    found.map((d) => [String(d._id), d.orderDtl?.sellingQuantity ?? 0])
+  );
+
+  const overPacked = [];
+  for (const [lineId, requestedQty] of requestedByLine.entries()) {
+    const soldQty = sellingByLine.get(lineId) ?? 0;
+    const packedQty = packedByLine.get(lineId) || 0;
+    if (requestedQty + packedQty > soldQty) {
+      overPacked.push({
+        lineId,
+        sellingQuantity: soldQty,
+        alreadyPacked: packedQty,
+        requested: requestedQty,
+      });
+    }
+  }
+  if (overPacked.length > 0) {
+    return res.status(400).json({
+      message: 'One or more lineIds exceed remaining quantity',
+      overPacked,
     });
   }
 

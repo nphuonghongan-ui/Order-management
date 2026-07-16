@@ -60,6 +60,13 @@ export async function markAllRead(): Promise<number> {
   return Number(data.modified ?? 0);
 }
 
+export async function deleteNotification(id: string): Promise<NotificationItem> {
+  const { data } = await api.delete<{ item: NotificationItem }>(
+    `/notifications/${id}`
+  );
+  return data.item;
+}
+
 export async function listManufactureRecipients(): Promise<ManufactureRecipient[]> {
   const { data } = await api.get<{ items: ManufactureRecipient[] }>(
     "/notifications/recipients"

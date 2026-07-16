@@ -5,6 +5,7 @@ import {
   sendUrgeUpdate,
   markRead,
   markAllRead,
+  deleteNotification,
   listManufactureRecipients,
 } from '../controllers/notificationController.js';
 
@@ -82,6 +83,25 @@ router.patch('/read-all', markAllRead);
  *       401: { description: Not authenticated }
  */
 router.patch('/:id/read', markRead);
+
+/**
+ * @openapi
+ * /notifications/{id}:
+ *   delete:
+ *     summary: Delete a single notification (recipient only)
+ *     tags: [Notifications]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: Deleted }
+ *       404: { description: Notification not found }
+ *       401: { description: Not authenticated }
+ */
+router.delete('/:id', deleteNotification);
 
 /**
  * @openapi

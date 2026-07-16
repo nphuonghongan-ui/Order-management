@@ -50,10 +50,11 @@ router.use(requireAuth);
  *         name: excludePacked
  *         schema: { type: boolean }
  *         description: |
- *           If true, returns only orders whose `_id` is NOT referenced as `lineId`
- *           in any PackingList (across all accounts). Used by the Sale-side
- *           packing-list picker to hide orders that have already been packed.
- *           Off by default.
+ *           If true, returns only orders that still have remaining unpacked
+ *           quantity — i.e. `sum(PackingList.items.qty where lineId == Order._id)
+ *           < Order.orderDtl.sellingQuantity`. Each returned item carries a
+ *           `packedQty` field so the client can show remaining qty. Used by the
+ *           Sale-side packing-list picker. Off by default.
  *     responses:
  *       200:
  *         description: A page of items

@@ -10,6 +10,7 @@ export type AvailableLine = {
   mode: Mode;
   partNum: string;
   sellingQuantity: number;
+  packedQty: number;
   quantityPerCont: number;
   unitPrice: number;
   total: number;
