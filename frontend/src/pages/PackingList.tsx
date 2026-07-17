@@ -4,9 +4,11 @@ import { toast } from "sonner";
 import {
   AlertCircle,
   Box,
+  Check,
   Code2,
   Inbox,
   Loader2,
+  SquarePen,
   Trash2,
   X,
 } from "lucide-react";
@@ -15,6 +17,7 @@ import DataTable, { type Column } from "@/components/DataTable";
 import { PageShell } from "@/components/PageShell";
 import { MetaField } from "@/components/Detail/MetaField";
 import { SectionCard } from "@/components/Detail/SectionCard";
+import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -31,6 +34,8 @@ import {
 import {
   deletePackingList,
   listPackingLists,
+  updatePackingList,
+  type PackingListOperation,
 } from "@/lib/packingListApi";
 import type { PackingListRecord } from "@/components/packing-list/types";
 import { ExportButtons } from "@/components/packing-list/ExportButtons";
@@ -40,6 +45,198 @@ const isAxiosError = (
 ): e is { response?: { data?: { message?: string } }; message: string } => {
   return typeof e === "object" && e !== null && "message" in e;
 };
+
+function EditableTextField({
+  label,
+  value,
+  onSave,
+  type = "text",
+  inputClassName,
+  validator,
+}: {
+  label: string;
+  value: string;
+  onSave: (next: string) => Promise<void>;
+  type?: "text" | "email" | "date";
+  inputClassName?: string;
+  validator?: (v: string) => string | null;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value ?? "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const start = () => {
+    setDraft(value ?? "");
+    setError(null);
+    setEditing(true);
+  };
+  const cancel = () => {
+    setEditing(false);
+    setError(null);
+  };
+
+  const save = async () => {
+    setError(null);
+    if (validator) {
+      const e = validator(draft);
+      if (e) {
+        setError(e);
+        return;
+      }
+    }
+    if (draft === (value ?? "")) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    try {
+      await onSave(draft);
+      setEditing(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!editing) {
+    return (
+      <div className="group relative">
+        <MetaField label={label} value={value} />
+        <button
+          type="button"
+          onClick={start}
+          className="absolute top-0 right-0 p-1 rounded text-muted-foreground opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-muted hover:text-foreground transition-opacity"
+          title={`Edit ${label}`}
+          aria-label={`Edit ${label}`}
+        >
+          <SquarePen size={12} />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+        {label}
+      </label>
+      <div className="flex items-center gap-1">
+        <Input
+          type={type}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") save();
+            if (e.key === "Escape") cancel();
+          }}
+          autoFocus
+          className={inputClassName ?? "h-7 text-sm"}
+        />
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving}
+          title="Save"
+          aria-label="Save"
+          className="p-1 rounded text-primary hover:bg-primary/10 disabled:opacity-50"
+        >
+          {saving ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Check size={14} />
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={cancel}
+          disabled={saving}
+          title="Cancel"
+          aria-label="Cancel"
+          className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+        >
+          <X size={14} />
+        </button>
+      </div>
+      {error && <p className="text-xs text-destructive">{error}</p>}
+    </div>
+  );
+}
+
+function QtyCellInline({
+  qty,
+  currentSellingQty,
+  onSave,
+}: {
+  qty: number;
+  currentSellingQty: number;
+  onSave: (next: number) => Promise<void>;
+}) {
+  const max = Math.max(1, currentSellingQty + qty);
+  const [draft, setDraft] = useState(String(qty));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDraft(String(qty));
+  }, [qty]);
+
+  const commit = async () => {
+    setError(null);
+    const n = parseInt(draft, 10);
+    if (!Number.isFinite(n) || n < 1) {
+      setError("Min 1");
+      return;
+    }
+    if (n > max) {
+      setError(`Max ${max}`);
+      return;
+    }
+    if (n === qty) return;
+    setSaving(true);
+    try {
+      await onSave(n);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <Input
+        type="number"
+        value={draft}
+        min={1}
+        max={max}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit();
+          }
+          if (e.key === "Escape") {
+            setDraft(String(qty));
+            setError(null);
+          }
+        }}
+        disabled={max < 1}
+        className="h-7 w-16 text-right font-mono text-xs px-1"
+      />
+      {error && (
+        <span className="text-[10px] text-destructive whitespace-nowrap">
+          {error}
+        </span>
+      )}
+      {saving && (
+        <Loader2 size={12} className="animate-spin text-muted-foreground" />
+      )}
+    </div>
+  );
+}
 
 export default function PackingList() {
   const navigate = useNavigate();
@@ -98,6 +295,58 @@ export default function PackingList() {
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const applyUpdated = (updated: PackingListRecord) => {
+    setSelected(updated);
+    setRecords((prev) =>
+      prev.map((r) => (r._id === updated._id ? updated : r))
+    );
+  };
+
+  const runOp = async (operations: PackingListOperation[]) => {
+    if (!selected) throw new Error("No packing list selected");
+    const updated = await updatePackingList(selected._id, { operations });
+    applyUpdated(updated);
+    toast.success("Updated");
+  };
+
+  const handleCustomerField = async (
+    field: "name" | "address" | "contact" | "email",
+    next: string
+  ) => {
+    if (!selected) return;
+    await runOp([
+      {
+        op: "set_customer",
+        name: selected.customer.name,
+        address: selected.customer.address,
+        contact: selected.customer.contact,
+        email: selected.customer.email,
+        [field]: next,
+      },
+    ]);
+  };
+
+  const handleDeliveryField = async (
+    field: "name" | "address" | "shipDate" | "notes",
+    next: string
+  ) => {
+    if (!selected) return;
+    await runOp([
+      {
+        op: "set_delivery",
+        name: selected.delivery.name,
+        address: selected.delivery.address,
+        shipDate: selected.delivery.shipDate,
+        notes: selected.delivery.notes,
+        [field]: next,
+      },
+    ]);
+  };
+
+  const handleItemQty = async (lineId: string, nextQty: number) => {
+    await runOp([{ op: "set_qty", lineId, qty: nextQty }]);
   };
 
   const groupedByPo = useMemo(() => {
@@ -341,7 +590,7 @@ export default function PackingList() {
                 <div className="rounded-lg border border-border bg-card p-4">
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                     <MetaField
-                      label="Submitted"
+                      label="Created At"
                       value={formatDisplay(selected.createdAt)}
                     />
                   </div>
@@ -350,20 +599,27 @@ export default function PackingList() {
                 {/* CUSTOMER */}
                 <SectionCard title="Customer" icon={Code2}>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                    <MetaField label="Name" value={selected.customer.name} />
-                    <MetaField
+                    <EditableTextField
+                      label="Name"
+                      value={selected.customer.name}
+                      onSave={(v) => handleCustomerField("name", v)}
+                    />
+                    <EditableTextField
                       label="Contact"
                       value={selected.customer.contact}
+                      onSave={(v) => handleCustomerField("contact", v)}
                     />
-                    <MetaField
+                    <EditableTextField
                       label="Email"
                       value={selected.customer.email}
-                      mono
+                      type="email"
+                      onSave={(v) => handleCustomerField("email", v)}
                     />
                     <div className="col-span-2">
-                      <MetaField
+                      <EditableTextField
                         label="Address"
                         value={selected.customer.address}
+                        onSave={(v) => handleCustomerField("address", v)}
                       />
                     </div>
                   </div>
@@ -372,25 +628,30 @@ export default function PackingList() {
                 {/* DELIVERY */}
                 <SectionCard title="Delivery" icon={Code2}>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                    <MetaField
+                    <EditableTextField
                       label="Recipient"
                       value={selected.delivery.name}
+                      onSave={(v) => handleDeliveryField("name", v)}
                     />
-                    <MetaField
+                    <EditableTextField
                       label="Expected Date"
-                      value={formatDisplay(selected.delivery.shipDate)}
+                      value={selected.delivery.shipDate}
+                      type="date"
+                      onSave={(v) => handleDeliveryField("shipDate", v)}
                     />
                     <div className="col-span-2">
-                      <MetaField
+                      <EditableTextField
                         label="Address"
                         value={selected.delivery.address}
+                        onSave={(v) => handleDeliveryField("address", v)}
                       />
                     </div>
                     {selected.delivery.notes && (
                       <div className="col-span-2">
-                        <MetaField
+                        <EditableTextField
                           label="Notes"
                           value={selected.delivery.notes}
+                          onSave={(v) => handleDeliveryField("notes", v)}
                         />
                       </div>
                     )}
@@ -445,9 +706,16 @@ export default function PackingList() {
                                       </span>
                                     </div>
                                   </div>
-                                  <span className="font-mono text-sm font-semibold shrink-0">
-                                    {formatNumber(it.qty)} × $ {fmt(it.unitPrice)}
-                                  </span>
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    <QtyCellInline
+                                      qty={it.qty}
+                                      currentSellingQty={it.currentSellingQty ?? 0}
+                                      onSave={(n) => handleItemQty(it.lineId, n)}
+                                    />
+                                    <span className="font-mono text-sm font-semibold whitespace-nowrap">
+                                      × $ {fmt(it.unitPrice)}
+                                    </span>
+                                  </div>
                                 </div>
                               );
                             })}

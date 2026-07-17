@@ -28,6 +28,7 @@ export type FieldError = Partial<Record<keyof LineItem, string>>;
 export interface ManufactureOrderDtl {
   orderLine: number;
   partNum: string;
+  // Remaining quantity to pack (decrements when a PackingList is submitted).
   sellingQuantity: number;
 }
 
