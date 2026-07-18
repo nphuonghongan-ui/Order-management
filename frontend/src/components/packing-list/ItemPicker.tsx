@@ -176,7 +176,8 @@ async function loadPartNumsCached() {
 const buildColumns = (
   qtyRender: (row: AvailableLine) => ReactNode,
   qtySortValue: (row: AvailableLine) => number,
-  cbmQty: (row: AvailableLine) => number
+  cbmQty: (row: AvailableLine) => number,
+  containersQty: (row: AvailableLine) => number
 ): Column<AvailableLine>[] => [
   {
     key: "poNum",
@@ -222,10 +223,10 @@ const buildColumns = (
     align: "right",
     sortable: true,
     sortValue: (row) =>
-      calcContainers(row.sellingQuantity, row.quantityPerCont),
+      calcContainers(containersQty(row), row.quantityPerCont),
     render: (row) =>
       monoCell(
-        formatNumber(calcContainers(row.sellingQuantity, row.quantityPerCont))
+        formatNumber(calcContainers(containersQty(row), row.quantityPerCont))
       ),
   },
   {
@@ -454,7 +455,8 @@ export function ItemPicker({
       buildColumns(
         (row) => monoCell(formatNumber(remainingFor(row))),
         (row) => remainingFor(row),
-        (row) => row.length * row.width * row.height * remainingFor(row)
+        (row) => row.length * row.width * row.height * remainingFor(row),
+        (row) => remainingFor(row)
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [pickedQtyByLineId]
@@ -495,7 +497,8 @@ export function ItemPicker({
           row.length *
           row.width *
           row.height *
-          (pickedQtyByLineId.get(row._id) ?? row.sellingQuantity)
+          (pickedQtyByLineId.get(row._id) ?? row.sellingQuantity),
+        (row) => pickedQtyByLineId.get(row._id) ?? row.sellingQuantity
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [pickedQtyByLineId, sourceMap]
