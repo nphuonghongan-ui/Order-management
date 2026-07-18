@@ -4,7 +4,7 @@ const orderDtlSchema = new mongoose.Schema(
   {
     orderLine: { type: Number, required: true, min: 1 },
     partNum: { type: String, required: true, trim: true, uppercase: true },
-    sellingQuantity: { type: Number, required: true, min: 1 },
+    sellingQuantity: { type: Number, required: true, min: 0 },
   },
   { _id: false }
 );

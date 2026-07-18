@@ -87,7 +87,12 @@ const options = {
                   type: 'string',
                   description: 'Must be a known part number (must exist in the part_nums collection).',
                 },
-                sellingQuantity: { type: 'integer', minimum: 1 },
+                sellingQuantity: {
+                  type: 'integer',
+                  minimum: 1,
+                  description:
+                    'Original ordered quantity on PO create. Decrements as PackingLists are submitted for this line, becoming the remaining quantity to pack.',
+                },
               },
             },
             unitPrice: { type: 'number', minimum: 0 },
@@ -120,7 +125,12 @@ const options = {
               properties: {
                 orderLine: { type: 'integer' },
                 partNum: { type: 'string' },
-                sellingQuantity: { type: 'integer' },
+                sellingQuantity: {
+                  type: 'integer',
+                  minimum: 0,
+                  description:
+                    'Remaining quantity to pack for this line. Equals the original ordered quantity minus the sum of qty across all PackingLists for this line.',
+                },
               },
             },
             unitPrice: { type: 'number' },
@@ -216,6 +226,12 @@ const options = {
             mode: { type: 'string', enum: ['SEA', 'AIR', 'ROAD', 'RAIL'] },
             qty: { type: 'integer', minimum: 1 },
             unitPrice: { type: 'number', minimum: 0 },
+            currentSellingQty: {
+              type: 'integer',
+              minimum: 0,
+              description:
+                'The source Order\'s current `orderDtl.sellingQuantity` at read time (i.e. remaining qty to pack for this line, before this PL\'s qty is added back). Lets the UI compute the per-item max for qty edits.',
+            },
           },
         },
         PackingListPublic: {
@@ -252,6 +268,52 @@ const options = {
               type: 'array',
               minItems: 1,
               items: { $ref: '#/components/schemas/PackingListItem' },
+            },
+          },
+        },
+        PackingListOperation: {
+          oneOf: [
+            {
+              type: 'object',
+              required: ['op', 'lineId', 'qty'],
+              properties: {
+                op: { type: 'string', enum: ['set_qty'] },
+                lineId: { type: 'string' },
+                qty: { type: 'integer', minimum: 1 },
+              },
+            },
+            {
+              type: 'object',
+              required: ['op', 'name', 'address'],
+              properties: {
+                op: { type: 'string', enum: ['set_customer'] },
+                name: { type: 'string' },
+                address: { type: 'string' },
+                contact: { type: 'string' },
+                email: { type: 'string', format: 'email' },
+              },
+            },
+            {
+              type: 'object',
+              required: ['op', 'name', 'address'],
+              properties: {
+                op: { type: 'string', enum: ['set_delivery'] },
+                name: { type: 'string' },
+                address: { type: 'string' },
+                shipDate: { type: 'string', format: 'date', nullable: true },
+                notes: { type: 'string' },
+              },
+            },
+          ],
+        },
+        UpdatePackingListRequest: {
+          type: 'object',
+          required: ['operations'],
+          properties: {
+            operations: {
+              type: 'array',
+              minItems: 1,
+              items: { $ref: '#/components/schemas/PackingListOperation' },
             },
           },
         },

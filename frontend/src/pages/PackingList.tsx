@@ -4,9 +4,14 @@ import { toast } from "sonner";
 import {
   AlertCircle,
   Box,
+  Check,
+  Circle,
+  CircleDot,
   Code2,
   Inbox,
   Loader2,
+  Save,
+  SquarePen,
   Trash2,
   X,
 } from "lucide-react";
@@ -15,6 +20,16 @@ import DataTable, { type Column } from "@/components/DataTable";
 import { PageShell } from "@/components/PageShell";
 import { MetaField } from "@/components/Detail/MetaField";
 import { SectionCard } from "@/components/Detail/SectionCard";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -31,6 +46,8 @@ import {
 import {
   deletePackingList,
   listPackingLists,
+  updatePackingList,
+  type PackingListOperation,
 } from "@/lib/packingListApi";
 import type { PackingListRecord } from "@/components/packing-list/types";
 import { ExportButtons } from "@/components/packing-list/ExportButtons";
@@ -41,6 +58,205 @@ const isAxiosError = (
   return typeof e === "object" && e !== null && "message" in e;
 };
 
+function EditableTextField({
+  label,
+  value,
+  onCommit,
+  type = "text",
+  inputClassName,
+  validator,
+  isDirty = false,
+}: {
+  label: string;
+  value: string;
+  onCommit: (next: string) => void;
+  type?: "text" | "email" | "date";
+  inputClassName?: string;
+  validator?: (v: string) => string | null;
+  isDirty?: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value ?? "");
+  const [error, setError] = useState<string | null>(null);
+
+  const start = () => {
+    setDraft(value ?? "");
+    setError(null);
+    setEditing(true);
+  };
+  const cancel = () => {
+    setEditing(false);
+    setError(null);
+  };
+
+  const commit = () => {
+    setError(null);
+    if (validator) {
+      const e = validator(draft);
+      if (e) {
+        setError(e);
+        return;
+      }
+    }
+    if (draft === (value ?? "")) {
+      setEditing(false);
+      return;
+    }
+    onCommit(draft);
+    setEditing(false);
+  };
+
+  if (!editing) {
+    return (
+      <div className="group relative">
+        <MetaField
+          label={label}
+          value={
+            <span className="inline-flex items-center gap-1.5">
+              <span>{value || "—"}</span>
+              {isDirty && (
+                <span
+                  title="Unsaved change"
+                  aria-label="Unsaved change"
+                  className="inline-flex"
+                >
+                  <Circle
+                    size={8}
+                    className="fill-amber-500 text-amber-500"
+                  />
+                </span>
+              )}
+            </span>
+          }
+        />
+        <button
+          type="button"
+          onClick={start}
+          className="absolute top-0 right-0 p-1 rounded text-muted-foreground opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-muted hover:text-foreground transition-opacity"
+          title={`Edit ${label}`}
+          aria-label={`Edit ${label}`}
+        >
+          <SquarePen size={12} />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+        {label}
+      </label>
+      <div className="flex items-center gap-1">
+        <Input
+          type={type}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commit();
+            if (e.key === "Escape") cancel();
+          }}
+          autoFocus
+          className={inputClassName ?? "h-7 text-sm"}
+        />
+        <button
+          type="button"
+          onClick={commit}
+          title="Commit"
+          aria-label="Commit"
+          className="p-1 rounded text-primary hover:bg-primary/10"
+        >
+          <Check size={14} />
+        </button>
+        <button
+          type="button"
+          onClick={cancel}
+          title="Cancel"
+          aria-label="Cancel"
+          className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <X size={14} />
+        </button>
+      </div>
+      {error && <p className="text-xs text-destructive">{error}</p>}
+    </div>
+  );
+}
+
+function QtyCellInline({
+  qty,
+  currentSellingQty,
+  onCommit,
+  isDirty = false,
+}: {
+  qty: number;
+  currentSellingQty: number;
+  onCommit: (next: number) => void;
+  isDirty?: boolean;
+}) {
+  const max = Math.max(1, currentSellingQty + qty);
+  const [draft, setDraft] = useState(String(qty));
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDraft(String(qty));
+  }, [qty]);
+
+  const commit = () => {
+    setError(null);
+    const n = parseInt(draft, 10);
+    if (!Number.isFinite(n) || n < 1) {
+      setError("Min 1");
+      return;
+    }
+    if (n > max) {
+      setError(`Max ${max}`);
+      return;
+    }
+    if (n === qty) return;
+    onCommit(n);
+  };
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <Input
+        type="number"
+        value={draft}
+        min={1}
+        max={max}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit();
+          }
+          if (e.key === "Escape") {
+            setDraft(String(qty));
+            setError(null);
+          }
+        }}
+        disabled={max < 1}
+        className="h-7 w-16 text-right font-mono text-xs px-1"
+      />
+      {isDirty && (
+        <span
+          title="Unsaved change"
+          aria-label="Unsaved change"
+          className="inline-flex"
+        >
+          <Circle size={8} className="fill-amber-500 text-amber-500" />
+        </span>
+      )}
+      {error && (
+        <span className="text-[10px] text-destructive whitespace-nowrap">
+          {error}
+        </span>
+      )}
+    </div>
+  );
+}
+
 export default function PackingList() {
   const navigate = useNavigate();
   const [records, setRecords] = useState<PackingListRecord[]>([]);
@@ -49,6 +265,10 @@ export default function PackingList() {
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<PackingListRecord | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<PackingListRecord | null>(null);
+  const [pendingOps, setPendingOps] = useState<PackingListOperation[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -70,6 +290,16 @@ export default function PackingList() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (selected) {
+      setDraft(selected);
+      setPendingOps([]);
+    } else {
+      setDraft(null);
+      setPendingOps([]);
+    }
+  }, [selected]);
 
   const filtered = q
     ? records.filter(
@@ -100,10 +330,141 @@ export default function PackingList() {
     }
   };
 
+  const applyUpdated = (updated: PackingListRecord) => {
+    setSelected(updated);
+    setRecords((prev) =>
+      prev.map((r) => (r._id === updated._id ? updated : r))
+    );
+  };
+
+  const isDirty = pendingOps.length > 0;
+
+  const dirtyPaths = useMemo(() => {
+    const set = new Set<string>();
+    if (!selected) return set;
+    for (const op of pendingOps) {
+      if (op.op === "set_customer") {
+        if (op.name !== selected.customer.name) set.add("customer.name");
+        if (op.address !== selected.customer.address) set.add("customer.address");
+        if ((op.contact ?? "") !== (selected.customer.contact ?? ""))
+          set.add("customer.contact");
+        if ((op.email ?? "") !== (selected.customer.email ?? ""))
+          set.add("customer.email");
+      } else if (op.op === "set_delivery") {
+        if (op.name !== selected.delivery.name) set.add("delivery.name");
+        if (op.address !== selected.delivery.address) set.add("delivery.address");
+        if ((op.shipDate ?? "") !== (selected.delivery.shipDate ?? ""))
+          set.add("delivery.shipDate");
+        if ((op.notes ?? "") !== (selected.delivery.notes ?? ""))
+          set.add("delivery.notes");
+      } else if (op.op === "set_qty") {
+        const item = selected.items.find((it) => it.lineId === op.lineId);
+        if (item && item.qty !== op.qty) set.add(`items.${op.lineId}`);
+      }
+    }
+    return set;
+  }, [pendingOps, selected]);
+
+  const enqueueOp = (op: PackingListOperation) => {
+    setPendingOps((prev) => {
+      let filtered: PackingListOperation[];
+      if (op.op === "set_qty") {
+        filtered = prev.filter(
+          (p) => !(p.op === "set_qty" && p.lineId === op.lineId)
+        );
+      } else if (op.op === "set_customer") {
+        filtered = prev.filter((p) => p.op !== "set_customer");
+      } else {
+        filtered = prev.filter((p) => p.op !== "set_delivery");
+      }
+      return [...filtered, op];
+    });
+  };
+
+  const commitCustomer = (next: PackingListRecord["customer"]) => {
+    setDraft((prev) => (prev ? { ...prev, customer: next } : prev));
+    enqueueOp({
+      op: "set_customer",
+      name: next.name,
+      address: next.address,
+      contact: next.contact,
+      email: next.email,
+    });
+  };
+
+  const commitDelivery = (next: PackingListRecord["delivery"]) => {
+    setDraft((prev) => (prev ? { ...prev, delivery: next } : prev));
+    enqueueOp({
+      op: "set_delivery",
+      name: next.name,
+      address: next.address,
+      shipDate: next.shipDate,
+      notes: next.notes,
+    });
+  };
+
+  const commitItemQty = (lineId: string, qty: number) => {
+    setDraft((prev) =>
+      prev
+        ? {
+            ...prev,
+            items: prev.items.map((it) =>
+              it.lineId === lineId ? { ...it, qty } : it
+            ),
+          }
+        : prev
+    );
+    enqueueOp({ op: "set_qty", lineId, qty });
+  };
+
+  const discardPending = () => {
+    if (selected) {
+      setDraft(selected);
+    }
+    setPendingOps([]);
+  };
+
+  const handleSave = async () => {
+    if (!selected || !isDirty || saving) return;
+    setSaving(true);
+    try {
+      const updated = await updatePackingList(selected._id, {
+        operations: pendingOps,
+      });
+      applyUpdated(updated);
+      setPendingOps([]);
+      toast.success("Updated");
+    } catch (err) {
+      toast.error(
+        isAxiosError(err)
+          ? err.response?.data?.message || err.message
+          : "Save failed"
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSheetOpenChange = (open: boolean) => {
+    if (open) return;
+    if (saving) return;
+    if (isDirty) {
+      setConfirmDiscard(true);
+      return;
+    }
+    setSelected(null);
+  };
+
+  const confirmDiscardAndClose = () => {
+    setConfirmDiscard(false);
+    setPendingOps([]);
+    setSelected(null);
+  };
+
   const groupedByPo = useMemo(() => {
-    if (!selected) return [];
-    const map = new Map<string, typeof selected.items>();
-    for (const it of selected.items) {
+    if (!draft) return [];
+    const map = new Map<string, typeof draft.items>();
+    for (const it of draft.items) {
       const arr = map.get(it.poNum) ?? [];
       arr.push(it);
       map.set(it.poNum, arr);
@@ -113,7 +474,15 @@ export default function PackingList() {
       items,
       subTotal: items.reduce((s, it) => s + it.qty * it.unitPrice, 0),
     }));
-  }, [selected]);
+  }, [draft]);
+
+  const liveTotal = useMemo(
+    () =>
+      draft
+        ? draft.items.reduce((s, it) => s + it.qty * it.unitPrice, 0)
+        : 0,
+    [draft]
+  );
 
   const columns: Column<PackingListRecord>[] = [
     {
@@ -305,173 +674,302 @@ export default function PackingList() {
         }
       />
 
-      <Sheet
-        open={!!selected}
-        onOpenChange={(o) => !o && setSelected(null)}
-      >
+      <Sheet open={!!selected} onOpenChange={handleSheetOpenChange}>
         <SheetContent
           side="right"
           showCloseButton={false}
-          className="w-full sm:max-w-md overflow-y-auto p-0"
+          className="w-full sm:max-w-md p-0 flex flex-col gap-0"
         >
-          {selected && (
-            <div className="flex flex-col">
-              {/* Header */}
-              <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-4">
-                <SheetHeader className="p-0">
-                  <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    Packing List
-                  </span>
-                  <SheetTitle className="font-mono text-xl mt-1">
-                    {selected.plNumber}
-                  </SheetTitle>
-                </SheetHeader>
-                <button
-                  type="button"
-                  onClick={() => setSelected(null)}
-                  className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                  aria-label="Close"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-3 px-5 pb-5 text-sm">
-                {/* Meta card */}
-                <div className="rounded-lg border border-border bg-card p-4">
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                    <MetaField
-                      label="Submitted"
-                      value={formatDisplay(selected.createdAt)}
-                    />
+          {selected && draft && (
+            <>
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <div className="flex flex-col">
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-4">
+                    <SheetHeader className="p-0">
+                      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                        Packing List
+                      </span>
+                      <SheetTitle className="font-mono text-xl mt-1">
+                        {selected.plNumber}
+                      </SheetTitle>
+                    </SheetHeader>
+                    <button
+                      type="button"
+                      onClick={() => handleSheetOpenChange(false)}
+                      className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                      aria-label="Close"
+                    >
+                      <X size={16} />
+                    </button>
                   </div>
-                </div>
 
-                {/* CUSTOMER */}
-                <SectionCard title="Customer" icon={Code2}>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                    <MetaField label="Name" value={selected.customer.name} />
-                    <MetaField
-                      label="Contact"
-                      value={selected.customer.contact}
-                    />
-                    <MetaField
-                      label="Email"
-                      value={selected.customer.email}
-                      mono
-                    />
-                    <div className="col-span-2">
-                      <MetaField
-                        label="Address"
-                        value={selected.customer.address}
-                      />
-                    </div>
-                  </div>
-                </SectionCard>
-
-                {/* DELIVERY */}
-                <SectionCard title="Delivery" icon={Code2}>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                    <MetaField
-                      label="Recipient"
-                      value={selected.delivery.name}
-                    />
-                    <MetaField
-                      label="Expected Date"
-                      value={formatDisplay(selected.delivery.shipDate)}
-                    />
-                    <div className="col-span-2">
-                      <MetaField
-                        label="Address"
-                        value={selected.delivery.address}
-                      />
-                    </div>
-                    {selected.delivery.notes && (
-                      <div className="col-span-2">
+                  <div className="flex flex-col gap-3 px-5 pb-5 text-sm">
+                    {/* Meta card */}
+                    <div className="rounded-lg border border-border bg-card p-4">
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                         <MetaField
-                          label="Notes"
-                          value={selected.delivery.notes}
+                          label="Created At"
+                          value={formatDisplay(selected.createdAt)}
                         />
                       </div>
-                    )}
-                  </div>
-                </SectionCard>
-
-                {/* PACKING LIST DETAIL */}
-                <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      Packing List Detail
-                    </span>
-                  </div>
-                  {selected.items.length === 0 ? (
-                    <div className="rounded-md border border-border bg-background px-4 py-6 text-center text-xs text-muted-foreground">
-                      No items
                     </div>
-                  ) : (
-                    <div className="flex flex-col gap-3">
-                      {groupedByPo.map((group) => (
-                        <div
-                          key={group.poNum}
-                          className="rounded-md border border-border bg-background overflow-hidden"
-                        >
-                          <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/40">
-                            <span className="font-mono text-sm font-semibold">
-                              {group.poNum}
-                            </span>
-                            <span className="font-mono text-sm font-semibold text-primary">
-                              $ {fmt(group.subTotal)}
-                            </span>
-                          </div>
-                          <div className="divide-y divide-border">
-                            {group.items.map((it) => {
-                              const ModeIcon = MODE_ICONS[it.mode];
-                              return (
-                                <div
-                                  key={it.lineId}
-                                  className="flex items-center gap-3 px-4 py-3"
-                                >
-                                  <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary-light">
-                                    <Box size={14} />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-mono font-semibold truncate">
-                                      {it.partNum}
-                                    </div>
-                                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5">
-                                      <ModeIcon size={10} />
-                                      <span className="truncate">
-                                        {it.mode} · {it.shipToNum}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <span className="font-mono text-sm font-semibold shrink-0">
-                                    {formatNumber(it.qty)} × $ {fmt(it.unitPrice)}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
+
+                    {/* CUSTOMER */}
+                    <SectionCard title="Customer" icon={Code2}>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                        <EditableTextField
+                          label="Name"
+                          value={draft.customer.name}
+                          isDirty={dirtyPaths.has("customer.name")}
+                          onCommit={(v) =>
+                            commitCustomer({ ...draft.customer, name: v })
+                          }
+                        />
+                        <EditableTextField
+                          label="Contact"
+                          value={draft.customer.contact}
+                          isDirty={dirtyPaths.has("customer.contact")}
+                          onCommit={(v) =>
+                            commitCustomer({ ...draft.customer, contact: v })
+                          }
+                        />
+                        <EditableTextField
+                          label="Email"
+                          value={draft.customer.email}
+                          type="email"
+                          isDirty={dirtyPaths.has("customer.email")}
+                          onCommit={(v) =>
+                            commitCustomer({ ...draft.customer, email: v })
+                          }
+                        />
+                        <div className="col-span-2">
+                          <EditableTextField
+                            label="Address"
+                            value={draft.customer.address}
+                            isDirty={dirtyPaths.has("customer.address")}
+                            onCommit={(v) =>
+                              commitCustomer({
+                                ...draft.customer,
+                                address: v,
+                              })
+                            }
+                          />
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                      </div>
+                    </SectionCard>
 
-                {/* Total card */}
-                <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-widest text-primary-light">
-                    Total
-                  </span>
-                  <span className="font-mono text-sm font-semibold text-primary-light">
-                    $ {fmt(selected.total)}
-                  </span>
+                    {/* DELIVERY */}
+                    <SectionCard title="Delivery" icon={Code2}>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                        <EditableTextField
+                          label="Recipient"
+                          value={draft.delivery.name}
+                          isDirty={dirtyPaths.has("delivery.name")}
+                          onCommit={(v) =>
+                            commitDelivery({ ...draft.delivery, name: v })
+                          }
+                        />
+                        <EditableTextField
+                          label="Expected Date"
+                          value={draft.delivery.shipDate}
+                          type="date"
+                          isDirty={dirtyPaths.has("delivery.shipDate")}
+                          onCommit={(v) =>
+                            commitDelivery({ ...draft.delivery, shipDate: v })
+                          }
+                        />
+                        <div className="col-span-2">
+                          <EditableTextField
+                            label="Address"
+                            value={draft.delivery.address}
+                            isDirty={dirtyPaths.has("delivery.address")}
+                            onCommit={(v) =>
+                              commitDelivery({
+                                ...draft.delivery,
+                                address: v,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <EditableTextField
+                            label="Notes"
+                            value={draft.delivery.notes}
+                            isDirty={dirtyPaths.has("delivery.notes")}
+                            onCommit={(v) =>
+                              commitDelivery({ ...draft.delivery, notes: v })
+                            }
+                          />
+                        </div>
+                      </div>
+                    </SectionCard>
+
+                    {/* PACKING LIST DETAIL */}
+                    <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                          Packing List Detail
+                        </span>
+                      </div>
+                      {draft.items.length === 0 ? (
+                        <div className="rounded-md border border-border bg-background px-4 py-6 text-center text-xs text-muted-foreground">
+                          No items
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-3">
+                          {groupedByPo.map((group) => (
+                            <div
+                              key={group.poNum}
+                              className="rounded-md border border-border bg-background overflow-hidden"
+                            >
+                              <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/40">
+                                <span className="font-mono text-sm font-semibold">
+                                  {group.poNum}
+                                </span>
+                                <span className="font-mono text-sm font-semibold text-primary">
+                                  $ {fmt(group.subTotal)}
+                                </span>
+                              </div>
+                              <div className="divide-y divide-border">
+                                {group.items.map((it) => {
+                                  const ModeIcon = MODE_ICONS[it.mode];
+                                  return (
+                                    <div
+                                      key={it.lineId}
+                                      className="flex items-center gap-3 px-4 py-3"
+                                    >
+                                      <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary-light">
+                                        <Box size={14} />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-sm font-mono font-semibold truncate">
+                                          {it.partNum}
+                                        </div>
+                                        <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5">
+                                          <ModeIcon size={10} />
+                                          <span className="truncate">
+                                            {it.mode} · {it.shipToNum}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-1.5 shrink-0">
+                                        <QtyCellInline
+                                          qty={it.qty}
+                                          currentSellingQty={
+                                            it.currentSellingQty ?? 0
+                                          }
+                                          isDirty={dirtyPaths.has(
+                                            `items.${it.lineId}`
+                                          )}
+                                          onCommit={(n) =>
+                                            commitItemQty(it.lineId, n)
+                                          }
+                                        />
+                                        <span className="font-mono text-sm font-semibold whitespace-nowrap">
+                                          × $ {fmt(it.unitPrice)}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Total card */}
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-widest text-primary-light">
+                        Total
+                      </span>
+                      <span className="font-mono text-sm font-semibold text-primary-light">
+                        $ {fmt(liveTotal)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+
+              {isDirty && (
+                <div className="shrink-0 border-t border-border bg-card px-5 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="size-7 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
+                        <CircleDot
+                          size={14}
+                          className="text-primary"
+                        />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-semibold text-foreground">
+                          {pendingOps.length} pending change
+                          {pendingOps.length !== 1 ? "s" : ""}
+                        </span>
+                        <span className="text-xs text-muted-foreground truncate">
+                          Review and save to commit the updates
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={discardPending}
+                        disabled={saving}
+                      >
+                        Discard
+                      </Button>
+                      <Button onClick={handleSave} disabled={saving} size="sm">
+                        {saving ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Save size={14} />
+                        )}
+                        Save changes ({pendingOps.length})
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </SheetContent>
       </Sheet>
+
+      <Dialog
+        open={confirmDiscard}
+        onOpenChange={(o) => !saving && setConfirmDiscard(o)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Discard unsaved changes?</DialogTitle>
+            <DialogDescription>
+              You have {pendingOps.length} unsaved change
+              {pendingOps.length !== 1 ? "s" : ""}. Closing now will discard
+              them.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmDiscard(false)}
+              disabled={saving}
+            >
+              Keep editing
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDiscardAndClose}
+              disabled={saving}
+            >
+              Discard
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 }

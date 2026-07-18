@@ -5,6 +5,7 @@ import {
   deletePackingList,
   getPackingList,
   listPackingLists,
+  updatePackingList,
 } from '../controllers/packingListController.js';
 
 const router = express.Router();
@@ -170,5 +171,66 @@ router.post('/', createPackingList);
  *       404: { description: Packing list not found }
  */
 router.delete('/:id', deletePackingList);
+
+/**
+ * @openapi
+ * /packing-list/{id}:
+ *   patch:
+ *     summary: Update a packing list (items, customer, or delivery)
+ *     description: |
+ *       `Sale` role only. Applies a sequence of operations atomically inside
+ *       a Mongoose transaction. The accepted operations are:
+ *         - `set_qty { lineId, qty }` — change a line's qty. The Order's
+ *           `orderDtl.sellingQuantity` is adjusted by `(oldQty - newQty)` so
+ *           the remaining-to-pack invariant holds. Multiple `set_qty` ops
+ *           targeting the same `lineId` collapse to the last one. Over-pack
+ *           is rejected: `newQty` must be `<= Order.sellingQuantity + this
+ *           PL's current qty for that line` (i.e. the original ordered).
+ *         - `set_customer { name, address, contact?, email? }` — replace the
+ *           customer subdoc on the PL.
+ *         - `set_delivery { name, address, shipDate?, notes? }` — replace the
+ *           delivery subdoc on the PL.
+ *       `itemsCount` and `total` are server-computed from the final state.
+ *     tags: [PackingList]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *         description: MongoDB _id of the PackingList document.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema: { $ref: '#/components/schemas/UpdatePackingListRequest' }
+ *     responses:
+ *       200:
+ *         description: Updated packing list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 list: { $ref: '#/components/schemas/PackingListPublic' }
+ *       400:
+ *         description: |
+ *           Validation failed (op shape) or over-pack rejected. `opErrors` is
+ *           populated for shape errors; the top-level `message` carries the
+ *           over-pack detail.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: 'string' }
+ *                 opErrors:
+ *                   type: array
+ *                   items: { type: 'object' }
+ *       401: { description: Not authenticated }
+ *       403: { description: Forbidden (insufficient role) }
+ *       404: { description: Packing list not found }
+ */
+router.patch('/:id', updatePackingList);
 
 export default router;

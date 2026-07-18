@@ -9,6 +9,7 @@ export type AvailableLine = {
   requestDate: string;
   mode: Mode;
   partNum: string;
+  // Remaining quantity to pack (mutates server-side on PackingList submit/delete).
   sellingQuantity: number;
   packedQty: number;
   quantityPerCont: number;
@@ -32,6 +33,7 @@ export interface PickedItem {
   width: number;
   height: number;
   cbm: number;
+  currentSellingQty?: number;
 }
 
 export interface CustomerInfo {

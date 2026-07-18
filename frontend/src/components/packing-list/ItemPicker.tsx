@@ -405,10 +405,7 @@ export function ItemPicker({
   );
 
   const remainingFor = (l: AvailableLine) =>
-    Math.max(
-      0,
-      l.sellingQuantity - l.packedQty - (pickedQtyByLineId.get(l._id) ?? 0)
-    );
+    Math.max(0, l.sellingQuantity - (pickedQtyByLineId.get(l._id) ?? 0));
 
   const sourceMap = useMemo(
     () => new Map(available.map((a) => [a._id, a] as const)),
@@ -418,10 +415,7 @@ export function ItemPicker({
   const packableLineMax = (lineId: string) => {
     const src = sourceMap.get(lineId);
     if (!src) return 0;
-    return Math.max(
-      0,
-      src.sellingQuantity - src.packedQty
-    );
+    return Math.max(0, src.sellingQuantity);
   };
 
   const filteredAvailable = useMemo(() => {
@@ -471,7 +465,7 @@ export function ItemPicker({
       const idx = prev.findIndex((p) => p.lineId === lineId);
       if (idx === -1) return prev;
       const src = sourceMap.get(lineId);
-      const maxQty = src ? Math.max(0, src.sellingQuantity - src.packedQty) : 0;
+      const maxQty = src ? Math.max(0, src.sellingQuantity) : 0;
       const clamped = Math.min(Math.max(1, Math.floor(nextQty)), maxQty || 1);
       const item = prev[idx];
       const updated: PickedItem = {
@@ -524,10 +518,7 @@ export function ItemPicker({
     });
 
   const addPickedQty = (line: AvailableLine, qty: number) => {
-    const maxQty = Math.max(
-      0,
-      line.sellingQuantity - line.packedQty
-    );
+    const maxQty = Math.max(0, line.sellingQuantity);
     const remaining = Math.max(
       0,
       maxQty - (pickedQtyByLineId.get(line._id) ?? 0)

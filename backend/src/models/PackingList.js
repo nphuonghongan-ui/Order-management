@@ -74,7 +74,7 @@ const packingListSchema = new mongoose.Schema(
 packingListSchema.index({ createdAt: -1, _id: -1 });
 packingListSchema.index({ 'items.lineId': 1 });
 
-packingListSchema.statics.toClient = (doc) => ({
+packingListSchema.statics.toClient = (doc, orderSellingByLineId = new Map()) => ({
   _id: doc._id,
   plNumber: doc.plNumber,
   customer: {
@@ -99,6 +99,7 @@ packingListSchema.statics.toClient = (doc) => ({
     mode: it.mode,
     qty: it.qty,
     unitPrice: it.unitPrice,
+    currentSellingQty: orderSellingByLineId.get(String(it.lineId)) ?? 0,
   })),
   itemsCount: doc.itemsCount,
   total: doc.total,
