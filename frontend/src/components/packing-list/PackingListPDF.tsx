@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   },
   fieldValue: { fontSize: 10 },
 
-  itemsTitle: {
+  packingListDetailTitle: {
     fontSize: 11,
     fontWeight: 700,
     marginBottom: 8,
@@ -243,7 +243,6 @@ export function PackingListDocument({ record }: { record: PackingListRecord }) {
           <View style={styles.plBlock}>
             <Text style={styles.plLabel}>PL Number</Text>
             <Text style={styles.plNumber}>{record.plNumber}</Text>
-            <Text style={styles.plDate}>{formatDate(record.createdAt)}</Text>
           </View>
         </View>
 
@@ -282,8 +281,8 @@ export function PackingListDocument({ record }: { record: PackingListRecord }) {
           </View>
         </View>
 
-        {/* Items */}
-        <Text style={styles.itemsTitle}>Items</Text>
+        {/* Packing List Detail */}
+        <Text style={styles.packingListDetailTitle}>PACKING LIST DETAIL</Text>
         {grouped.map((group) => (
           <View key={group.poNum} style={styles.poBlock} wrap={false}>
             <View style={styles.poHeader}>
