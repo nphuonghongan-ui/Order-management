@@ -37,6 +37,7 @@ export interface PickedItem {
   height: number;
   cbm: number;
   currentSellingQty?: number;
+  quantityPerCont?: number;
 }
 
 export interface CustomerInfo {
