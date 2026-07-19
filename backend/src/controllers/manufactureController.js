@@ -99,6 +99,10 @@ export const patchManufactureItem = async (req, res) => {
     $set.quantityPerContModifiedBy = modifier;
   }
 
+  $set.pendingManufactureUpdate = false;
+  $set.pendingManufactureUpdateAt = null;
+  $set.pendingManufactureUpdateQtyPerCont = null;
+
   const updated = await Order.findOneAndUpdate(
     { _id: id },
     { $set },

@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import Account from '../models/Account.js';
 import Order from '../models/Order.js';
 import PackingList from '../models/PackingList.js';
@@ -72,28 +71,10 @@ export const listLineItems = async (req, res) => {
     packedQtyByLine = new Map(
       packedAgg.map((p) => [String(p._id), p.packedQty || 0])
     );
-    const fullyPackedIds = await PackingList.aggregate([
-      { $unwind: '$items' },
-      { $group: { _id: '$items.lineId', packedQty: { $sum: '$items.qty' } } },
-      {
-        $lookup: {
-          from: 'orders',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'order',
-          pipeline: [
-            { $project: { sellingQuantity: '$orderDtl.sellingQuantity' } },
-          ],
-        },
-      },
-      { $unwind: '$order' },
-      {
-        $match: {
-          $expr: { $gte: ['$packedQty', '$order.sellingQuantity'] },
-        },
-      },
-      { $project: { _id: 1 } },
-    ]).then((rows) => rows.map((r) => new mongoose.Types.ObjectId(r._id)));
+    const fullyPackedIds = await Order.find({ 'orderDtl.sellingQuantity': { $lte: 0 } })
+      .select('_id')
+      .lean()
+      .then((rows) => rows.map((r) => r._id));
     if (fullyPackedIds.length > 0) {
       filter._id = { $nin: fullyPackedIds };
     }

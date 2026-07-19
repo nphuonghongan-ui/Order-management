@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
+  AlertTriangle,
   Bell,
   CheckSquare,
   ChevronLeft,
@@ -13,6 +14,7 @@ import {
   Search,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { listLineItems } from "@/lib/lineItemApi";
 import { listPartNums } from "@/lib/partNumApi";
-import { calcContainers, fmt } from "@/components/po/utils";
+import { calcContainersNeeded, fmt } from "@/components/po/utils";
 import {
   currencyCell,
   exWorkDateCell,
@@ -37,7 +39,10 @@ import {
 import type { ManufactureItem } from "@/components/po/types";
 import { useAuthStore } from "@/stores/authStore";
 import { NotifyManufactureDialog } from "@/components/notification/NotifyManufactureDialog";
-import type { AvailableLine, PickedItem } from "./types";
+import type {
+  AvailableLine,
+  PickedItem,
+} from "./types";
 import DataTable, { type Column } from "@/components/DataTable";
 
 const toAvailableLine = (
@@ -67,6 +72,10 @@ const toAvailableLine = (
     length: dim.length,
     width: dim.width,
     height: dim.height,
+    pendingManufactureUpdate: it.pendingManufactureUpdate ?? false,
+    pendingManufactureUpdateAt: it.pendingManufactureUpdateAt ?? null,
+    pendingManufactureUpdateQtyPerCont:
+      it.pendingManufactureUpdateQtyPerCont ?? null,
   };
 };
 
@@ -177,15 +186,25 @@ const buildColumns = (
   qtyRender: (row: AvailableLine) => ReactNode,
   qtySortValue: (row: AvailableLine) => number,
   cbmQty: (row: AvailableLine) => number,
-  containersQty: (row: AvailableLine) => number
-): Column<AvailableLine>[] => [
-  {
-    key: "poNum",
-    label: "PO Number",
-    sortable: true,
-    mono: true,
-    render: (row) => monoCell(row.poNum),
-  },
+  containersQty: (row: AvailableLine) => number,
+  statusCell?: (row: AvailableLine) => ReactNode
+): Column<AvailableLine>[] => {
+  const cols: Column<AvailableLine>[] = [];
+  if (statusCell) {
+    cols.push({
+      key: "status",
+      label: "",
+      render: statusCell,
+    });
+  }
+  cols.push(
+    {
+      key: "poNum",
+      label: "PO Number",
+      sortable: true,
+      mono: true,
+      render: (row) => monoCell(row.poNum),
+    },
   {
     key: "partNum",
     label: "Part Num",
@@ -223,10 +242,12 @@ const buildColumns = (
     align: "right",
     sortable: true,
     sortValue: (row) =>
-      calcContainers(containersQty(row), row.quantityPerCont),
+      calcContainersNeeded(containersQty(row), row.quantityPerCont),
     render: (row) =>
       monoCell(
-        formatNumber(calcContainers(containersQty(row), row.quantityPerCont))
+        formatNumber(
+          calcContainersNeeded(containersQty(row), row.quantityPerCont)
+        )
       ),
   },
   {
@@ -310,8 +331,10 @@ const buildColumns = (
     sortable: true,
     sortValue: cbmQty,
     render: (row) => monoCell(formatNumber(cbmQty(row))),
-  },
-];
+  }
+  );
+  return cols;
+};
 
 interface ItemPickerProps {
   open: boolean;
@@ -344,7 +367,7 @@ export function ItemPicker({
   >(null);
   const role = useAuthStore((s) => s.role);
 
-  const fetchLineItemLimit = 50;
+  const numOfAvailableOrders = 50;
 
   useEffect(() => {
     if (!open) return;
@@ -361,7 +384,7 @@ export function ItemPicker({
       try {
         const [result, partNums] = await Promise.all([
           listLineItems({
-            limit: fetchLineItemLimit,
+            limit: numOfAvailableOrders,
             ready: true,
             excludePacked: true,
           }),
@@ -456,10 +479,46 @@ export function ItemPicker({
         (row) => monoCell(formatNumber(remainingFor(row))),
         (row) => remainingFor(row),
         (row) => row.length * row.width * row.height * remainingFor(row),
-        (row) => remainingFor(row)
+        (row) => remainingFor(row),
+        (row) =>
+          row.pendingManufactureUpdate ? (
+            <div className="flex items-center gap-1">
+              <span
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border border-amber-500/40 bg-amber-100 text-amber-800 whitespace-nowrap"
+                title="Awaiting Manufacture update"
+              >
+                <AlertTriangle size={10} />
+                Awaiting MANU
+              </span>
+              {role === "Sale" && (
+                <NotifyManufactureDialog
+                  riskLines={[
+                    {
+                      lineId: row._id,
+                      poNum: row.poNum,
+                      partNum: row.partNum,
+                      pickedQty: row.sellingQuantity,
+                      quantityPerCont: row.quantityPerCont,
+                    },
+                  ]}
+                  affectedOrderIds={[row._id]}
+                  trigger={
+                    <button
+                      type="button"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-[10px] font-semibold text-amber-700 underline whitespace-nowrap"
+                      title="Notify Manufacture to clear this flag"
+                    >
+                      Notify
+                    </button>
+                  }
+                />
+              )}
+            </div>
+          ) : null
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [pickedQtyByLineId]
+    [pickedQtyByLineId, role]
   );
 
   const setPickedQtyForLine = (lineId: string, nextQty: number) => {
@@ -504,13 +563,26 @@ export function ItemPicker({
     [pickedQtyByLineId, sourceMap]
   );
 
-  const toggleLeft = (row: AvailableLine) =>
+  const availableRowClassName = (row: AvailableLine) => {
+    if (row.pendingManufactureUpdate) return "bg-amber-50/60";
+    return "";
+  };
+
+  const toggleLeft = (row: AvailableLine) => {
+    if (row.pendingManufactureUpdate) {
+      toast.message(
+        "Awaiting Manufacture update. Notify Manufacture to clear this flag.",
+        { description: `${row.poNum} · ${row.partNum}` }
+      );
+      return;
+    }
     setLeftSel((prev) => {
       const next = new Set(prev);
       if (next.has(row._id)) next.delete(row._id);
       else next.add(row._id);
       return next;
     });
+  };
 
   const toggleRight = (row: AvailableLine) =>
     setRightSel((prev) => {
@@ -521,6 +593,13 @@ export function ItemPicker({
     });
 
   const addPickedQty = (line: AvailableLine, qty: number) => {
+    if (line.pendingManufactureUpdate) {
+      toast.message(
+        "Awaiting Manufacture update. Notify Manufacture to clear this flag.",
+        { description: `${line.poNum} · ${line.partNum}` }
+      );
+      return;
+    }
     const maxQty = Math.max(0, line.sellingQuantity);
     const remaining = Math.max(
       0,
@@ -548,12 +627,28 @@ export function ItemPicker({
 
   const moveSelRight = () => {
     const toAdd = filteredAvailable.filter((l) => leftSel.has(l._id));
-    toAdd.forEach((l) => addPickedQty(l, remainingFor(l)));
+    const flagged = toAdd.filter((l) => l.pendingManufactureUpdate);
+    const allowed = toAdd.filter((l) => !l.pendingManufactureUpdate);
+    if (flagged.length > 0) {
+      toast.message(
+        `${flagged.length} line(s) awaiting Manufacture update were skipped.`,
+        { description: "Notify Manufacture to clear the flag, or pick other lines." }
+      );
+    }
+    allowed.forEach((l) => addPickedQty(l, remainingFor(l)));
     setLeftSel(new Set());
   };
 
   const moveAllRight = () => {
-    filteredAvailable.forEach((l) => addPickedQty(l, remainingFor(l)));
+    const flagged = filteredAvailable.filter((l) => l.pendingManufactureUpdate);
+    const allowed = filteredAvailable.filter((l) => !l.pendingManufactureUpdate);
+    if (flagged.length > 0) {
+      toast.message(
+        `${flagged.length} flagged line(s) were skipped.`,
+        { description: "Notify Manufacture to clear them." }
+      );
+    }
+    allowed.forEach((l) => addPickedQty(l, remainingFor(l)));
     setLeftSel(new Set());
   };
 
@@ -577,14 +672,32 @@ export function ItemPicker({
     setCtxMenu({ x: e.clientX, y: e.clientY, line: row, sel: nextSel });
   };
 
-  const promptMaxFor = (p: NonNullable<typeof qtyPrompt>) =>
-    Math.min(...p.targets.map(remainingFor));
+  const promptMaxFor = (p: NonNullable<typeof qtyPrompt>) => {
+    const allowed = p.targets.filter((t) => !t.pendingManufactureUpdate);
+    if (allowed.length === 0) return 0;
+    return Math.min(...allowed.map(remainingFor));
+  };
 
   const openQtyPromptFor = (targets: AvailableLine[]) => {
     if (targets.length === 0) return;
     setCtxMenu(null);
-    const max = promptMaxFor({ targets, value: 1 });
-    setQtyPrompt({ targets, value: Math.max(1, max) });
+    const allowed = targets.filter((t) => !t.pendingManufactureUpdate);
+    const flagged = targets.filter((t) => t.pendingManufactureUpdate);
+    if (allowed.length === 0) {
+      toast.message(
+        "All selected lines are awaiting Manufacture update.",
+        { description: "Notify Manufacture first to clear the flags." }
+      );
+      return;
+    }
+    if (flagged.length > 0) {
+      toast.message(
+        `${flagged.length} flagged line(s) were excluded from this prompt.`,
+        { description: "Notify Manufacture to clear them." }
+      );
+    }
+    const max = promptMaxFor({ targets: allowed, value: 1 });
+    setQtyPrompt({ targets: allowed, value: Math.max(1, max) });
   };
 
   const submitQtyPrompt = () => {
@@ -614,8 +727,12 @@ export function ItemPicker({
 
           <div className="flex justify-around gap-2">
             <button type="button" onClick={() => onOpenChange(false)} className="text-sm font-medium px-5 py-2 rounded-lg border">Cancel</button>
-            <button type="button" onClick={handleConfirm} disabled={localPicked.length === 0}
-              className="flex items-center gap-1.5 text-sm font-semibold px-5 py-2 rounded-lg bg-dk-blue text-white disabled:opacity-50">
+            <button
+              type="button"
+              onClick={handleConfirm}
+              disabled={localPicked.length === 0}
+              className="flex items-center gap-1.5 text-sm font-semibold px-5 py-2 rounded-lg bg-dk-blue text-white disabled:opacity-50"
+            >
               <CheckSquare size={14} /> Confirm ({localPicked.length})
             </button>
           </div>
@@ -686,6 +803,7 @@ export function ItemPicker({
                 onRowClick={toggleLeft}
                 onContextMenu={handleContextMenu}
                 selectedRowIds={leftSel}
+                rowClassName={availableRowClassName}
               />
             )}
           </Box>

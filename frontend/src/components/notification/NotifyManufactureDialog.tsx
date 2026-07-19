@@ -22,20 +22,43 @@ import {
 import {
   listManufactureRecipients,
   sendUrgeUpdate,
+  notifyManufactureQtyMismatch,
 } from "@/lib/notificationApi";
-import type { ManufactureRecipient } from "./types";
+import type {
+  ManufactureRecipient,
+  NotificationRiskLine,
+} from "./types";
 
 interface NotifyManufactureDialogProps {
   trigger?: React.ReactNode;
+  riskLines?: NotificationRiskLine[];
+  affectedOrderIds?: string[];
+  onSent?: (info: { flaggedOrderIds?: string[] }) => void;
 }
 
-export function NotifyManufactureDialog({ trigger }: NotifyManufactureDialogProps) {
+const buildDefaultMessage = (riskLines: NotificationRiskLine[]): string => {
+  if (riskLines.length === 0) return "";
+  const parts = riskLines.map(
+    (r) =>
+      `PO ${r.poNum ?? "?"} ${r.partNum ?? ""} (picked ${r.pickedQty}, Qty per Cont ${r.quantityPerCont})`
+  );
+  return `Please adjust Qty per Cont for: ${parts.join("; ")}.`;
+};
+
+export function NotifyManufactureDialog({
+  trigger,
+  riskLines,
+  affectedOrderIds,
+  onSent,
+}: NotifyManufactureDialogProps) {
   const [open, setOpen] = useState(false);
   const [recipients, setRecipients] = useState<ManufactureRecipient[]>([]);
   const [loadingRecipients, setLoadingRecipients] = useState(false);
   const [selected, setSelected] = useState<string>("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+
+  const isQtyMismatch = Array.isArray(riskLines) && riskLines.length > 0;
 
   useEffect(() => {
     if (!open) return;
@@ -61,6 +84,13 @@ export function NotifyManufactureDialog({ trigger }: NotifyManufactureDialogProp
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    if (isQtyMismatch) {
+      setMessage(buildDefaultMessage(riskLines));
+    }
+  }, [open, isQtyMismatch, riskLines]);
+
   const reset = () => {
     setSelected("");
     setMessage("");
@@ -73,12 +103,42 @@ export function NotifyManufactureDialog({ trigger }: NotifyManufactureDialogProp
     }
     setSending(true);
     try {
-      await sendUrgeUpdate({
-        recipientCustomerCustId: selected,
-        message: message.trim() || undefined,
-      });
-      const recipient = recipients.find((r) => r.customerCustId === selected);
-      toast.success(`Notification sent to ${recipient?.userName ?? selected}`);
+      if (isQtyMismatch) {
+        const ids =
+          affectedOrderIds ??
+          Array.from(
+            new Set(
+              riskLines.map((r) => r.lineId).filter((v): v is string => !!v)
+            )
+          );
+        if (ids.length === 0) {
+          toast.error("No order ids to flag");
+          setSending(false);
+          return;
+        }
+        const result = await notifyManufactureQtyMismatch({
+          affectedOrderIds: ids,
+          riskLines,
+          message: message.trim() || undefined,
+        });
+        const recipient = recipients.find(
+          (r) => r.customerCustId === selected
+        );
+        toast.success(
+          `Notification sent to ${recipient?.userName ?? selected}. ${result.flaggedOrderIds.length} order(s) flagged for Manufacture update.`
+        );
+        onSent?.({ flaggedOrderIds: result.flaggedOrderIds });
+      } else {
+        await sendUrgeUpdate({
+          recipientCustomerCustId: selected,
+          message: message.trim() || undefined,
+        });
+        const recipient = recipients.find(
+          (r) => r.customerCustId === selected
+        );
+        toast.success(`Notification sent to ${recipient?.userName ?? selected}`);
+        onSent?.({});
+      }
       reset();
       setOpen(false);
     } catch (err) {
@@ -103,9 +163,15 @@ export function NotifyManufactureDialog({ trigger }: NotifyManufactureDialogProp
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Notify Manufacture</DialogTitle>
+          <DialogTitle>
+            {isQtyMismatch
+              ? "Notify Manufacture — Qty per Cont"
+              : "Notify Manufacture"}
+          </DialogTitle>
           <DialogDescription>
-            Send an "urge" to a Manufacture account to update pending orders.
+            {isQtyMismatch
+              ? "Manufacture will be asked to adjust Qty per Cont so the picked qty produces a full container. The flagged order(s) will be disabled for picking until Manufacture updates them."
+              : "Send an \"urge\" to a Manufacture account to update pending orders."}
           </DialogDescription>
         </DialogHeader>
 
@@ -150,7 +216,11 @@ export function NotifyManufactureDialog({ trigger }: NotifyManufactureDialogProp
             <Textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="e.g. Please update ExWorkDate and Qty per Cont for the AIG orders."
+              placeholder={
+                isQtyMismatch
+                  ? "Auto-filled from the offending line(s). Edit if needed."
+                  : "e.g. Please update ExWorkDate and Qty per Cont for the AIG orders."
+              }
               rows={4}
               maxLength={2000}
             />

@@ -6,9 +6,14 @@ export const fmt = (n: number) =>
 export const calcTotal = (qty: string, price: string) =>
   (parseFloat(qty) || 0) * (parseFloat(price) || 0);
 
-export const calcContainers = (sellingQuantity: number, quantityPerCont: number): number => {
-  if (quantityPerCont <= 0) return 0;
-  return Math.floor(sellingQuantity / quantityPerCont);
+export const calcContainersNeeded = (qty: number, quantityPerCont: number): number => {
+  if (qty <= 0 || quantityPerCont <= 0) return 0;
+  return Math.ceil(qty / quantityPerCont);
+};
+
+export const calcFullContainers = (qty: number, quantityPerCont: number): number => {
+  if (qty <= 0 || quantityPerCont <= 0) return 0;
+  return Math.floor(qty / quantityPerCont);
 };
 
 export const newLineId = () => crypto.randomUUID();
@@ -46,5 +51,8 @@ export function validateHeader(h: POHeader): FieldError {
   if (!h.shipToNum.trim()) err.shipToNum = "Required";
   if (!h.needByDate) err.needByDate = "Required";
   if (!h.requestDate) err.requestDate = "Required";
+  if (h.needByDate && h.requestDate && h.needByDate < h.requestDate) {
+    err.needByDate = "Must be ≥ Request Date";
+  }
   return err;
 }

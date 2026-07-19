@@ -46,6 +46,9 @@ export interface ManufactureItem {
   quantityPerCont: number;
   exWorkDate: string | null;
   packedQty?: number;
+  pendingManufactureUpdate?: boolean;
+  pendingManufactureUpdateAt?: string | null;
+  pendingManufactureUpdateQtyPerCont?: number | null;
   createdAt: string;
   updatedAt: string;
 }

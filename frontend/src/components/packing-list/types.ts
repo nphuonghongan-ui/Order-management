@@ -19,6 +19,9 @@ export type AvailableLine = {
   length: number;
   width: number;
   height: number;
+  pendingManufactureUpdate?: boolean;
+  pendingManufactureUpdateAt?: string | null;
+  pendingManufactureUpdateQtyPerCont?: number | null;
 };
 
 export interface PickedItem {
