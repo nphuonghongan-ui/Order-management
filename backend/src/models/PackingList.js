@@ -91,16 +91,20 @@ packingListSchema.statics.toClient = (doc, orderSellingByLineId = new Map()) => 
       : '',
     notes: doc.delivery.notes ?? '',
   },
-  items: doc.items.map((it) => ({
-    lineId: it.lineId,
-    poNum: it.poNum,
-    partNum: it.partNum,
-    shipToNum: it.shipToNum,
-    mode: it.mode,
-    qty: it.qty,
-    unitPrice: it.unitPrice,
-    currentSellingQty: orderSellingByLineId.get(String(it.lineId)) ?? 0,
-  })),
+  items: doc.items.map((it) => {
+    const meta = orderSellingByLineId.get(String(it.lineId));
+    return {
+      lineId: it.lineId,
+      poNum: it.poNum,
+      partNum: it.partNum,
+      shipToNum: it.shipToNum,
+      mode: it.mode,
+      qty: it.qty,
+      unitPrice: it.unitPrice,
+      currentSellingQty: meta?.sellingQuantity ?? 0,
+      quantityPerCont: meta?.quantityPerCont ?? 0,
+    };
+  }),
   itemsCount: doc.itemsCount,
   total: doc.total,
   createdAt: doc.createdAt,

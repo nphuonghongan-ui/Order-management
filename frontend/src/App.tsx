@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import NewOrder from "./pages/NewOrder";
 import PackingList from "./pages/PackingList";
 import NewPackingList from "./pages/NewPackingList";
+import LoadingToContainer from "./pages/LoadingToContainer";
 import ProductionSchedule from "./pages/ProductionSchedule";
 import MyOrders from "./pages/MyOrders";
 import NotFound from "./pages/NotFound";
@@ -100,6 +101,14 @@ function App() {
                 element={
                   <RoleGuard allowed={[ROLES.SALE]}>
                     <NewPackingList />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path=":plId/loading"
+                element={
+                  <RoleGuard allowed={[ROLES.SALE]}>
+                    <LoadingToContainer />
                   </RoleGuard>
                 }
               />

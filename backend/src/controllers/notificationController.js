@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import Notification from '../models/Notification.js';
 import Account from '../models/Account.js';
+import Order from '../models/Order.js';
 import { getIO, roomFor } from '../lib/socket.js';
 
 const encodeCursor = (createdAt, _id) =>
@@ -159,5 +160,131 @@ export const listManufactureRecipients = async (_req, res) => {
       userName: d.userName,
       role: d.role,
     })),
+  });
+};
+
+const sanitizeRiskLines = (raw) => {
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const r of raw) {
+    if (!r || typeof r !== 'object') continue;
+    const lineId = typeof r.lineId === 'string' && mongoose.isValidObjectId(r.lineId)
+      ? r.lineId
+      : null;
+    const poNum = typeof r.poNum === 'string' && r.poNum.trim()
+      ? r.poNum.trim().toUpperCase()
+      : null;
+    const partNum = typeof r.partNum === 'string' && r.partNum.trim()
+      ? r.partNum.trim().toUpperCase()
+      : null;
+    const pickedQty = Number(r.pickedQty);
+    const quantityPerCont = Number(r.quantityPerCont);
+    out.push({
+      lineId,
+      poNum,
+      partNum,
+      pickedQty: Number.isFinite(pickedQty) && pickedQty >= 0 ? pickedQty : 0,
+      quantityPerCont:
+        Number.isFinite(quantityPerCont) && quantityPerCont >= 0
+          ? quantityPerCont
+          : 0,
+    });
+  }
+  return out;
+};
+
+export const notifyManufactureQtyMismatch = async (req, res) => {
+  const {
+    affectedOrderIds,
+    riskLines,
+    message,
+    poNum,
+    orderId,
+  } = req.body || {};
+
+  if (!Array.isArray(affectedOrderIds) || affectedOrderIds.length === 0) {
+    return res.status(400).json({ message: 'affectedOrderIds is required' });
+  }
+  const validIds = [];
+  for (const id of affectedOrderIds) {
+    if (typeof id === 'string' && mongoose.isValidObjectId(id)) {
+      validIds.push(new mongoose.Types.ObjectId(id));
+    }
+  }
+  if (validIds.length === 0) {
+    return res.status(400).json({ message: 'No valid order ids' });
+  }
+
+  const safeRiskLines = sanitizeRiskLines(riskLines).filter(
+    (r) => r.lineId && validIds.some((id) => String(id) === r.lineId)
+  );
+
+  const orders = await Order.find({ _id: { $in: validIds } })
+    .select('_id quantityPerCont customerCustId accountId')
+    .lean();
+  if (orders.length === 0) {
+    return res.status(404).json({ message: 'No matching orders' });
+  }
+
+  const qpcById = new Map(
+    orders.map((o) => [String(o._id), o.quantityPerCont ?? 0])
+  );
+
+  const now = new Date();
+  await Order.bulkWrite(
+    orders.map((o) => ({
+      updateOne: {
+        filter: { _id: o._id },
+        update: {
+          $set: {
+            pendingManufactureUpdate: true,
+            pendingManufactureUpdateAt: now,
+            pendingManufactureUpdateQtyPerCont: qpcById.get(String(o._id)) ?? 0,
+          },
+        },
+      },
+    }))
+  );
+
+  const recipient = await Account.findOne({ role: 'Manufacture' })
+    .sort({ customerCustId: 1 });
+  if (!recipient) {
+    return res.status(404).json({ message: 'No Manufacture recipient available' });
+  }
+  if (recipient.customerCustId === req.user.customerCustId) {
+    return res.status(400).json({ message: 'No other Manufacture recipient available' });
+  }
+
+  const safeMessage = typeof message === 'string' ? message.trim().slice(0, 2000) : '';
+  const safeContext = {
+    poNum: typeof poNum === 'string' && poNum.trim()
+      ? poNum.trim().toUpperCase()
+      : null,
+    orderId: mongoose.isValidObjectId(orderId) ? orderId : null,
+    riskLines: safeRiskLines,
+  };
+
+  const created = await Notification.create({
+    recipientCustomerCustId: recipient.customerCustId,
+    recipientUserName: recipient.userName,
+    fromCustomerCustId: req.user.customerCustId,
+    fromUserName: req.user.userName,
+    type: 'QTY_PER_CONT_MISMATCH',
+    title: 'Qty per Cont needs adjusting',
+    message: safeMessage,
+    context: safeContext,
+  });
+
+  const io = getIO();
+  if (io) {
+    io.to(roomFor(recipient.customerCustId)).emit(
+      'notification:new',
+      Notification.toClient(created)
+    );
+  }
+
+  return res.status(201).json({
+    item: Notification.toClient(created),
+    flaggedOrderIds: orders.map((o) => String(o._id)),
   });
 };

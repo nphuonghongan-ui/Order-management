@@ -78,9 +78,15 @@ const buildOrderSellingMap = async (lineIds) => {
     .map((id) => new mongoose.Types.ObjectId(id));
   if (objectIds.length === 0) return new Map();
   const orders = await Order.find({ _id: { $in: objectIds } })
-    .select('_id orderDtl.sellingQuantity');
+    .select('_id orderDtl.sellingQuantity quantityPerCont');
   return new Map(
-    orders.map((o) => [String(o._id), o.orderDtl?.sellingQuantity ?? 0])
+    orders.map((o) => [
+      String(o._id),
+      {
+        sellingQuantity: o.orderDtl?.sellingQuantity ?? 0,
+        quantityPerCont: o.quantityPerCont ?? 0,
+      },
+    ])
   );
 };
 

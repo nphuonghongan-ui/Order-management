@@ -4,6 +4,7 @@ import type {
   NotificationItem,
   NotificationListResult,
   NotificationContext,
+  NotificationRiskLine,
 } from "@/components/notification/types";
 
 export interface ListNotificationsParams {
@@ -72,4 +73,27 @@ export async function listManufactureRecipients(): Promise<ManufactureRecipient[
     "/notifications/recipients"
   );
   return data.items ?? [];
+}
+
+export interface NotifyManufactureQtyMismatchInput {
+  affectedOrderIds: string[];
+  riskLines: NotificationRiskLine[];
+  message?: string;
+  poNum?: string | null;
+  orderId?: string | null;
+}
+
+export interface NotifyManufactureQtyMismatchResult {
+  item: NotificationItem;
+  flaggedOrderIds: string[];
+}
+
+export async function notifyManufactureQtyMismatch(
+  input: NotifyManufactureQtyMismatchInput
+): Promise<NotifyManufactureQtyMismatchResult> {
+  const { data } = await api.post<NotifyManufactureQtyMismatchResult>(
+    "/notifications/qty-mismatch",
+    input
+  );
+  return data;
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { ArrowRight, Tag, Sparkles, X } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import Logo from "@/components/Logo";
 
 const sansFont = { fontFamily: "'Inter', sans-serif" };
@@ -104,6 +105,7 @@ const LinkedInIcon = ({ size = 16 }: { size?: number }) => (
 export default function App() {
   const navigate = useNavigate();
   const [loaded, setLoaded] = useState(false);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const t = setTimeout(() => setLoaded(true), 120);
@@ -188,16 +190,35 @@ export default function App() {
                 maxWidth: "14ch",
               }}
             >
-              A <span
+              A <motion.span
                 style={{
                   background:
-                    "linear-gradient(90deg, #60A5FA 0%, #818CF8 100%)",
+                    "linear-gradient(90deg, #60A5FA 0%, #C7D2FE 50%, #818CF8 100%)",
+                  backgroundSize: "200% 100%",
+                  backgroundPositionX: "0%",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
+                  display: "inline-block",
+                }}
+                animate={{
+                  backgroundPositionX: reduceMotion ? "0%" : "200%",
+                  y: [0, -12, 0],
+                }}
+                transition={{
+                  backgroundPositionX: {
+                    duration: 1.8,
+                    ease: "linear",
+                    repeat: Infinity,
+                  },
+                  y: {
+                    duration: 1.2,
+                    ease: "easeInOut",
+                    repeat: Infinity,
+                  },
                 }}
               >
                 packing list
-              </span> transformation solution.
+              </motion.span> transformation solution.
             </h1>
 
             {/* Description */}

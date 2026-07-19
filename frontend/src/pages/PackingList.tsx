@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import {
@@ -10,6 +10,7 @@ import {
   Code2,
   Inbox,
   Loader2,
+  Play,
   Save,
   SquarePen,
   Trash2,
@@ -18,6 +19,7 @@ import {
 import ActionToolbar from "@/components/ActionToolbar";
 import DataTable, { type Column } from "@/components/DataTable";
 import { PageShell } from "@/components/PageShell";
+import LoadingScreen from "@/components/LoadingScreen";
 import { MetaField } from "@/components/Detail/MetaField";
 import { SectionCard } from "@/components/Detail/SectionCard";
 import { Button } from "@/components/ui/button";
@@ -269,6 +271,16 @@ export default function PackingList() {
   const [pendingOps, setPendingOps] = useState<PackingListOperation[]>([]);
   const [saving, setSaving] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [loadingToContainerId, setLoadingToContainerId] = useState<string | null>(null);
+  const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+      }
+    };
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -572,6 +584,39 @@ export default function PackingList() {
       sortable: false,
       align: "right",
       render: (row) => <ExportButtons record={row} />,
+    },
+    {
+      key: "loadToContainer",
+      label: "Load",
+      sortable: false,
+      align: "right",
+      render: (row) => (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setLoadingToContainerId(row._id);
+            if (loadingTimerRef.current) {
+              clearTimeout(loadingTimerRef.current);
+            }
+            loadingTimerRef.current = setTimeout(() => {
+              setLoadingToContainerId(null);
+              loadingTimerRef.current = null;
+              navigate(`${row._id}/loading`);
+            }, 5000);
+          }}
+          disabled={loadingToContainerId === row._id}
+          className="p-1.5 rounded text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
+          title="Load to Container"
+          aria-label="Load to Container"
+        >
+          {loadingToContainerId === row._id ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Play size={14} />
+          )}
+        </button>
+      ),
     },
     {
       key: "_action",
@@ -970,6 +1015,13 @@ export default function PackingList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {loadingToContainerId && (
+        <LoadingScreen
+          variant="fullscreen"
+          label="Preparing"
+        />
+      )}
     </PageShell>
   );
 }

@@ -12,6 +12,7 @@ import {
   Ship,
   TrainFront,
   Truck,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,10 +51,12 @@ const MODE_OPTIONS = [
   { value: "RAIL" as const, label: "Rail Freight", icon: TrainFront },
 ];
 
+const today = () => new Date().toISOString().split("T")[0];
+
 const EMPTY_HEADER: POHeader = {
   shipToNum: "",
   needByDate: "",
-  requestDate: "",
+  requestDate: today(),
   mode: "SEA",
 };
 
@@ -61,7 +64,9 @@ export default function NewOrder() {
   const account = useAuthStore((s) => s.account);
   const customerCustID = account?.customerCustId ?? "PO";
 
-  const [poNum, setPoNum] = useState<string | null>(null);
+  const [poNum, setPoNum] = useState("");
+  const [originalPoNum, setOriginalPoNum] = useState("");
+  const [poNumTouched, setPoNumTouched] = useState(false);
   const [poNumLoading, setPoNumLoading] = useState(true);
   const [poNumError, setPoNumError] = useState(false);
   const [items, setItems] = useState<LineItem[]>([]);
@@ -80,6 +85,7 @@ export default function NewOrder() {
     try {
       const { poNum: next } = await fetchNextPONum();
       setPoNum(next);
+      setOriginalPoNum(next);
       setItems([emptyLine(customerCustID, next, "")]);
     } catch {
       toast.error("Failed to generate PO number. Please try again.");
@@ -87,6 +93,19 @@ export default function NewOrder() {
     } finally {
       setPoNumLoading(false);
     }
+  }
+
+  function updatePoNum(next: string) {
+    setPoNum(next);
+    setPoNumTouched(true);
+    setItems((prev) => prev.map((it) => ({ ...it, poNum: next })));
+  }
+
+  function revertPoNum() {
+    if (!originalPoNum) return;
+    setPoNum(originalPoNum);
+    setPoNumTouched(false);
+    setItems((prev) => prev.map((it) => ({ ...it, poNum: originalPoNum })));
   }
 
   async function loadPartNums() {
@@ -120,6 +139,7 @@ export default function NewOrder() {
     setHeaderErrors({});
     setSubmitError(null);
     setConflictingPairs([]);
+    setPoNumTouched(false);
     loadNextPONum();
   }
 
@@ -160,6 +180,12 @@ export default function NewOrder() {
   function validate(): boolean {
     const next: Record<string, FieldError> = {};
     let valid = true;
+
+    if (!poNum.trim()) {
+      setPoNumTouched(true);
+      valid = false;
+    }
+
     const seenLines = new Map<string, string[]>();
     items.forEach((it) => {
       const err = validateItem(it);
@@ -293,15 +319,32 @@ export default function NewOrder() {
             <div className="size-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#dceaff]">
               <Hash size={19} className="text-[#075bd8]" />
             </div>
-            <div className="min-w-[176px]">
+            <div className="min-w-[260px]">
               <div className="text-[11px] font-semibold uppercase tracking-[0.25em] mb-1 text-[#65748b] font-mono">
                 PONum
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-base font-bold text-[#001a44] font-mono">
-                  {poNum}
-                </span>
+                <Input
+                  value={poNum}
+                  onChange={(e) => updatePoNum(e.target.value.trim().toUpperCase())}
+                  placeholder="Enter PONum"
+                  aria-invalid={poNumTouched && !poNum.trim()}
+                  className="h-9 w-[220px] font-mono text-sm font-bold text-[#001a44] border-[#c8d4e5] placeholder:opacity-70"
+                />
+                {poNum !== originalPoNum && (
+                  <button
+                    type="button"
+                    onClick={revertPoNum}
+                    title="Revert to generated PONum"
+                    className="p-1.5 rounded border border-border text-slate hover:text-foreground hover:bg-muted"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
               </div>
+              {poNumTouched && !poNum.trim() && (
+                <p className="text-[11px] text-destructive mt-1 font-mono">PONum is required</p>
+              )}
             </div>
             <Separator orientation="vertical" className="h-10 bg-[#c8d4e5]" />
             <div className="min-w-[140px]">
@@ -380,6 +423,7 @@ export default function NewOrder() {
               <Input
                 type="date"
                 value={poHeader.needByDate}
+                min={poHeader.requestDate || undefined}
                 onChange={(e) =>
                   setPoHeader((h) => ({ ...h, needByDate: e.target.value }))
                 }
@@ -393,7 +437,11 @@ export default function NewOrder() {
                 type="date"
                 value={poHeader.requestDate}
                 onChange={(e) =>
-                  setPoHeader((h) => ({ ...h, requestDate: e.target.value }))
+                  setPoHeader((h) => {
+                    const req = e.target.value;
+                    const needBy = req && (!h.needByDate || h.needByDate < req) ? req : h.needByDate;
+                    return { ...h, requestDate: req, needByDate: needBy };
+                  })
                 }
                 aria-invalid={!!headerErrors.requestDate}
                 className="h-9 rounded-[4px] border-[#c8d4e5] bg-white"

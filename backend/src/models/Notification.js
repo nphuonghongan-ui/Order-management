@@ -52,6 +52,28 @@ const notificationSchema = new mongoose.Schema(
     context: {
       poNum: { type: String, default: null, trim: true, uppercase: true },
       orderId: { type: String, default: null },
+      riskLines: {
+        type: [
+          {
+            lineId: { type: String, default: null },
+            poNum: {
+              type: String,
+              default: null,
+              trim: true,
+              uppercase: true,
+            },
+            partNum: {
+              type: String,
+              default: null,
+              trim: true,
+              uppercase: true,
+            },
+            pickedQty: { type: Number, default: 0 },
+            quantityPerCont: { type: Number, default: 0 },
+          },
+        ],
+        default: undefined,
+      },
     },
   },
   { timestamps: true, collection: 'notifications' }
@@ -73,6 +95,15 @@ notificationSchema.statics.toClient = (doc) => ({
   context: {
     poNum: doc.context?.poNum ?? null,
     orderId: doc.context?.orderId ?? null,
+    riskLines: Array.isArray(doc.context?.riskLines)
+      ? doc.context.riskLines.map((r) => ({
+          lineId: r?.lineId ?? null,
+          poNum: r?.poNum ?? null,
+          partNum: r?.partNum ?? null,
+          pickedQty: Number(r?.pickedQty) || 0,
+          quantityPerCont: Number(r?.quantityPerCont) || 0,
+        }))
+      : [],
   },
   createdAt: doc.createdAt,
 });

@@ -7,6 +7,7 @@ import {
   markAllRead,
   deleteNotification,
   listManufactureRecipients,
+  notifyManufactureQtyMismatch,
 } from '../controllers/notificationController.js';
 
 const router = express.Router();
@@ -134,5 +135,49 @@ router.delete('/:id', deleteNotification);
  *       403: { description: Forbidden (not Sale) }
  */
 router.post('/', requireRole('Sale'), sendUrgeUpdate);
+
+/**
+ * @openapi
+ * /notifications/qty-mismatch:
+ *   post:
+ *     summary: Notify Manufacture that a line's Qty per Cont needs adjusting
+ *     description: |
+ *       Sale-only. Flags the given orders with `pendingManufactureUpdate=true` and sends
+ *       a QTY_PER_CONT_MISMATCH notification to the first available Manufacture account,
+ *       carrying the offending `riskLines` in the notification context.
+ *     tags: [Notifications]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [affectedOrderIds]
+ *             properties:
+ *               affectedOrderIds:
+ *                 type: array
+ *                 items: { type: string }
+ *               riskLines:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     lineId: { type: string }
+ *                     poNum: { type: string }
+ *                     partNum: { type: string }
+ *                     pickedQty: { type: number }
+ *                     quantityPerCont: { type: number }
+ *               message: { type: string }
+ *               poNum: { type: string }
+ *               orderId: { type: string }
+ *     responses:
+ *       201: { description: Notification sent and orders flagged }
+ *       400: { description: Validation error }
+ *       404: { description: No matching orders or no Manufacture recipient }
+ *       401: { description: Not authenticated }
+ *       403: { description: Forbidden (not Sale) }
+ */
+router.post('/qty-mismatch', requireRole('Sale'), notifyManufactureQtyMismatch);
 
 export default router;

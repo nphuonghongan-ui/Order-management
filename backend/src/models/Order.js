@@ -46,6 +46,13 @@ const orderSchema = new mongoose.Schema(
       trim: true,
       uppercase: true,
     },
+    pendingManufactureUpdate: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    pendingManufactureUpdateAt: { type: Date, default: null },
+    pendingManufactureUpdateQtyPerCont: { type: Number, default: null },
   },
   { timestamps: true, collection: 'orders' }
 );
@@ -70,6 +77,10 @@ orderSchema.statics.toClient = (doc, packedQty = 0) => ({
   quantityPerCont: doc.quantityPerCont,
   exWorkDate: doc.exWorkDate ?? null,
   packedQty,
+  pendingManufactureUpdate: doc.pendingManufactureUpdate ?? false,
+  pendingManufactureUpdateAt: doc.pendingManufactureUpdateAt ?? null,
+  pendingManufactureUpdateQtyPerCont:
+    doc.pendingManufactureUpdateQtyPerCont ?? null,
   createdAt: doc.createdAt,
   updatedAt: doc.updatedAt,
 });

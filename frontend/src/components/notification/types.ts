@@ -1,8 +1,17 @@
-export type NotificationType = "URGE_UPDATE_ORDERS" | string;
+export type NotificationType = "URGE_UPDATE_ORDERS" | "QTY_PER_CONT_MISMATCH" | string;
+
+export interface NotificationRiskLine {
+  lineId: string | null;
+  poNum: string | null;
+  partNum: string | null;
+  pickedQty: number;
+  quantityPerCont: number;
+}
 
 export interface NotificationContext {
   poNum: string | null;
   orderId: string | null;
+  riskLines?: NotificationRiskLine[];
 }
 
 export interface NotificationItem {

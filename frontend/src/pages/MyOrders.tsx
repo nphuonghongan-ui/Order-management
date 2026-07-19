@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/sheet";
 import { listLineItems } from "@/lib/lineItemApi";
 import { useAuthStore } from "@/stores/authStore";
-import { calcContainers, fmt } from "@/components/po/utils";
+import { calcContainersNeeded, fmt } from "@/components/po/utils";
 import type { ManufactureItem, Mode } from "@/components/po/types";
 import {
   currencyCell,
@@ -240,7 +240,10 @@ export default function MyOrders() {
       render: (row) =>
         monoCell(
           formatNumber(
-            calcContainers(row.orderDtl.sellingQuantity, row.quantityPerCont)
+            calcContainersNeeded(
+              row.orderDtl.sellingQuantity,
+              row.quantityPerCont
+            )
           )
         ),
     },
@@ -534,7 +537,7 @@ export default function MyOrders() {
                       icon={Boxes}
                       label="No. cont"
                       value={formatNumber(
-                        calcContainers(
+                        calcContainersNeeded(
                           selectedItem.orderDtl.sellingQuantity,
                           selectedItem.quantityPerCont
                         )

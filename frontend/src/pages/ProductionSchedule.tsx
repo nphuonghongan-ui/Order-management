@@ -27,7 +27,7 @@ import {
   listManufactureItems,
   patchManufactureItem,
 } from "@/lib/manufactureApi";
-import { calcContainers } from "@/components/po/utils";
+import { calcContainersNeeded } from "@/components/po/utils";
 import type { ManufactureItem } from "@/components/po/types";
 import {
   currencyCell,
@@ -373,14 +373,20 @@ export default function ProductionSchedule() {
         align: "right",
         sortable: true,
         sortValue: (row) =>
-          calcContainers(row.orderDtl.sellingQuantity, row.quantityPerCont),
+          calcContainersNeeded(
+            row.orderDtl.sellingQuantity,
+            row.quantityPerCont
+          ),
         render: (row) => {
           const currentQty = pending[row._id]
             ? pending[row._id].newQtyPerCont
             : row.quantityPerCont;
           return monoCell(
             formatNumber(
-              calcContainers(row.orderDtl.sellingQuantity, currentQty)
+              calcContainersNeeded(
+                row.orderDtl.sellingQuantity,
+                currentQty
+              )
             )
           );
         },

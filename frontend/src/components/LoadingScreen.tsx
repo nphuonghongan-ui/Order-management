@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Box, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type LoadingScreenProps = {
@@ -7,174 +9,87 @@ type LoadingScreenProps = {
   className?: string;
 };
 
-const TruckAnimation = () => (
-  <svg
-    viewBox="0 0 220 110"
-    width="220"
-    height="110"
-    role="presentation"
-    aria-hidden="true"
-    className="overflow-visible"
-  >
-    <defs>
-      <linearGradient id="container-body" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#1E6BFF" />
-        <stop offset="100%" stopColor="#003D9B" />
-      </linearGradient>
-      <linearGradient id="cab-body" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#374151" />
-        <stop offset="100%" stopColor="#1F2937" />
-      </linearGradient>
-    </defs>
+const BG = "#08122C";
 
-    {/* Road */}
-    <line
-      x1="0"
-      y1="98"
-      x2="220"
-      y2="98"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeDasharray="8 8"
-      className="road-line text-white/30"
-    />
+const DotSpinner = ({ className }: { className?: string }) => {
+  const dots = Array.from({ length: 8 }, (_, i) => i);
+  return (
+    <div
+      className={cn("dot-spinner relative size-8", className)}
+      aria-hidden="true"
+    >
+      {dots.map((i) => {
+        const angle = (i / dots.length) * 360;
+        const opacity = 0.25 + (i / (dots.length - 1)) * 0.75;
+        return (
+          <span
+            key={i}
+            className="absolute left-1/2 top-1/2 size-1.5 rounded-full bg-white"
+            style={{
+              opacity,
+              transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(-12px)`,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+};
 
-    {/* Truck group (bobs) */}
-    <g className="truck-bob">
-      {/* Container body */}
-      <rect
-        x="30"
-        y="22"
-        width="130"
-        height="58"
-        rx="2"
-        fill="url(#container-body)"
-      />
-      {/* Corrugated lines */}
-      {[40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150].map((x) => (
-        <line
-          key={x}
-          x1={x}
-          y1="24"
-          x2={x}
-          y2="78"
-          stroke="rgba(255,255,255,0.18)"
-          strokeWidth="1"
-        />
-      ))}
-      {/* Rear doors */}
-      <line
-        x1="32"
-        y1="22"
-        x2="32"
-        y2="80"
-        stroke="rgba(0,0,0,0.35)"
-        strokeWidth="1.5"
-      />
-      <line
-        x1="36"
-        y1="26"
-        x2="36"
-        y2="76"
-        stroke="rgba(0,0,0,0.25)"
-        strokeWidth="1"
-      />
-      {/* AxonLog label on container */}
-      <text
-        x="95"
-        y="56"
-        textAnchor="middle"
-        fontFamily="Inter, sans-serif"
-        fontSize="10"
-        fontWeight="700"
-        fill="rgba(255,255,255,0.92)"
-        letterSpacing="1.2"
-      >
-        AXONLOG
-      </text>
+const DecorativeIcons = ({ compact }: { compact?: boolean }) => {
+  const iconClass = cn(
+    "absolute text-[#3B6FD9]/40",
+    compact ? "size-5" : "size-6 sm:size-7"
+  );
 
-      {/* Cab */}
-      <path
-        d="M 160 36 L 188 36 L 198 52 L 198 80 L 160 80 Z"
-        fill="url(#cab-body)"
-      />
-      {/* Window */}
-      <path
-        d="M 164 40 L 186 40 L 193 52 L 164 52 Z"
-        fill="#60A5FA"
-        opacity="0.85"
-      />
-      {/* Bumper / headlight */}
-      <rect x="194" y="66" width="6" height="8" rx="1" fill="#FBBF24" />
-    </g>
+  const [positions] = useState(() => {
+    const rng = () => 5 + Math.random() * 80;
+    return Array.from({ length: 4 }, () => ({
+      top: `${rng()}%`,
+      left: `${rng()}%`,
+    }));
+  });
 
-    {/* Wheels (spin) */}
-    <g className="wheel-spin" style={{ transformOrigin: "58px 86px" }}>
-      <circle cx="58" cy="86" r="11" fill="#111827" />
-      <circle cx="58" cy="86" r="5" fill="#6B7280" />
-      <line x1="58" y1="76" x2="58" y2="96" stroke="#111827" strokeWidth="1.5" />
-      <line x1="48" y1="86" x2="68" y2="86" stroke="#111827" strokeWidth="1.5" />
-    </g>
-    <g className="wheel-spin" style={{ transformOrigin: "178px 86px" }}>
-      <circle cx="178" cy="86" r="11" fill="#111827" />
-      <circle cx="178" cy="86" r="5" fill="#6B7280" />
-      <line x1="178" y1="76" x2="178" y2="96" stroke="#111827" strokeWidth="1.5" />
-      <line x1="168" y1="86" x2="188" y2="86" stroke="#111827" strokeWidth="1.5" />
-    </g>
-  </svg>
-);
+  return (
+    <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+      <MapPin className={iconClass} strokeWidth={1.5} style={positions[0]} />
+      <Box className={iconClass} strokeWidth={1.5} style={positions[1]} />
+      <Box className={iconClass} strokeWidth={1.5} style={positions[2]} />
+      <MapPin className={iconClass} strokeWidth={1.5} style={positions[3]} />
+    </div>
+  );
+};
 
-const Dots = () => (
-  <span className="loading-dots inline-flex" aria-hidden="true">
-    <span>.</span>
-    <span>.</span>
-    <span>.</span>
-  </span>
-);
-
+/* ------------------------------------------------------------------ */
+/*  Keyframes                                                         */
+/* ------------------------------------------------------------------ */
 const keyframes = `
-  @keyframes wheel-spin {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-  }
-  @keyframes truck-bob {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-1.5px); }
-  }
-  @keyframes road-scroll {
-    from { stroke-dashoffset: 0; }
-    to   { stroke-dashoffset: -32; }
-  }
-  @keyframes loading-dot {
-    0%, 20%   { opacity: 0.2; }
-    50%       { opacity: 1; }
-    80%, 100% { opacity: 0.2; }
-  }
   @keyframes loading-fade-in {
     from { opacity: 0; }
     to   { opacity: 1; }
   }
-  .truck-bob { animation: truck-bob 0.8s ease-in-out infinite; }
-  .wheel-spin { animation: wheel-spin 0.6s linear infinite; transform-box: fill-box; }
-  .road-line { animation: road-scroll 0.8s linear infinite; }
-  .loading-dots > span {
-    animation: loading-dot 1.4s ease-in-out infinite;
+  @keyframes dot-spinner-rotate {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
   }
-  .loading-dots > span:nth-child(2) { animation-delay: 0.2s; }
-  .loading-dots > span:nth-child(3) { animation-delay: 0.4s; }
-  .loading-fade-in { animation: loading-fade-in 0.2s ease-out; }
+  .loading-fade-in { animation: loading-fade-in 0.25s ease-out; }
+  .dot-spinner { animation: dot-spinner-rotate 0.9s steps(8) infinite; }
 
   @media (prefers-reduced-motion: reduce) {
-    .truck-bob, .wheel-spin, .road-line, .loading-dots > span {
+    .loading-fade-in,
+    .dot-spinner {
       animation: none;
     }
   }
 `;
 
+/* ------------------------------------------------------------------ */
+/*  Component                                                         */
+/* ------------------------------------------------------------------ */
 export default function LoadingScreen({
   isLoading = true,
   variant = "fullscreen",
-  label = "Loading",
+  label = "Preparing",
   className,
 }: LoadingScreenProps) {
   if (!isLoading) return null;
@@ -188,25 +103,52 @@ export default function LoadingScreen({
         role="status"
         aria-live="polite"
         aria-busy="true"
-        aria-label={label}
+        aria-label={`${label}...`}
         className={cn(
-          "loading-fade-in flex flex-col items-center justify-center gap-5",
+          "loading-fade-in relative flex flex-col items-center justify-center overflow-hidden",
           isFullscreen
-            ? "fixed inset-0 z-50 bg-[#0a1530]"
-            : "w-full h-full min-h-[160px] bg-background/80 backdrop-blur-sm rounded-lg border border-border",
+            ? "fixed inset-0 z-50 gap-5 px-6"
+            : "h-full w-full min-h-[200px] gap-4 rounded-lg border border-border px-4 py-6 backdrop-blur-sm",
           className
         )}
+        style={{
+          background: isFullscreen
+            ? BG
+            : `color-mix(in srgb, ${BG} 92%, transparent)`,
+        }}
       >
-        <TruckAnimation />
+        <DecorativeIcons compact={!isFullscreen} />
+
+        <img
+          src="/svgs/truck.png"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          className={cn(
+            "relative z-10 h-auto select-none",
+            isFullscreen
+              ? "w-[min(100%,28rem)] sm:w-[min(100%,34rem)]"
+              : "w-[min(100%,16rem)]"
+          )}
+        />
+
         <div
           className={cn(
-            "text-sm font-medium tracking-wide",
-            isFullscreen ? "text-white/90" : "text-foreground"
+            "relative z-10 flex flex-col items-center",
+            isFullscreen ? "gap-4" : "gap-3"
           )}
-          style={{ fontFamily: "'Inter', sans-serif" }}
         >
-          {label}
-          <Dots />
+          <p
+            className={cn(
+              "font-medium tracking-wide text-white",
+              isFullscreen ? "text-sm sm:text-base" : "text-sm"
+            )}
+            style={{ fontFamily: "var(--font-sans)" }}
+          >
+            {label}
+            <span aria-hidden="true">...</span>
+          </p>
+          <DotSpinner />
         </div>
       </div>
     </>
