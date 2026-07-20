@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/popover";
 import { DimensionBox } from "./DimensionBox";
 import { calcTotal, fmt } from "./utils";
+import { EMPTY } from "@/lib/format";
 import type { FieldError, LineItem, Mode } from "./types";
 import { Field } from "./Field";
 import type { PartNumOption } from "@/lib/partNumApi";
@@ -108,16 +109,15 @@ export function LineCard({
   }, [computePosFor, hovered, partNumOpen]);
 
   return (
-    <div className="rounded-lg border border-[#c8d4e5] bg-white overflow-hidden">
-      {/* Card header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#c8d4e5] bg-[#f4f7fb]">
+    <div className="rounded-lg border border-border bg-card overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/30">
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center text-xs font-bold text-white bg-[#0052CC] font-mono py-1 px-2 rounded-[4px]">
+          <div className="flex items-center justify-center text-xs font-bold text-primary-foreground bg-primary-light font-mono py-1 px-2 rounded">
             Line Item # {index + 1}
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="inline-flex h-6 items-center gap-1 rounded-full border border-[#7fe7ff] bg-[#e9fbff] px-2.5 text-xs font-semibold text-[#0b6f8b]">
+          <span className="inline-flex h-6 items-center gap-1 rounded-full border border-primary/20 bg-accent px-2.5 text-xs font-semibold text-primary">
             <ModeIcon size={12} />
             {mode}
           </span>
@@ -152,7 +152,7 @@ export function LineCard({
               <button
                 type="button"
                 aria-invalid={!!errors.partNum}
-                className="cursor-pointer h-9 w-full flex items-center justify-between rounded-[4px] border border-[#c8d4e5] bg-white px-3 font-mono text-sm text-foreground outline-none transition-colors focus-visible:border-[#075bd8] aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20"
+                className="cursor-pointer h-9 w-full flex items-center justify-between rounded border border-border bg-card px-3 font-mono text-sm text-foreground outline-none transition-colors focus-visible:border-primary aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20"
               >
                 {item.partNum || (
                   <span className="text-muted-foreground opacity-70">
@@ -227,7 +227,7 @@ export function LineCard({
             onChange={(e) => onChange({ orderLine: e.target.value })}
             placeholder="1"
             aria-invalid={!!errors.orderLine}
-            className="h-9 rounded-[4px] border-[#c8d4e5] bg-white font-mono placeholder:opacity-70"
+            className="h-9 font-mono"
           />
         </Field>
 
@@ -239,7 +239,7 @@ export function LineCard({
             placeholder="0"
             min={1}
             aria-invalid={!!errors.sellingQuantity}
-            className="h-9 rounded-[4px] border-[#c8d4e5] bg-white font-mono placeholder:opacity-70"
+            className="h-9 font-mono"
           />
         </Field>
 
@@ -252,13 +252,13 @@ export function LineCard({
             min={0}
             step="0.01"
             aria-invalid={!!errors.unitPrice}
-            className="h-9 rounded-[4px] border-[#c8d4e5] bg-white font-mono placeholder:opacity-70"
+            className="h-9 font-mono"
           />
         </Field>
 
         <Field label="Total (auto)">
-          <div className="h-9 px-3 flex items-center rounded-[4px] text-sm font-bold bg-[#d9eaff] text-[#075bd8] border border-[#9bc7ff] font-mono">
-            {total > 0 ? fmt(total) : "—"}
+          <div className="h-9 px-3 flex items-center rounded text-sm font-bold bg-accent text-primary-light border border-primary/20 font-mono">
+            {total > 0 ? fmt(total) : EMPTY}
           </div>
         </Field>
       </div>

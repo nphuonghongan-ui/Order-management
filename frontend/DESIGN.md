@@ -48,6 +48,8 @@ colors:
   background: '#f8f9fb'
   on-background: '#191c1e'
   surface-variant: '#e1e2e4'
+  nav-accent: '#ea580c'
+  on-nav-accent: '#ffffff'
 typography:
   headline-lg:
     fontFamily: Inter
@@ -117,6 +119,7 @@ The palette is anchored in **Corporate Blue** and **Slate Greys** to establish a
 - **Neutrals:** A range of cool-toned greys (Slate) is used for borders, backgrounds, and text hierarchy.
   - **`slate` `#64748B` (`215 16% 47%`)** — neutral muted text tone. Use for icon accents, footer metadata, sub-table column headers, and empty-state copy where a slightly lighter, less blue-leaning tone reads better than `--muted-foreground` (`#434654`). Dark-mode mirror: `215 14% 65%`. Exposed as `text-slate`, `bg-slate`, `border-slate`, etc.
 - **Functional Status:** These colors are reserved strictly for data-driven statuses (Shipped, Pending, Issue). They utilize high-saturation tones to ensure they catch the eye immediately within dense data tables.
+- **Nav Accent (Orange):** A scoped secondary accent used **exclusively for nav hover/active feedback** (the 2px underline under active or hovered nav links). Do not use for primary CTAs, status indicators, or any other component. Hex `#ea580c` (HSL `21 90% 48%`); dark-mode mirror `#ea580c` at 55% lightness. Exposed as `text-nav-accent` and `border-nav-accent` via `tailwind.config.js`.
 
 ## Typography
 

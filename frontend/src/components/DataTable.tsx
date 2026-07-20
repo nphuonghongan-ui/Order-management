@@ -14,6 +14,7 @@ export interface Column<T> {
   label: string;
   align?: "left" | "right";
   mono?: boolean;
+  width?: string;
   sortable?: boolean;
   nullsSort?: "always-end" | "direction-aware";
   sortValue?: (row: T) => string | number | null | undefined;
@@ -97,7 +98,8 @@ export default function DataTable<T extends { _id: string }>({
                 className={cn(
                   "text-left font-bold text-xs uppercase tracking-wide py-3 px-4 text-muted-foreground select-none",
                   col.align === "right" && "text-right",
-                  col.sortable !== false && "cursor-pointer hover:text-foreground"
+                  col.sortable !== false && "cursor-pointer hover:text-foreground",
+                  col.width
                 )}
               >
                 <span className="inline-flex items-center">
@@ -132,7 +134,7 @@ export default function DataTable<T extends { _id: string }>({
               </td>
             </tr>
           ) : (
-            sortedData.map((row) => {
+            sortedData.map((row, i) => {
               const isSelected = selectedSet?.has(row._id) ?? false;
               return (
               <tr
@@ -147,7 +149,9 @@ export default function DataTable<T extends { _id: string }>({
                   onContextMenu && "context-menu",
                   isSelected
                     ? "bg-primary/10"
-                    : "hover:bg-muted/50",
+                    : i % 2 === 1
+                      ? "bg-muted/20"
+                      : "hover:bg-muted/50",
                   rowClassName?.(row)
                 )}
               >
@@ -157,7 +161,8 @@ export default function DataTable<T extends { _id: string }>({
                     className={cn(
                       "py-3 px-4 text-foreground",
                       col.align === "right" && "text-right",
-                      col.mono && "font-mono text-xs"
+                      col.mono && "font-mono text-xs",
+                      col.width
                     )}
                   >
                     {col.render ? col.render(row) : String(row[col.key as keyof T] ?? "")}

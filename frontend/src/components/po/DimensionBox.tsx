@@ -101,9 +101,9 @@ export function DimensionBox({ length, width, height }: DimensionBoxProps) {
         </div>
       </div>
       <div className="text-[10px] font-mono text-muted-foreground leading-tight text-center">
-        <span className="text-[#3f7fcf]">x</span> {length} ·{" "}
-        <span className="text-[#3f7fcf]">y</span> {width} ·{" "}
-        <span className="text-[#3f7fcf]">z</span> {height}
+        <span className="text-primary-light">x</span> {length} ·{" "}
+        <span className="text-primary-light">y</span> {width} ·{" "}
+        <span className="text-primary-light">z</span> {height}
       </div>
     </div>
   );

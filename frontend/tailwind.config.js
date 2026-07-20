@@ -32,6 +32,8 @@ module.exports = {
           variant: "hsl(var(--outline-variant))",
         },
         slate: "hsl(var(--slate))",
+        "nav-accent": "hsl(21 90% 48%)",
+        "on-nav-accent": "hsl(0 0% 100%)",
         background: {
           DEFAULT: "hsl(var(--background))",
           secondary: "hsl(var(--background-secondary))",

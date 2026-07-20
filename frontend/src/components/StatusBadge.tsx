@@ -6,11 +6,11 @@ const statusVariants = cva(
   {
     variants: {
       variant: {
-        success: "bg-green-100 text-green-800",
-        warning: "bg-amber-100 text-amber-800",
-        error: "bg-red-100 text-red-800",
-        info: "bg-blue-100 text-blue-800",
-        neutral: "bg-slate-100 text-slate-700",
+        success: "bg-success-container text-success-foreground-dark",
+        warning: "bg-warning-container text-warning-foreground-dark",
+        error: "bg-destructive-container text-destructive",
+        info: "bg-info-container text-info-foreground-dark",
+        neutral: "bg-muted text-muted-foreground",
       },
     },
     defaultVariants: { variant: "neutral" },

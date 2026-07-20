@@ -266,7 +266,7 @@ export default function ProductionSchedule() {
     }
     if (Object.keys(newErrors).length > 0) {
       toast.error(
-        `${Object.keys(newErrors).length} update(s) failed — see row indicators`
+        `${Object.keys(newErrors).length} update(s) failed. See row indicators.`
       );
     }
 
@@ -620,7 +620,7 @@ export default function ProductionSchedule() {
                 />
                 <span className="text-xs text-amber-700">
                   {unsetQty} item{unsetQty !== 1 ? "s" : ""} still need Qty per
-                  Container. You can still save — set it later or leave as 0.
+                  Container. You can still save. Set it later or leave as 0.
                 </span>
               </div>
             ) : null;

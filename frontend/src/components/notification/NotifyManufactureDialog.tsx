@@ -165,7 +165,7 @@ export function NotifyManufactureDialog({
         <DialogHeader>
           <DialogTitle>
             {isQtyMismatch
-              ? "Notify Manufacture — Qty per Cont"
+              ? "Notify Manufacture: Qty per Cont"
               : "Notify Manufacture"}
           </DialogTitle>
           <DialogDescription>

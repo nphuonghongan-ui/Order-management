@@ -1,11 +1,42 @@
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { ArrowRight, Tag, Sparkles, X } from "lucide-react";
+import { ArrowRight, Box, Container, Globe, Truck, Warehouse } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import Logo from "@/components/Logo";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import StatusBadge from "@/components/StatusBadge";
+import { cn } from "@/lib/utils";
 
-const sansFont = { fontFamily: "'Inter', sans-serif" };
-const monoFont = { fontFamily: "'JetBrains Mono', monospace" };
+const TRUSTED_LOGOS = [
+  { name: "Maersk", slug: "maersk" },
+  { name: "DHL", slug: "dhl" },
+  { name: "Flexport", slug: "flexport" },
+  { name: "FedEx", slug: "fedex" },
+  { name: "Kuehne+Nagel", slug: "kuehnenagel" },
+  { name: "DSV", slug: "dsv" },
+  { name: "DB Schenker", slug: "dbschenker" },
+  { name: "UPS", slug: "ups" },
+];
+
+const SAMPLE_ROWS = [
+  { sku: "AX-1042", qty: 240, container: "MAEU 3041872", status: "shipped" },
+  { sku: "AX-2218", qty: 96, container: "TCLU 8810445", status: "submitted" },
+  { sku: "AX-3371", qty: 512, container: "MSCU 7209118", status: "pending" },
+] as const;
+
+const EASE = [0.16, 1, 0.3, 1] as const;
+
+const LinkedInIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+  </svg>
+);
 
 const scrollWheelKeyframes = `
   @keyframes scroll-wheel {
@@ -18,47 +49,6 @@ const scrollWheelKeyframes = `
     animation: scroll-wheel 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
   }
 `;
-
-const Chip = ({ label }: { label: string }) => (
-  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 text-sm text-gray-700 shadow-sm">
-    <X size={14} className="text-red-500" />
-    {label}
-  </span>
-);
-
-const SolutionCard = ({
-  title,
-  description,
-  image,
-  alt,
-}: {
-  title: string;
-  description: string;
-  image: string;
-  alt: string;
-}) => (
-  <div className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm flex flex-col">
-    <div className="p-6">
-      <h3
-        className="text-base sm:text-lg font-semibold"
-        style={{ color: "#0D1F3C" }}
-      >
-        {title}
-      </h3>
-      <p
-        className="mt-2 text-sm"
-        style={{ color: "#6B7280", lineHeight: 1.6 }}
-      >
-        {description}
-      </p>
-    </div>
-    <img
-      src={image}
-      alt={alt}
-      className="w-full h-52 md:h-56 object-cover mt-auto"
-    />
-  </div>
-);
 
 const FooterColumn = ({
   title,
@@ -90,42 +80,296 @@ const FooterColumn = ({
   </div>
 );
 
-const LinkedInIcon = ({ size = 16 }: { size?: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    aria-hidden="true"
-  >
-    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-  </svg>
-);
+function Reveal({
+  children,
+  delay = 0,
+  className,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  className?: string;
+}) {
+  const reduce = useReducedMotion();
+  return (
+    <motion.div
+      className={className}
+      initial={reduce ? false : { opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.5, delay, ease: EASE }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
-export default function App() {
-  const navigate = useNavigate();
-  const [loaded, setLoaded] = useState(false);
-  const reduceMotion = useReducedMotion();
+function AnimatedWord({ text, className }: { text: string; className?: string }) {
+  const reduce = useReducedMotion();
+  return (
+    <motion.span
+      className={cn("inline-block whitespace-nowrap", className)}
+      aria-label={text}
+      style={{
+        backgroundImage:
+          "linear-gradient(90deg, #93C5FD 0%, #60A5FA 50%, #93C5FD 100%)",
+        backgroundSize: "200% 100%",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+        backgroundClip: "text",
+      }}
+      animate={reduce ? undefined : { backgroundPositionX: ["0%", "200%"] }}
+      transition={
+        reduce
+          ? undefined
+          : { duration: 4, repeat: Infinity, ease: "linear" }
+      }
+    >
+      {text.split("").map((char, i) => (
+        <span key={i} aria-hidden="true" className="inline-block">
+          {char === " " ? "\u00A0" : char}
+        </span>
+      ))}
+    </motion.span>
+  );
+}
 
-  useEffect(() => {
-    const t = setTimeout(() => setLoaded(true), 120);
-    return () => clearTimeout(t);
-  }, []);
+function LogoMarquee() {
+  const reduce = useReducedMotion();
+  const items = [...TRUSTED_LOGOS, ...TRUSTED_LOGOS];
 
   return (
-    <div className="relative bg-black" style={sansFont}>
+    <div
+      aria-label="Trusted by global freight operators"
+      className="relative overflow-hidden border-y border-border bg-surface-container-low"
+    >
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-surface-container-low to-transparent z-10"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-surface-container-low to-transparent z-10"
+        aria-hidden="true"
+      />
+      <motion.div
+        className="flex w-max items-center gap-14 py-6 px-6"
+        animate={reduce ? undefined : { x: ["0%", "-50%"] }}
+        transition={
+          reduce
+            ? undefined
+            : { duration: 32, repeat: Infinity, ease: "linear" }
+        }
+        aria-hidden="true"
+      >
+        {items.map((logo, i) => (
+          <div
+            key={`${logo.slug}-${i}`}
+            className="flex items-center gap-2 text-slate"
+            title={logo.name}
+          >
+            <img
+              src={`https://cdn.simpleicons.org/${logo.slug}`}
+              alt={logo.name}
+              className="h-5 w-5 opacity-60 grayscale"
+              loading="lazy"
+            />
+            <span className="font-mono text-xs uppercase tracking-[0.18em]">
+              {logo.name}
+            </span>
+          </div>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+function HeroPreviewCard() {
+  return (
+    <Card className="w-full ring-1 ring-foreground/10 shadow-overlay">
+      <div className="flex items-center justify-between px-4 pt-1">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
+            Packing list
+          </p>
+          <p className="mt-1 font-heading text-sm font-medium text-card-foreground">
+            PL-2026-0381
+          </p>
+        </div>
+        <StatusBadge status="active" />
+      </div>
+      <div className="mt-3 divide-y divide-border border-y border-border">
+        {SAMPLE_ROWS.map((row) => (
+          <div
+            key={row.sku}
+            className="grid grid-cols-12 items-center gap-2 px-4 py-2.5 text-xs"
+          >
+            <span className="col-span-4 font-mono text-foreground">
+              {row.sku}
+            </span>
+            <span className="col-span-2 text-right font-mono text-slate">
+              {row.qty}
+            </span>
+            <span className="col-span-4 truncate font-mono text-slate">
+              {row.container}
+            </span>
+            <span className="col-span-2 flex justify-end">
+              <StatusBadge status={row.status} />
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center justify-between px-4 pb-1 pt-3">
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
+          3 of 14 lines
+        </span>
+        <span className="font-mono text-[10px] text-slate">
+          synced 2s ago
+        </span>
+      </div>
+    </Card>
+  );
+}
+
+function BentoCell({
+  className,
+  children,
+  tone = "default",
+}: {
+  className?: string;
+  children: React.ReactNode;
+  tone?: "default" | "tint" | "accent";
+}) {
+  return (
+    <div
+      className={cn(
+        "relative flex flex-col justify-between overflow-hidden rounded-xl p-6 ring-1 ring-foreground/10 min-h-[220px]",
+        tone === "default" && "bg-card",
+        tone === "tint" && "bg-primary-fixed/60",
+        tone === "accent" && "bg-accent",
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+function StatNumber({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="font-mono text-3xl md:text-4xl text-foreground tracking-tight">
+        {value}
+      </span>
+      <span className="text-xs text-slate">{label}</span>
+    </div>
+  );
+}
+
+function HexGrid() {
+  return (
+    <svg
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
+      style={{ opacity: 0.6 }}
+    >
+      <defs>
+        <pattern
+          id="hexgrid"
+          width="28"
+          height="49"
+          patternUnits="userSpaceOnUse"
+        >
+          <path
+            d="M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z"
+            fill="white"
+            fillOpacity="0.12"
+          />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#hexgrid)" />
+    </svg>
+  );
+}
+
+export default function LandingPage() {
+  const navigate = useNavigate();
+  const goToLogin = () => navigate("/login");
+
+  return (
+    <div className="bg-background text-foreground">
       {/* ══════════════════════════════════════════════════
-          HERO SECTION
+          0. TOP NAV — sticky glossy glass pill
       ══════════════════════════════════════════════════ */}
-      <div className="relative min-h-screen overflow-hidden">
-        {/* ── VIDEO BACKGROUND ──────────────────────────── */}
+      <header className="fixed top-2 inset-x-0 z-50 flex justify-center px-4 lg:px-12 pt-3 pb-3">
+        <div
+          className="glass-nav flex w-full max-w-3xl items-center justify-between gap-2 rounded-full border border-white/45 px-4 py-2 ring-1 ring-white/20 sm:px-5 sm:py-2.5"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.62) 50%, rgba(255,255,255,0.72) 100%)",
+            backdropFilter: "blur(24px) saturate(180%)",
+            WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            boxShadow:
+              "0 10px 32px rgba(9, 30, 66, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -1px 0 rgba(0, 0, 0, 0.06)",
+          }}
+        >
+          <a href="#top" className="flex items-center gap-2 shrink-0" aria-label="AxonLog home">
+            <Logo variant="dark" />
+          </a>
+
+          <nav
+            aria-label="Primary"
+            className="hidden md:flex items-center gap-7 text-sm text-foreground"
+          >
+            <a
+              href="#top"
+              className="relative pb-1 border-b-2 border-transparent transition-colors duration-200 ease-in hover:text-foreground hover:border-nav-accent"
+            >
+              Home
+            </a>
+            <a
+              href="#about"
+              className="relative pb-1 border-b-2 border-transparent transition-colors duration-200 ease-in hover:text-foreground hover:border-nav-accent"
+            >
+              About Us
+            </a>
+            <a
+              href="#solutions"
+              className="relative pb-1 border-b-2 border-transparent transition-colors duration-200 ease-in hover:text-foreground hover:border-nav-accent"
+            >
+              Services
+            </a>
+            <a
+              href="#solutions"
+              className="relative pb-1 border-b-2 border-transparent transition-colors duration-200 ease-in hover:text-foreground hover:border-nav-accent"
+            >
+              Pricing
+            </a>
+          </nav>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              size="default"
+              onClick={goToLogin}
+              className="h-10 px-5 text-sm rounded-full cursor-pointer"
+            >
+              Book a demo
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* ══════════════════════════════════════════════════
+          1. HERO — full-bleed video, dark overlay, floating cards
+      ══════════════════════════════════════════════════ */}
+      <section id="top" className="relative min-h-[90dvh] overflow-hidden">
+        {/* Video background — logistics footage */}
         <video
           className="absolute inset-0 w-full h-full object-cover"
           autoPlay
           muted
           loop
           playsInline
-          style={{ opacity: 0.55 }}
+          style={{ opacity: 0.95 }}
         >
           {/* Container port aerial / logistics footage */}
           <source
@@ -139,9 +383,10 @@ export default function App() {
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(to bottom, rgba(4,9,22,0.55) 0%, rgba(4,9,22,0.42) 40%, rgba(4,9,22,0.72) 100%)",
+              "linear-gradient(to bottom, rgba(4,9,22,0.6) 10%, rgba(4,9,22,0.65) 35%, rgba(4,9,22,0.75) 100%)",
           }}
         />
+
         {/* Subtle vignette edges */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -150,28 +395,15 @@ export default function App() {
           }}
         />
 
-        {/* ── TOP BAR ───────────────────────────────────── */}
-        <header className="absolute top-0 inset-x-0 z-20 flex items-center justify-between px-8 lg:px-12 py-6">
-          <Logo variant="light" />
-        </header>
-
-        {/* ── CENTERED HERO CONTENT ─────────────────────── */}
-        <main className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 text-center">
-          <div
-            className="flex flex-col items-center transition-all duration-700"
-            style={{
-              opacity: loaded ? 1 : 0,
-              transform: loaded ? "none" : "translateY(20px)",
-            }}
-          >
-            {/* Eyebrow tag */}
+        {/* Main content — anchored to bottom, centered */}
+        <main className="relative z-10 min-h-[75dvh] flex flex-col justify-end pb-12 md:pb-20">
+          <div className="mx-auto w-full max-w-3xl  text-center">
             <div
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-8"
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-8 font-mono"
               style={{
                 background: "rgba(0,82,204,0.28)",
                 border: "1px solid rgba(0,82,204,0.5)",
                 color: "#93C5FD",
-                ...monoFont,
               }}
             >
               <span
@@ -180,101 +412,39 @@ export default function App() {
               />
               Global logistics platform
             </div>
-
-            {/* Title */}
             <h1
-              className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6"
+              className="mt-5 font-heading text-4xl font-semibold text-white sm:text-5xl lg:text-6xl"
               style={{
-                letterSpacing: "-0.035em",
-                lineHeight: 1.08,
-                maxWidth: "14ch",
+                letterSpacing: "-0.03em",
+                lineHeight: 1.05,
               }}
             >
-              A <motion.span
-                style={{
-                  background:
-                    "linear-gradient(90deg, #60A5FA 0%, #C7D2FE 50%, #818CF8 100%)",
-                  backgroundSize: "200% 100%",
-                  backgroundPositionX: "0%",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  display: "inline-block",
-                }}
-                animate={{
-                  backgroundPositionX: reduceMotion ? "0%" : "200%",
-                  y: [0, -12, 0],
-                }}
-                transition={{
-                  backgroundPositionX: {
-                    duration: 1.8,
-                    ease: "linear",
-                    repeat: Infinity,
-                  },
-                  y: {
-                    duration: 1.2,
-                    ease: "easeInOut",
-                    repeat: Infinity,
-                  },
-                }}
-              >
-                packing list
-              </motion.span> transformation solution.
+              A <AnimatedWord text="Packing List" className="text-white" /> transformation solution
             </h1>
+            <Reveal delay={0.1}>
+              <p
+                className="mt-5 text-base text-white text-center"
+                style={{ lineHeight: 1.65, hyphens: "auto" }}
+              >
+                End-to-end freight visibility from origin to door — ocean, air, road, and customs in one platform.
+              </p>
+            </Reveal>
+            <Reveal delay={0.15}>
+              <div className="mt-8 flex flex-col flex-wrap items-center justify-center gap-3">
+                <Button
+                  size="lg"
+                  onClick={goToLogin}
+                  className="h-11 px-5 text-sm bg-white text-primary-light hover:bg-white/90 hover:text-primary cursor-pointer"
+                >
+                  Get started
+                  <ArrowRight />
+                </Button>
 
-            {/* Description */}
-            <p
-              className="text-base sm:text-lg mb-10"
-              style={{
-                color: "rgba(255,255,255,0.58)",
-                maxWidth: "34ch",
-                lineHeight: 1.65,
-              }}
-            >
-              End-to-end freight visibility from origin to door —
-              ocean, air, road, and customs in one platform.
-            </p>
-
-            {/* CTA */}
-            <button
-              onClick={() => navigate("/login")}
-              className="inline-flex items-center gap-2.5 text-sm font-semibold px-8 py-3.5 text-white transition-all"
-              style={{
-                background: "#0052CC",
-                borderRadius: "5px",
-                letterSpacing: "0.01em",
-              }}
-              onMouseEnter={(e) => {
-                (
-                  e.currentTarget as HTMLElement
-                ).style.background = "#003B9A";
-                (e.currentTarget as HTMLElement).style.transform =
-                  "translateY(-1px)";
-                (e.currentTarget as HTMLElement).style.boxShadow =
-                  "0 8px 24px rgba(0,82,204,0.45)";
-              }}
-              onMouseLeave={(e) => {
-                (
-                  e.currentTarget as HTMLElement
-                ).style.background = "#0052CC";
-                (e.currentTarget as HTMLElement).style.transform =
-                  "none";
-                (e.currentTarget as HTMLElement).style.boxShadow =
-                  "none";
-              }}
-            >
-              Opt in <ArrowRight size={15} />
-            </button>
-
-            {/* Trust note */}
-            <p
-              className="mt-5 text-xs"
-              style={{
-                color: "rgba(255,255,255,0.3)",
-                ...monoFont,
-              }}
-            >
-              No credit card required · Cancel anytime
-            </p>
+                <span className="font-mono text-xs text-white/50 mt-2">
+                  No credit card required · Cancel anytime
+                </span>
+              </div>
+            </Reveal>
           </div>
         </main>
 
@@ -284,12 +454,6 @@ export default function App() {
           className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 pointer-events-none"
           aria-hidden="true"
         >
-          <span
-            className="text-[10px] font-medium tracking-[0.2em] uppercase"
-            style={{ ...monoFont, color: "rgba(255,255,255,0.55)" }}
-          >
-            Scroll
-          </span>
           <div className="w-6 h-10 rounded-full border-2 border-white/30 flex flex-col items-center pt-2 gap-0.5">
             {/* The scroll wheel — a thin horizontal bar in the middle */}
             <span className="block w-2 h-0.5 rounded-full bg-white/50" />
@@ -297,222 +461,370 @@ export default function App() {
             <span className="block w-1 h-1.5 rounded-full bg-white/80 animate-scroll-wheel" />
           </div>
         </div>
-      </div>
-      
+      </section>
+
       {/* ══════════════════════════════════════════════════
-          PROBLEM SECTION
+          2. TRUSTED-BY LOGO WALL — single marquee
       ══════════════════════════════════════════════════ */}
-      <section className="bg-white py-20 md:py-24">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col items-center">
-          {/* Pill */}
-          <span className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-            What's the problem?
-          </span>
+      <LogoMarquee />
 
-          {/* Heading */}
-          <h2
-            className="mt-6 text-3xl sm:text-4xl md:text-5xl font-bold text-center"
-            style={{
-              color: "#0D1F3C",
-              letterSpacing: "-0.025em",
-              lineHeight: 1.1,
-            }}
-          >
-            Manual workflows cause
-            <br />
-            <span style={{ color: "#0052CC" }}>delays and errors</span>
-          </h2>
-
-          {/* Image cards */}
-          <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-            <div className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
-              <img
-                src="/assets/warehouse-1.png"
-                alt="Warehouse disorganized shelves"
-                className="w-full h-64 md:h-72 object-cover"
-              />
-              <div className="p-5 flex items-center gap-3">
-                <span className="w-9 h-9 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center">
-                  <Tag size={16} />
-                </span>
-                <span
-                  className="text-sm sm:text-base font-semibold"
-                  style={{ color: "#0D1F3C" }}
-                >
-                  Inaccurate Order Fulfillment
-                </span>
-              </div>
-            </div>
-
-            <div className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
-              <img
-                src="/assets/warehouse-2.png"
-                alt="Worker scanning inventory"
-                className="w-full h-64 md:h-72 object-cover"
-              />
-              <div className="p-5 flex items-center gap-3">
-                <span className="w-9 h-9 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
-                  <Sparkles size={16} />
-                </span>
-                <span
-                  className="text-sm sm:text-base font-semibold"
-                  style={{ color: "#0D1F3C" }}
-                >
-                  Lack of Real-Time Visibility
-                </span>
-              </div>
+      {/* ══════════════════════════════════════════════════
+          3. ABOUT — short editorial block + inline stat tiles
+      ══════════════════════════════════════════════════ */}
+      <section id="about" className="border-b border-border">
+        <div className="mx-auto max-w-7xl px-6 py-20 md:py-28">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
+            <Reveal className="lg:col-span-5">
+              <h2
+                className="font-heading text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl"
+                style={{ letterSpacing: "-0.025em", lineHeight: 1.1 }}
+              >
+                Built for freight that has to move.
+              </h2>
+            </Reveal>
+            <div className="lg:col-span-7 space-y-5 text-base text-foreground-muted md:text-lg">
+              <Reveal delay={0.05}>
+                <p style={{ lineHeight: 1.7 }}>
+                  AxonLog is a logistics platform for sales, manufacturing, and
+                  the loading floor. We replace re-keyed spreadsheets with one
+                  source of truth for every order, packing list, and container.
+                </p>
+              </Reveal>
+              <Reveal delay={0.1}>
+                <p style={{ lineHeight: 1.7 }}>
+                  Our operators run bonded and free-trade-zone warehouses,
+                  coordinate carrier moves through key ports, and audit every
+                  line item from pick to door.
+                </p>
+              </Reveal>
             </div>
           </div>
 
-          {/* Chip cluster (1-2-3 stagger) */}
-          <div className="mt-16 flex flex-col items-center gap-3">
-            {/* row 1 — 1 chip */}
-            <div className="flex justify-center gap-3 flex-wrap">
-              <Chip label="Inefficiency in Processes" />
-            </div>
+          <Reveal delay={0.15}>
+            <dl className="mt-14 grid grid-cols-2 gap-x-8 gap-y-10 border-t border-border pt-10 md:grid-cols-3">
+              <div>
+                <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
+                  Headquartered
+                </dt>
+                <dd className="mt-2 text-base text-foreground">
+                  Manchester, Kentucky
+                </dd>
+              </div>
+              <div>
+                <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
+                  Coverage
+                </dt>
+                <dd className="mt-2 text-base text-foreground">
+                  180+ countries
+                </dd>
+              </div>
+              <div>
+                <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
+                  Carrier network
+                </dt>
+                <dd className="mt-2 text-base text-foreground">
+                  2,500+ trucks
+                </dd>
+              </div>
+            </dl>
+          </Reveal>
+        </div>
+      </section>
 
-            {/* row 2 — 2 chips */}
-            <div className="flex justify-center gap-3 flex-wrap">
-              <Chip label="Human Errors" />
-              <Chip label="Missed Deadlines" />
+      {/* ══════════════════════════════════════════════════
+          4. SOLUTIONS — bento grid (4 cells, asymmetric)
+      ══════════════════════════════════════════════════ */}
+      <section id="solutions" className="bg-surface-container-low">
+        <div className="mx-auto max-w-7xl px-6 py-20 md:py-28">
+          <Reveal>
+            <div className="max-w-2xl">
+              <h2
+                className="font-heading text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl"
+                style={{ letterSpacing: "-0.025em", lineHeight: 1.1 }}
+              >
+                One platform, every stage of the load.
+              </h2>
+              <p
+                className="mt-4 max-w-prose text-base text-foreground-muted"
+                style={{ lineHeight: 1.6 }}
+              >
+                Sales, manufacturing, and the loading floor work from the same
+                source of truth.
+              </p>
             </div>
+          </Reveal>
 
-            {/* row 3 — 3 chips */}
-            <div className="flex justify-center gap-3 flex-wrap">
-              <Chip label="Lack of Transparency" />
-              <Chip label="Difficulty in Scaling" />
-              <Chip label="Inconsistent Communication" />
-            </div>
+          <div className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-3">
+            {/* Cell 1 — Fulfillment (col-span-2) with image */}
+            <Reveal className="md:col-span-2" delay={0.05}>
+              <BentoCell className="p-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 h-full">
+                  <div className="flex flex-col justify-between p-6">
+                    <div>
+                      <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary-fixed text-primary">
+                        <Box size={18} />
+                      </div>
+                      <h3 className="mt-5 font-heading text-lg font-semibold text-foreground">
+                        Fulfillment
+                      </h3>
+                      <p
+                        className="mt-2 text-sm text-foreground-muted"
+                        style={{ lineHeight: 1.6 }}
+                      >
+                        Connect sales orders to packing lists, pick lists, and
+                        loading manifests without re-keying a single SKU.
+                      </p>
+                    </div>
+                    <span className="mt-6 font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
+                      Order &rarr; Packing
+                    </span>
+                  </div>
+                  <div className="relative min-h-[200px] overflow-hidden">
+                    <img
+                      src="/assets/solution-1.png"
+                      alt="Organized fulfillment center inventory"
+                      className="absolute inset-0 h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+              </BentoCell>
+            </Reveal>
+
+            {/* Cell 2 — Bonded & FTZ (col-span-1) on tinted bg */}
+            <Reveal className="md:col-span-1" delay={0.1}>
+              <BentoCell tone="tint">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-card text-primary">
+                  <Warehouse size={18} />
+                </div>
+                <div>
+                  <h3 className="font-heading text-lg font-semibold text-foreground">
+                    Bonded &amp; FTZ
+                  </h3>
+                  <p
+                    className="mt-2 text-sm text-foreground-muted"
+                    style={{ lineHeight: 1.6 }}
+                  >
+                    Track duty status, lot numbers, and customs holds alongside
+                    standard inventory.
+                  </p>
+                </div>
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
+                  Customs &middot; Duty
+                </span>
+              </BentoCell>
+            </Reveal>
+
+            {/* Cell 3 — Transportation (col-span-1) on accent bg */}
+            <Reveal className="md:col-span-1" delay={0.15}>
+              <BentoCell tone="accent">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-card text-primary">
+                  <Truck size={18} />
+                </div>
+                <div>
+                  <h3 className="font-heading text-lg font-semibold text-foreground">
+                    Transportation
+                  </h3>
+                  <p
+                    className="mt-2 text-sm text-foreground-muted"
+                    style={{ lineHeight: 1.6 }}
+                  >
+                    Coordinate 2,500+ carrier moves through key ports and
+                    inland hubs in one queue.
+                  </p>
+                </div>
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
+                  Port &rarr; Door
+                </span>
+              </BentoCell>
+            </Reveal>
+
+            {/* Cell 4 — Real-time visibility (col-span-2) with image + stat */}
+            <Reveal className="md:col-span-2" delay={0.2}>
+              <BentoCell className="p-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 h-full">
+                  <div className="relative min-h-[200px] overflow-hidden order-2 sm:order-1">
+                    <img
+                      src="/assets/warehouse-1.png"
+                      alt="Logistics operations floor"
+                      className="absolute inset-0 h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="flex flex-col justify-between p-6 order-1 sm:order-2">
+                    <div>
+                      <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary-fixed text-primary">
+                        <Globe size={18} />
+                      </div>
+                      <h3 className="mt-5 font-heading text-lg font-semibold text-foreground">
+                        Real-time visibility
+                      </h3>
+                      <p
+                        className="mt-2 text-sm text-foreground-muted"
+                        style={{ lineHeight: 1.6 }}
+                      >
+                        Every stage, from pick to port, on one timeline.
+                      </p>
+                    </div>
+                    <div className="mt-6 flex items-baseline gap-3 border-t border-border/60 pt-4">
+                      <span className="font-mono text-2xl text-foreground tracking-tight">
+                        400+
+                      </span>
+                      <span className="text-xs text-slate">
+                        shipments processed this month
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </BentoCell>
+            </Reveal>
           </div>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════
-          SOLUTIONS SECTION
+          5. PRODUCT PREVIEW — split with real Card
       ══════════════════════════════════════════════════ */}
-      <section className="bg-gray-50 py-20 md:py-24">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col items-center">
-          {/* Pill */}
-          <span className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-            Solutions
-          </span>
+      <section className="border-b border-border">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-6 py-20 md:py-28 lg:grid-cols-12 lg:gap-10">
+          <Reveal className="lg:col-span-5">
+            <div className="lg:sticky lg:top-24">
+              <h2
+                className="font-heading text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl"
+                style={{ letterSpacing: "-0.025em", lineHeight: 1.1 }}
+              >
+                Built for the floor. Trusted by ops.
+              </h2>
+              <p
+                className="mt-4 max-w-prose text-base text-foreground-muted"
+                style={{ lineHeight: 1.6 }}
+              >
+                Packing lists, loading manifests, and production schedules on
+                one screen. Roles, statuses, and audit trail included.
+              </p>
+              <ul className="mt-6 space-y-2 text-sm text-foreground-muted">
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  Role-based access for sales, manufacture, and loading
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  Live status across every container
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  Audit trail on every line item
+                </li>
+              </ul>
+            </div>
+          </Reveal>
 
-          {/* Heading */}
-          <h2
-            className="mt-6 text-3xl sm:text-4xl md:text-5xl font-bold text-center"
-            style={{
-              color: "#0D1F3C",
-              letterSpacing: "-0.025em",
-              lineHeight: 1.1,
-            }}
-          >
-            All-in-One Solution
-            <br />
-            for Everyone
-          </h2>
+          <Reveal className="lg:col-span-7" delay={0.1}>
+            <div className="relative">
+              <HeroPreviewCard />
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Card className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-md bg-tertiary-container text-tertiary">
+                      <Container size={18} />
+                    </div>
+                    <div>
+                      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
+                        Containers
+                      </p>
+                      <p className="mt-0.5 font-heading text-base font-medium text-card-foreground">
+                        28 in transit
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+                <Card className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-md bg-success-container text-success">
+                      <Box size={18} />
+                    </div>
+                    <div>
+                      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
+                        Picked today
+                      </p>
+                      <p className="mt-0.5 font-heading text-base font-medium text-card-foreground">
+                        1,847 units
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+              <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
+                Sample data
+              </p>
+            </div>
+          </Reveal>
+        </div>
+      </section>
 
-          {/* Subhead */}
-          <p
-            className="mt-5 text-sm sm:text-base text-center max-w-2xl"
-            style={{ color: "#6B7280", lineHeight: 1.6 }}
-          >
-            Automate repetitive tasks, integrate seamlessly with your tools, and
-            access real-time insights to optimize every step of your process.
+      {/* ══════════════════════════════════════════════════
+          6. STATS STRIP
+      ══════════════════════════════════════════════════ */}
+      <section className="bg-surface-container-low border-b border-border">
+        <div className="mx-auto max-w-7xl px-6 py-14">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+            <StatNumber value="12,400+" label="Shipments this month" />
+            <StatNumber value="180+" label="Countries served" />
+            <StatNumber value="0.4%" label="Manifest error rate" />
+            <StatNumber value="< 2s" label="Average sync time" />
+          </div>
+          <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
+            Sample data
           </p>
-
-          {/* Cards — single row of 3 */}
-          <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-            <SolutionCard
-              title="Fulfillment"
-              description="Tech-driven fulfillment services that streamline the flow from manufacturer to customer, with added benefits like repackaging."
-              image="/assets/solution-1.png"
-              alt="Fulfillment center with organized inventory"
-            />
-            <SolutionCard
-              title="Bonded & FTZ Warehouses"
-              description="Secure storage and cost-saving solutions for import and export activities through bonded and Free Trade Zone (FTZ) warehouses."
-              image="/assets/solution-2.png"
-              alt="Bonded warehouse with customs signage"
-            />
-            <SolutionCard
-              title="Transportation"
-              description="A reliable transportation network with 2,500+ trucks, ensuring fast, efficient deliveries through key ports and logistics hubs."
-              image="/assets/solution-3.png"
-              alt="Highway with freight trucks"
-            />
-          </div>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════
-          CURVED LINE (bridges Solutions → CTA)
-      ══════════════════════════════════════════════════ */}
-      <div className="relative bg-gray-50 pt-16 pb-32">
-        {/* Curved SVG line from testimonial down to the conveyor image */}
-        <svg
-          className="absolute left-0 right-0 bottom-0 w-full h-24 pointer-events-none"
-          viewBox="0 0 1440 100"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M720,0 Q1100,100 1100,80"
-            stroke="#3B82F6"
-            strokeWidth="1.5"
-            fill="none"
-            strokeDasharray="4 4"
-          />
-        </svg>
-      </div>
-
-      {/* ══════════════════════════════════════════════════
-          CTA SECTION
+          7. CTA — single intent, brand-blue block
       ══════════════════════════════════════════════════ */}
       <section
-        className="relative pt-32 pb-20 md:pt-40 md:pb-24"
+        className="relative overflow-hidden"
         style={{
-          background: "linear-gradient(180deg, #3B82F6 0%, #1D4ED8 100%)",
+          background:
+            "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary-container)) 100%)",
         }}
       >
-        {/* Conveyor image — sits on top of the section */}
-        <div className="absolute left-1/2 -top-16 -translate-x-1/2 w-64 h-48 md:w-64 md:h-48 rounded-2xl overflow-hidden shadow-xl z-10">
-          <img
-            src="/assets/cta-conveyor.png"
-            alt="Logistics worker scanning packages on a conveyor belt"
-            className="w-full h-full object-cover"
-          />
-        </div>
+        <HexGrid />
 
-        <div className="relative max-w-3xl mx-auto px-6 text-center pt-18">
-          {/* Heading */}
-          <h2
-            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white"
-            style={{ letterSpacing: "-0.025em", lineHeight: 1.1 }}
-          >
-            Start using AxonLog today.
-          </h2>
-
-          {/* Subhead */}
-          <p
-            className="mt-4 text-sm sm:text-base text-white/80 max-w-xl mx-auto"
-            style={{ lineHeight: 1.6 }}
-          >
-            Automates your repetitive tasks, integrates seamlessly with your existing tools.
-          </p>
-
-          {/* CTA button */}
-          <button
-            onClick={() => navigate("/login")}
-            className="mt-8 inline-flex items-center px-8 py-4 rounded-full bg-white text-sm font-semibold transition-colors hover:bg-gray-100 cursor-pointer"
-            style={{ color: "#1D4ED8" }}
-          >
-            Explore AxonLog
-          </button>
+        <div className="relative mx-auto max-w-2xl px-6 py-24 md:py-32 text-center">
+          <Reveal>
+            <h2
+              className="font-heading text-3xl font-semibold text-primary-foreground sm:text-4xl md:text-5xl"
+              style={{ letterSpacing: "-0.025em", lineHeight: 1.1 }}
+            >
+              Start using AxonLog today.
+            </h2>
+          </Reveal>
+          <Reveal delay={0.05}>
+            <p
+              className="mt-4 text-base text-primary-foreground/80"
+              style={{ lineHeight: 1.6 }}
+            >
+              Set up in under five minutes. No card required.
+            </p>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <div className="mt-8 flex justify-center">
+              <Button
+                size="lg"
+                onClick={goToLogin}
+                className="h-11 px-6 text-sm bg-card text-primary hover:bg-card/90 hover:text-primary"
+              >
+                Get started
+                <ArrowRight />
+              </Button>
+            </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════
-          FOOTER
+          8. FOOTER
       ══════════════════════════════════════════════════ */}
       <footer className="bg-white border-t border-gray-200">
         <div className="max-w-6xl mx-auto px-6 py-16">
