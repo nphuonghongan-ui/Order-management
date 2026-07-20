@@ -17,6 +17,7 @@ import { getPackingList } from "@/lib/packingListApi";
 import { formatPackingListForModel } from "@/components/packing-list/formatPackingListForModel";
 import { getPartNumDimensions } from "@/components/packing-list/exportEnrichment";
 import type { PackingListRecord } from "@/components/packing-list/types";
+import { EMPTY } from "@/lib/format";
 
 async function copyToClipboard(text: string): Promise<void> {
   if (navigator.clipboard?.writeText) {
@@ -139,19 +140,19 @@ export default function LoadingToContainer() {
         </div>
 
         <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <div className="flex items-center justify-between gap-3 px-6 py-5 bg-[#0E1933]">
+          <div className="flex items-center justify-between gap-3 px-6 py-5 bg-dk-bg">
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-white/10 p-2 ring-1 ring-white/20">
                 <Truck size={20} className="text-white" />
               </div>
               <div>
-                <div className="font-mono text-lg font-semibold text-white">
-                  {record?.plNumber ?? plId ?? "—"}
+                <div className="font-mono text-lg font-semibold text-dk-text">
+                  {record?.plNumber ?? plId ?? EMPTY}
                 </div>
               </div>
             </div>
             {record && (
-              <span className="text-[11px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-400/20 text-emerald-200 ring-1 ring-emerald-300/40">
+              <span className="text-[11px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full bg-success/15 text-success">
                 {record.itemsCount} item{record.itemsCount === 1 ? "" : "s"}
               </span>
             )}

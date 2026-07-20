@@ -5,12 +5,10 @@ import {
   AlertCircle,
   Box,
   Check,
-  Circle,
-  CircleDot,
-  Code2,
   Inbox,
   Loader2,
   Play,
+  Plus,
   Save,
   SquarePen,
   Trash2,
@@ -19,25 +17,23 @@ import {
 import ActionToolbar from "@/components/ActionToolbar";
 import DataTable, { type Column } from "@/components/DataTable";
 import { PageShell } from "@/components/PageShell";
+import { SkeletonTable } from "@/components/SkeletonRow";
+import { StatBar } from "@/components/StatBar";
+import { SectionHeader } from "@/components/SectionHeader";
+import { EmptyState } from "@/components/EmptyState";
+import { DirtyChip } from "@/components/DirtyChip";
+import { ConfirmDiscardDialog } from "@/components/ConfirmDiscardDialog";
 import LoadingScreen from "@/components/LoadingScreen";
 import { MetaField } from "@/components/Detail/MetaField";
 import { SectionCard } from "@/components/Detail/SectionCard";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
 import { fmt } from "@/components/po/utils";
 import {
   MODE_ICONS,
@@ -45,6 +41,9 @@ import {
   formatDisplay,
   formatNumber,
 } from "@/components/po/lineItemColumns";
+import { extractErrorMessage } from "@/lib/api";
+import { EMPTY } from "@/lib/format";
+import { useSaveShortcut } from "@/lib/useSaveShortcut";
 import {
   deletePackingList,
   listPackingLists,
@@ -53,12 +52,6 @@ import {
 } from "@/lib/packingListApi";
 import type { PackingListRecord } from "@/components/packing-list/types";
 import { ExportButtons } from "@/components/packing-list/ExportButtons";
-
-const isAxiosError = (
-  e: unknown
-): e is { response?: { data?: { message?: string } }; message: string } => {
-  return typeof e === "object" && e !== null && "message" in e;
-};
 
 function EditableTextField({
   label,
@@ -115,19 +108,8 @@ function EditableTextField({
           label={label}
           value={
             <span className="inline-flex items-center gap-1.5">
-              <span>{value || "—"}</span>
-              {isDirty && (
-                <span
-                  title="Unsaved change"
-                  aria-label="Unsaved change"
-                  className="inline-flex"
-                >
-                  <Circle
-                    size={8}
-                    className="fill-amber-500 text-amber-500"
-                  />
-                </span>
-              )}
+              <span>{value || EMPTY}</span>
+              {isDirty && <DirtyChip variant="dot" />}
             </span>
           }
         />
@@ -241,15 +223,7 @@ function QtyCellInline({
         disabled={max < 1}
         className="h-7 w-16 text-right font-mono text-xs px-1"
       />
-      {isDirty && (
-        <span
-          title="Unsaved change"
-          aria-label="Unsaved change"
-          className="inline-flex"
-        >
-          <Circle size={8} className="fill-amber-500 text-amber-500" />
-        </span>
-      )}
+      {isDirty && <DirtyChip variant="dot" />}
       {error && (
         <span className="text-[10px] text-destructive whitespace-nowrap">
           {error}
@@ -271,7 +245,9 @@ export default function PackingList() {
   const [pendingOps, setPendingOps] = useState<PackingListOperation[]>([]);
   const [saving, setSaving] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
-  const [loadingToContainerId, setLoadingToContainerId] = useState<string | null>(null);
+  const [loadingToContainerId, setLoadingToContainerId] = useState<string | null>(
+    null
+  );
   const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -289,11 +265,7 @@ export default function PackingList() {
       const lists = await listPackingLists();
       setRecords(lists);
     } catch (err) {
-      setLoadError(
-        isAxiosError(err)
-          ? err.response?.data?.message || err.message
-          : "Failed to load packing lists"
-      );
+      setLoadError(extractErrorMessage(err, "Failed to load packing lists"));
     } finally {
       setLoading(false);
     }
@@ -332,11 +304,7 @@ export default function PackingList() {
       setSelected((prev) => (prev?._id === id ? null : prev));
       await load();
     } catch (err) {
-      toast.error(
-        isAxiosError(err)
-          ? err.response?.data?.message || err.message
-          : "Delete failed"
-      );
+      toast.error(extractErrorMessage(err, "Delete failed"));
     } finally {
       setDeletingId(null);
     }
@@ -447,15 +415,13 @@ export default function PackingList() {
       setPendingOps([]);
       toast.success("Updated");
     } catch (err) {
-      toast.error(
-        isAxiosError(err)
-          ? err.response?.data?.message || err.message
-          : "Save failed"
-      );
+      toast.error(extractErrorMessage(err, "Save failed"));
     } finally {
       setSaving(false);
     }
   };
+
+  useSaveShortcut(isDirty, handleSave);
 
   const handleSheetOpenChange = (open: boolean) => {
     if (open) return;
@@ -527,7 +493,7 @@ export default function PackingList() {
       render: (row) => (
         <div className="min-w-0">
           <div className="text-sm font-medium truncate">
-            {row.customer.name || "—"}
+            {row.customer.name || EMPTY}
           </div>
           {row.customer.contact && (
             <div className="text-xs text-muted-foreground truncate">
@@ -543,7 +509,9 @@ export default function PackingList() {
       sortable: false,
       render: (row) => (
         <div className="min-w-0">
-          <div className="text-sm truncate">{row.delivery.name || "—"}</div>
+          <div className="text-sm truncate">
+            {row.delivery.name || EMPTY}
+          </div>
           {row.delivery.address && (
             <div className="text-xs text-muted-foreground truncate">
               {row.delivery.address}
@@ -563,10 +531,7 @@ export default function PackingList() {
             {formatNumber(row.itemsCount)}
           </span>
           <span className="text-xs text-muted-foreground">
-            {formatNumber(
-              row.items.reduce((s, it) => s + it.qty, 0)
-            )}{" "}
-            units
+            {formatNumber(row.items.reduce((s, it) => s + it.qty, 0))} units
           </span>
         </div>
       ),
@@ -586,101 +551,110 @@ export default function PackingList() {
       render: (row) => <ExportButtons record={row} />,
     },
     {
-      key: "loadToContainer",
-      label: "Load",
-      sortable: false,
-      align: "right",
-      render: (row) => (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setLoadingToContainerId(row._id);
-            if (loadingTimerRef.current) {
-              clearTimeout(loadingTimerRef.current);
-            }
-            loadingTimerRef.current = setTimeout(() => {
-              setLoadingToContainerId(null);
-              loadingTimerRef.current = null;
-              navigate(`${row._id}/loading`);
-            }, 5000);
-          }}
-          disabled={loadingToContainerId === row._id}
-          className="p-1.5 rounded text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
-          title="Load to Container"
-          aria-label="Load to Container"
-        >
-          {loadingToContainerId === row._id ? (
-            <Loader2 size={14} className="animate-spin" />
-          ) : (
-            <Play size={14} />
-          )}
-        </button>
-      ),
-    },
-    {
       key: "_action",
       label: "",
       sortable: false,
       align: "right",
       render: (row) => (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDelete(row._id);
-          }}
-          disabled={deletingId === row._id}
-          className="p-1.5 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50"
-          title="Delete"
-          aria-label="Delete"
-        >
-          {deletingId === row._id ? (
-            <Loader2 size={14} className="animate-spin" />
-          ) : (
-            <Trash2 size={14} />
-          )}
-        </button>
+        <div className="flex items-center justify-end gap-1">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLoadingToContainerId(row._id);
+              if (loadingTimerRef.current) {
+                clearTimeout(loadingTimerRef.current);
+              }
+              loadingTimerRef.current = setTimeout(() => {
+                setLoadingToContainerId(null);
+                loadingTimerRef.current = null;
+                navigate(`${row._id}/loading`);
+              }, 5000);
+            }}
+            disabled={loadingToContainerId === row._id}
+            className="p-1.5 rounded text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
+            title="Load to Container"
+            aria-label="Load to Container"
+          >
+            {loadingToContainerId === row._id ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Play size={14} />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(row._id);
+            }}
+            disabled={deletingId === row._id}
+            className="p-1.5 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50"
+            title="Delete"
+            aria-label="Delete"
+          >
+            {deletingId === row._id ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Trash2 size={14} />
+            )}
+          </button>
+        </div>
       ),
     },
   ];
 
   if (loading && records.length === 0) {
     return (
-      <PageShell className="items-center justify-center py-24">
-        <Loader2 size={28} className="animate-spin text-muted-foreground" />
+      <PageShell>
+        <SectionHeader
+          title="Packing Lists"
+          actions={
+            <Button disabled>
+              <Loader2 className="animate-spin" />
+              Loading
+            </Button>
+          }
+        />
+        <div className="mt-4">
+          <DataTable
+            columns={columns}
+            data={[]}
+            emptyMessage={<SkeletonTable rows={8} columns={7} />}
+          />
+        </div>
       </PageShell>
     );
   }
 
   return (
-    <PageShell>
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="rounded-lg border border-border bg-card px-5 py-3.5">
-          <div className="text-xs text-muted-foreground">Total Lists</div>
-          <div className="text-2xl font-bold text-foreground font-mono mt-0.5">
-            {records.length}
-          </div>
-        </div>
-        <div className="rounded-lg border border-border bg-card px-5 py-3.5">
-          <div className="text-xs text-muted-foreground">Total Value</div>
-          <div className="text-2xl font-bold text-primary font-mono mt-0.5">
-            $ {totalValue > 0 ? fmt(totalValue) : "0.00"}
-          </div>
-        </div>
-      </div>
+    <PageShell className="gap-4">
+      <SectionHeader
+        title="Packing Lists"
+        description={`${records.length} record${records.length !== 1 ? "s" : ""}`}
+        actions={
+          <Button onClick={() => navigate("new")}>
+            <Plus />
+            New Packing List
+          </Button>
+        }
+      />
 
-      <ActionToolbar
-        search={q}
-        setSearch={setQ}
-        ctaLabel="New Packing List"
-        onCTA={() => navigate("new")}
+      <StatBar
+        items={[
+          { label: "Total Lists", value: formatNumber(records.length) },
+          {
+            label: "Total Value",
+            value: `$ ${totalValue > 0 ? fmt(totalValue) : "0.00"}`,
+            primary: true,
+          },
+        ]}
       />
 
       {loadError && (
         <div
           role="alert"
-          className="flex items-start gap-3 px-4 py-3 rounded-lg border border-destructive/40 bg-destructive/10 mb-4"
+          className="flex items-start gap-3 px-4 py-3 rounded-lg border border-destructive/40 bg-destructive/10"
         >
           <AlertCircle
             size={16}
@@ -698,23 +672,34 @@ export default function PackingList() {
         </div>
       )}
 
+      <ActionToolbar
+        search={q}
+        setSearch={setQ}
+        searchPlaceholder="Search by PL number, customer, or recipient..."
+      />
+
       <DataTable
         columns={columns}
         data={filtered}
         emptyMessage={
           records.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 text-muted-foreground">
-              {/* <Inbox size={32} className="opacity-40" /> */}
-              <span className="text-sm">No packing lists yet</span>
-              <span className="text-xs">
-                Click &ldquo;New Packing List&rdquo; to create your first one.
-              </span>
-            </div>
+            <EmptyState
+              icon={Inbox}
+              title="No packing lists yet"
+              description="Create your first packing list to get started."
+              action={
+                <Button onClick={() => navigate("new")}>
+                  <Plus />
+                  New Packing List
+                </Button>
+              }
+            />
           ) : (
-            <div className="flex flex-col items-center gap-2 text-muted-foreground">
-              <Inbox size={32} className="opacity-40" />
-              <span className="text-sm">No matches for &ldquo;{q}&rdquo;</span>
-            </div>
+            <EmptyState
+              variant="no-results"
+              title={`No matches for "${q}"`}
+              description="Try a different PL number, customer, or recipient."
+            />
           )
         }
       />
@@ -723,13 +708,12 @@ export default function PackingList() {
         <SheetContent
           side="right"
           showCloseButton={false}
-          className="w-full sm:max-w-md p-0 flex flex-col gap-0"
+          className="w-full sm:max-w-xl p-0 flex flex-col gap-0"
         >
           {selected && draft && (
             <>
               <div className="flex-1 min-h-0 overflow-y-auto">
                 <div className="flex flex-col">
-                  {/* Header */}
                   <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-4">
                     <SheetHeader className="p-0">
                       <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -750,7 +734,6 @@ export default function PackingList() {
                   </div>
 
                   <div className="flex flex-col gap-3 px-5 pb-5 text-sm">
-                    {/* Meta card */}
                     <div className="rounded-lg border border-border bg-card p-4">
                       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                         <MetaField
@@ -760,8 +743,7 @@ export default function PackingList() {
                       </div>
                     </div>
 
-                    {/* CUSTOMER */}
-                    <SectionCard title="Customer" icon={Code2}>
+                    <SectionCard title="Customer">
                       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                         <EditableTextField
                           label="Name"
@@ -804,8 +786,7 @@ export default function PackingList() {
                       </div>
                     </SectionCard>
 
-                    {/* DELIVERY */}
-                    <SectionCard title="Delivery" icon={Code2}>
+                    <SectionCard title="Delivery">
                       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                         <EditableTextField
                           label="Recipient"
@@ -850,7 +831,6 @@ export default function PackingList() {
                       </div>
                     </SectionCard>
 
-                    {/* PACKING LIST DETAIL */}
                     <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
                       <div className="flex items-center gap-2">
                         <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -894,7 +874,7 @@ export default function PackingList() {
                                         <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5">
                                           <ModeIcon size={10} />
                                           <span className="truncate">
-                                            {it.mode} · {it.shipToNum}
+                                            {it.mode} - {it.shipToNum}
                                           </span>
                                         </div>
                                       </div>
@@ -912,7 +892,7 @@ export default function PackingList() {
                                           }
                                         />
                                         <span className="font-mono text-sm font-semibold whitespace-nowrap">
-                                          × $ {fmt(it.unitPrice)}
+                                          x $ {fmt(it.unitPrice)}
                                         </span>
                                       </div>
                                     </div>
@@ -925,12 +905,11 @@ export default function PackingList() {
                       )}
                     </div>
 
-                    {/* Total card */}
-                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex items-center justify-between">
-                      <span className="text-xs font-semibold uppercase tracking-widest text-primary-light">
+                    <div className="rounded-lg bg-primary text-primary-foreground p-4 flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-widest">
                         Total
                       </span>
-                      <span className="font-mono text-sm font-semibold text-primary-light">
+                      <span className="font-mono text-sm font-semibold">
                         $ {fmt(liveTotal)}
                       </span>
                     </div>
@@ -939,24 +918,13 @@ export default function PackingList() {
               </div>
 
               {isDirty && (
-                <div className="shrink-0 border-t border-border bg-card px-5 py-3">
+                <div className="shrink-0 border-t border-border bg-card/80 backdrop-blur px-5 py-3">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="size-7 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
-                        <CircleDot
-                          size={14}
-                          className="text-primary"
-                        />
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-semibold text-foreground">
-                          {pendingOps.length} pending change
-                          {pendingOps.length !== 1 ? "s" : ""}
-                        </span>
-                        <span className="text-xs text-muted-foreground truncate">
-                          Review and save to commit the updates
-                        </span>
-                      </div>
+                      <DirtyChip label={`${pendingOps.length} pending`} />
+                      <span className="text-xs text-muted-foreground truncate">
+                        Review and save to commit the updates
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <Button
@@ -967,13 +935,17 @@ export default function PackingList() {
                       >
                         Discard
                       </Button>
-                      <Button onClick={handleSave} disabled={saving} size="sm">
+                      <Button
+                        onClick={handleSave}
+                        disabled={saving}
+                        size="sm"
+                      >
                         {saving ? (
                           <Loader2 size={14} className="animate-spin" />
                         ) : (
                           <Save size={14} />
                         )}
-                        Save changes ({pendingOps.length})
+                        Save changes
                       </Button>
                     </div>
                   </div>
@@ -984,37 +956,13 @@ export default function PackingList() {
         </SheetContent>
       </Sheet>
 
-      <Dialog
+      <ConfirmDiscardDialog
         open={confirmDiscard}
-        onOpenChange={(o) => !saving && setConfirmDiscard(o)}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Discard unsaved changes?</DialogTitle>
-            <DialogDescription>
-              You have {pendingOps.length} unsaved change
-              {pendingOps.length !== 1 ? "s" : ""}. Closing now will discard
-              them.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setConfirmDiscard(false)}
-              disabled={saving}
-            >
-              Keep editing
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDiscardAndClose}
-              disabled={saving}
-            >
-              Discard
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onOpenChange={setConfirmDiscard}
+        count={pendingOps.length}
+        onConfirm={confirmDiscardAndClose}
+        saving={saving}
+      />
 
       {loadingToContainerId && (
         <LoadingScreen

@@ -30,8 +30,8 @@ export function connectSocket(token: string) {
     useNotificationStore.getState().addOne(n);
     toast.message(n.title, {
       description: n.message
-        ? `${n.message}\n— from ${n.fromUserName} (${n.fromCustomerCustId})`
-        : `from ${n.fromUserName} (${n.fromCustomerCustId})`,
+        ? `${n.message}\nFrom ${n.fromUserName} (${n.fromCustomerCustId})`
+        : `From ${n.fromUserName} (${n.fromCustomerCustId})`,
     });
   });
 

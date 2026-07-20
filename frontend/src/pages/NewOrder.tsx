@@ -43,6 +43,7 @@ import {
 } from "@/lib/poApi";
 import { listPartNums, type PartNumOption } from "@/lib/partNumApi";
 import { Separator } from "@/components/ui/separator";
+import { EMPTY } from "@/lib/format";
 
 const MODE_OPTIONS = [
   { value: "SEA" as const, label: "Sea Freight", icon: Ship },
@@ -259,7 +260,7 @@ export default function NewOrder() {
     return (
       <PageShell className="items-center justify-center gap-3">
         <Loader2 size={28} className="animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Generating PO number…</p>
+        <p className="text-sm text-muted-foreground">Generating PO number...</p>
       </PageShell>
     );
   }
@@ -277,8 +278,8 @@ export default function NewOrder() {
   if (submitted) {
     return (
       <PageShell className="items-center justify-center gap-4">
-        <div className="size-16 rounded-full flex items-center justify-center bg-green-100">
-          <CheckCircle2 size={32} className="text-green-600" />
+        <div className="size-16 rounded-full flex items-center justify-center bg-success/10">
+          <CheckCircle2 size={32} className="text-success" />
         </div>
         <h2 className="text-xl font-bold text-foreground">
           Purchase Order{Object.keys(poGroups).length !== 1 ? "s" : ""} Submitted
@@ -287,7 +288,7 @@ export default function NewOrder() {
           {Object.entries(poGroups).map(([num, lines]) => (
             <div key={num} className="flex items-center gap-2">
               <span className="font-mono">{num}</span>
-              <span>—</span>
+              <span>-</span>
               <span>
                 {lines.length} line{lines.length !== 1 ? "s" : ""}
               </span>
@@ -314,13 +315,13 @@ export default function NewOrder() {
         className="flex-1 flex flex-col gap-5"
       >
         {/* PO identity strip */}
-        <div className="flex flex-wrap items-center gap-4 px-5 py-4 rounded-lg border border-[#c8d4e5] bg-white">
+        <div className="flex flex-wrap items-center gap-4 px-5 py-4 rounded-lg border border-border bg-card">
           <div className="flex min-w-0 flex-1 items-center gap-4">
-            <div className="size-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#dceaff]">
-              <Hash size={19} className="text-[#075bd8]" />
+            <div className="size-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-accent">
+              <Hash size={19} className="text-primary-light" />
             </div>
             <div className="min-w-[260px]">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.25em] mb-1 text-[#65748b] font-mono">
+              <div className="text-[11px] font-semibold uppercase tracking-widest mb-1 text-slate font-mono">
                 PONum
               </div>
               <div className="flex items-center gap-2">
@@ -329,7 +330,7 @@ export default function NewOrder() {
                   onChange={(e) => updatePoNum(e.target.value.trim().toUpperCase())}
                   placeholder="Enter PONum"
                   aria-invalid={poNumTouched && !poNum.trim()}
-                  className="h-9 w-[220px] font-mono text-sm font-bold text-[#001a44] border-[#c8d4e5] placeholder:opacity-70"
+                  className="h-9 w-[220px] font-mono text-sm font-bold text-foreground border-border"
                 />
                 {poNum !== originalPoNum && (
                   <button
@@ -346,44 +347,44 @@ export default function NewOrder() {
                 <p className="text-[11px] text-destructive mt-1 font-mono">PONum is required</p>
               )}
             </div>
-            <Separator orientation="vertical" className="h-10 bg-[#c8d4e5]" />
+            <Separator orientation="vertical" className="h-10 bg-border" />
             <div className="min-w-[140px]">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.25em] mb-1 text-[#65748b] font-mono">
+              <div className="text-[11px] font-semibold uppercase tracking-widest mb-1 text-slate font-mono">
                 Customer ID
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-base font-bold text-[#001a44] font-mono">
+                <span className="text-base font-bold text-foreground font-mono">
                   {customerCustID}
                 </span>
               </div>
             </div>
           </div>
           <div className="ml-auto text-right hidden sm:block">
-            <div className="text-xs text-[#526079]">Lines</div>
-            <div className="text-lg font-bold text-[#001a44] font-mono">
+            <div className="text-xs text-slate">Lines</div>
+            <div className="text-lg font-bold text-foreground font-mono">
               {items.length}
             </div>
           </div>
           <div className="text-right hidden sm:block">
-            <div className="text-xs text-[#526079]">Grand Total</div>
-            <div className="text-lg font-bold text-[#075bd8] font-mono">
-              {grandTotal > 0 ? fmt(grandTotal) : "—"}
+            <div className="text-xs text-slate">Grand Total</div>
+            <div className="text-lg font-bold text-primary-light font-mono">
+              {grandTotal > 0 ? fmt(grandTotal) : EMPTY}
             </div>
           </div>
         </div>
 
         {/* Shared Across All Lines */}
-        <div className="rounded-lg border border-[#7fe7ff] bg-white overflow-hidden">
-          <div className="flex items-start gap-3 px-5 py-4 border-b border-[#7fe7ff] bg-[#e9fbff]">
-            <div className="mt-0.5 size-6 rounded-full flex items-center justify-center bg-[#0a7f98] text-white">
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
+          <div className="flex items-start gap-3 px-5 py-4 border-b border-border bg-accent">
+            <div className="mt-0.5 size-6 rounded-full flex items-center justify-center bg-primary text-primary-foreground">
               <Link2 size={13} />
             </div>
             <div>
-              <div className="text-xs font-bold uppercase tracking-[0.24em] text-[#0b6f8b] font-mono">
+              <div className="text-xs font-bold uppercase tracking-widest text-primary font-mono">
                 Shared Across All Lines
               </div>
-              <p className="text-xs text-[#3aa3bf]">
-                Set once - automatically applied to every order line below.
+              <p className="text-xs text-primary-light">
+                Set once, automatically applied to every order line below.
               </p>
             </div>
           </div>
@@ -396,7 +397,7 @@ export default function NewOrder() {
                 }
                 placeholder="GRA-INDIA"
                 aria-invalid={!!headerErrors.shipToNum}
-                className="h-9 rounded-[4px] border-[#c8d4e5] bg-white font-mono placeholder:opacity-70"
+                className="h-9 font-mono"
               />
             </Field>
 
@@ -405,7 +406,7 @@ export default function NewOrder() {
                 value={poHeader.mode}
                 onValueChange={(v) => setPoHeader((h) => ({ ...h, mode: v as Mode }))}
               >
-                <SelectTrigger className="h-9 w-full rounded-[8px] border-[#c8d4e5] bg-white">
+                <SelectTrigger className="h-9 w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -428,7 +429,7 @@ export default function NewOrder() {
                   setPoHeader((h) => ({ ...h, needByDate: e.target.value }))
                 }
                 aria-invalid={!!headerErrors.needByDate}
-                className="h-9 rounded-[4px] border-[#c8d4e5] bg-white"
+                className="h-9"
               />
             </Field>
 
@@ -444,7 +445,7 @@ export default function NewOrder() {
                   })
                 }
                 aria-invalid={!!headerErrors.requestDate}
-                className="h-9 rounded-[4px] border-[#c8d4e5] bg-white"
+                className="h-9"
               />
             </Field>
           </div>
@@ -507,33 +508,33 @@ export default function NewOrder() {
           type="button"
           variant="outline"
           onClick={addLine}
-          className="w-full h-auto py-3 rounded-lg border-2 border-dashed border-[#9bc7ff] text-[#075bd8] bg-transparent font-semibold hover:bg-[#eef6ff] hover:border-[#6daeff]"
+          className="w-full h-auto py-3 border-2 border-dashed border-primary/30 text-primary-light font-semibold hover:bg-accent hover:border-primary/50"
         >
           <Plus size={16} /> Add another line
         </Button>
 
         {/* Summary */}
-        <div className="rounded-lg border border-[#c8d4e5] bg-white overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#c8d4e5]">
-            <span className="text-xs font-bold uppercase tracking-[0.24em] text-[#65748b] font-mono">
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
+          <div className="px-5 py-4 border-b border-border">
+            <span className="text-xs font-bold uppercase tracking-widest text-slate font-mono">
               Summary
             </span>
           </div>
           <div className="px-5 py-4 flex flex-col gap-2">
-            <div className="flex justify-between text-sm text-[#5e6d85]">
+            <div className="flex justify-between text-sm text-muted-foreground">
               <span>Total lines</span>
               <span className="font-mono">{items.length}</span>
             </div>
-            <div className="flex justify-between text-sm text-[#5e6d85]">
+            <div className="flex justify-between text-sm text-muted-foreground">
               <span>Total selling qty</span>
               <span className="font-mono">
-                {totalQty > 0 ? totalQty.toLocaleString() : "—"}
+                {totalQty > 0 ? totalQty.toLocaleString() : EMPTY}
               </span>
             </div>
-            <div className="flex justify-between text-base font-bold pt-2 border-t border-[#c8d4e5] text-[#001a44]">
+            <div className="flex justify-between text-base font-bold pt-2 border-t border-border text-foreground">
               <span>Grand Total</span>
-              <span className="text-[#075bd8] font-mono">
-                {grandTotal > 0 ? fmt(grandTotal) : "—"}
+              <span className="text-primary-light font-mono">
+                {grandTotal > 0 ? fmt(grandTotal) : EMPTY}
               </span>
             </div>
           </div>
@@ -541,17 +542,13 @@ export default function NewOrder() {
 
         {/* Action buttons */}
         <div className="flex items-center justify-end gap-4 pb-8">
-          <Button
-            type="submit"
-            disabled={submitting}
-            className="h-10 rounded-[4px] bg-[#075bd8] px-7 text-white hover:bg-[#064fbd]"
-          >
+          <Button type="submit" disabled={submitting} className="h-10 px-7">
             {submitting ? (
               <Loader2 size={15} className="animate-spin" />
             ) : (
               <Send size={15} />
             )}
-            {submitting ? "Submitting…" : "Submit Purchase Order"}
+            {submitting ? "Submitting..." : "Submit Purchase Order"}
           </Button>
         </div>
       </form>

@@ -77,7 +77,7 @@ export default function LoginPage() {
             className="text-sm mb-5"
             style={{ color: "rgba(255,255,255,0.9)", lineHeight: 1.6, textShadow: "0 1px 6px rgba(0,0,0,0.3)" }}
           >
-            Real-time visibility across 180+ countries — from the warehouse floor to the customer's door.
+            Real-time visibility across 180+ countries. From the warehouse floor to the customer&apos;s door.
           </p>
         </div>
       </div>

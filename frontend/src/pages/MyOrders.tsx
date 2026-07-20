@@ -18,6 +18,9 @@ import ActionToolbar from "@/components/ActionToolbar";
 import DataTable, { type Column } from "@/components/DataTable";
 import PagePagination from "@/components/PagePagination";
 import { PageShell } from "@/components/PageShell";
+import { StatBar } from "@/components/StatBar";
+import { SectionHeader } from "@/components/SectionHeader";
+import { EmptyState } from "@/components/EmptyState";
 import { IconField } from "@/components/Detail/IconField";
 import { MetaField } from "@/components/Detail/MetaField";
 import { SectionCard } from "@/components/Detail/SectionCard";
@@ -321,24 +324,23 @@ export default function MyOrders() {
   }
 
   return (
-    <PageShell>
-      {/* Fixed top: stats, toolbar, error */}
+    <PageShell className="gap-4">
+      <SectionHeader
+        title="My Orders"
+        description={`${formatNumber(totalLines)} line${totalLines !== 1 ? "s" : ""} across ${groupedByPO.length} PO${groupedByPO.length !== 1 ? "s" : ""}`}
+      />
+
       <div className="shrink-0">
-        {/* Stats row */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="rounded-lg border border-border bg-card px-5 py-3.5">
-            <div className="text-xs text-muted-foreground">Total Orders</div>
-            <div className="text-2xl font-bold text-primary-light font-mono mt-0.5">
-              {totalLines}
-            </div>
-          </div>
-          <div className="rounded-lg border border-border bg-card px-5 py-3.5">
-            <div className="text-xs text-muted-foreground">Total Value</div>
-            <div className="text-2xl font-bold text-primary-light font-mono mt-0.5">
-              $ {totalValue > 0 ? fmt(totalValue) : "—"}
-            </div>
-          </div>
-        </div>
+        <StatBar
+          items={[
+            { label: "Total Lines", value: formatNumber(totalLines) },
+            {
+              label: "Total Value",
+              value: `$ ${totalValue > 0 ? fmt(totalValue) : "0.00"}`,
+              primary: true,
+            },
+          ]}
+        />
 
         {/* Toolbar */}
         <div className="flex items-center justify-between mb-3 gap-4">
@@ -377,28 +379,19 @@ export default function MyOrders() {
       <div className="flex-1 min-h-0 overflow-auto">
         {groupedByPO.length === 0 ? (
           <div className="rounded-lg border border-border bg-card">
-            <div className="py-16 text-center">
-              <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                <Inbox size={32} className="opacity-40" />
-                {q ? (
-                  <>
-                    <span className="text-sm">
-                      No items match &ldquo;{q}&rdquo;
-                    </span>
-                    <span className="text-xs">
-                      Try a different PO number.
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-sm">No line items yet</span>
-                    <span className="text-xs">
-                      Submit a purchase order to see items here.
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
+            {q ? (
+              <EmptyState
+                variant="no-results"
+                title={`No items match "${q}"`}
+                description="Try a different PO number."
+              />
+            ) : (
+              <EmptyState
+                icon={Inbox}
+                title="No line items yet"
+                description="Submit a purchase order to see items here."
+              />
+            )}
           </div>
         ) : (
           <div className="flex flex-col gap-4">

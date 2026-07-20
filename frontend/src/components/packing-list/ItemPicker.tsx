@@ -182,21 +182,59 @@ async function loadPartNumsCached() {
   return res;
 }
 
+function AwaitingManufactureFlag({
+  row,
+  role,
+}: {
+  row: AvailableLine;
+  role: string | null;
+}) {
+  if (!row.pendingManufactureUpdate) return null;
+  return (
+    <div className="flex items-center gap-1 shrink-0">
+      <span
+        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border border-amber-500/40 bg-amber-100 text-amber-800 whitespace-nowrap"
+        title="Awaiting Manufacture update"
+      >
+        <AlertTriangle size={10} />
+        Awaiting MANU
+      </span>
+      {role === "Sale" && (
+        <NotifyManufactureDialog
+          riskLines={[
+            {
+              lineId: row._id,
+              poNum: row.poNum,
+              partNum: row.partNum,
+              pickedQty: row.sellingQuantity,
+              quantityPerCont: row.quantityPerCont,
+            },
+          ]}
+          affectedOrderIds={[row._id]}
+          trigger={
+            <button
+              type="button"
+              onClick={(e) => e.stopPropagation()}
+              className="text-[10px] font-semibold text-amber-700 underline whitespace-nowrap"
+              title="Notify Manufacture to clear this flag"
+            >
+              Notify
+            </button>
+          }
+        />
+      )}
+    </div>
+  );
+}
+
 const buildColumns = (
   qtyRender: (row: AvailableLine) => ReactNode,
   qtySortValue: (row: AvailableLine) => number,
   cbmQty: (row: AvailableLine) => number,
   containersQty: (row: AvailableLine) => number,
-  statusCell?: (row: AvailableLine) => ReactNode
+  partNumAugment?: (row: AvailableLine) => ReactNode
 ): Column<AvailableLine>[] => {
   const cols: Column<AvailableLine>[] = [];
-  if (statusCell) {
-    cols.push({
-      key: "status",
-      label: "",
-      render: statusCell,
-    });
-  }
   cols.push(
     {
       key: "poNum",
@@ -210,7 +248,15 @@ const buildColumns = (
     label: "Part Num",
     sortable: true,
     sortValue: (row) => row.partNum,
-    render: (row) => partNumCell(row.partNum),
+    render: (row) =>
+      partNumAugment ? (
+        <div className="flex items-center gap-2 min-w-0">
+          {partNumCell(row.partNum)}
+          {partNumAugment(row)}
+        </div>
+      ) : (
+        partNumCell(row.partNum)
+      ),
   },
   {
     key: "orderLine",
@@ -262,6 +308,7 @@ const buildColumns = (
     key: "total",
     label: "Total",
     align: "right",
+    width: "min-w-[7rem]",
     sortable: true,
     sortValue: (row) => row.total,
     render: (row) => currencyCell(row.total, { bold: true, primary: true }),
@@ -328,6 +375,7 @@ const buildColumns = (
     key: "cbm",
     label: "CBM",
     align: "right",
+    width: "min-w-[7rem]",
     sortable: true,
     sortValue: cbmQty,
     render: (row) => monoCell(formatNumber(cbmQty(row))),
@@ -480,42 +528,7 @@ export function ItemPicker({
         (row) => remainingFor(row),
         (row) => row.length * row.width * row.height * remainingFor(row),
         (row) => remainingFor(row),
-        (row) =>
-          row.pendingManufactureUpdate ? (
-            <div className="flex items-center gap-1">
-              <span
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border border-amber-500/40 bg-amber-100 text-amber-800 whitespace-nowrap"
-                title="Awaiting Manufacture update"
-              >
-                <AlertTriangle size={10} />
-                Awaiting MANU
-              </span>
-              {role === "Sale" && (
-                <NotifyManufactureDialog
-                  riskLines={[
-                    {
-                      lineId: row._id,
-                      poNum: row.poNum,
-                      partNum: row.partNum,
-                      pickedQty: row.sellingQuantity,
-                      quantityPerCont: row.quantityPerCont,
-                    },
-                  ]}
-                  affectedOrderIds={[row._id]}
-                  trigger={
-                    <button
-                      type="button"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-[10px] font-semibold text-amber-700 underline whitespace-nowrap"
-                      title="Notify Manufacture to clear this flag"
-                    >
-                      Notify
-                    </button>
-                  }
-                />
-              )}
-            </div>
-          ) : null
+        (row) => <AwaitingManufactureFlag row={row} role={role} />
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [pickedQtyByLineId, role]

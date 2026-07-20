@@ -93,7 +93,7 @@ export function extractSubmitError(err: unknown): {
         Object.entries(e).map(([k, v]) => `${k}: ${v}`)
       );
       if (flat.length) {
-        message = `${message} — ${flat.slice(0, 3).join("; ")}`;
+        message = `${message}. ${flat.slice(0, 3).join("; ")}`;
       }
     }
   }
