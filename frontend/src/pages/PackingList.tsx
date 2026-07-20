@@ -1019,7 +1019,7 @@ export default function PackingList() {
       {loadingToContainerId && (
         <LoadingScreen
           variant="fullscreen"
-          label="Loading to Container"
+          label="Preparing"
         />
       )}
     </PageShell>

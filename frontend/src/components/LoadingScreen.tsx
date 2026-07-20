@@ -1,6 +1,6 @@
+import { useState } from "react";
 import { Box, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
-import AnimatedTruck from "@/components/AnimatedTruck";
 
 type LoadingScreenProps = {
   isLoading?: boolean;
@@ -41,32 +41,21 @@ const DecorativeIcons = ({ compact }: { compact?: boolean }) => {
     "absolute text-[#3B6FD9]/40",
     compact ? "size-5" : "size-6 sm:size-7"
   );
-  const inset = compact
-    ? "12%"
-    : "clamp(1.5rem, 8vw, 4.5rem)";
+
+  const [positions] = useState(() => {
+    const rng = () => 5 + Math.random() * 80;
+    return Array.from({ length: 4 }, () => ({
+      top: `${rng()}%`,
+      left: `${rng()}%`,
+    }));
+  });
 
   return (
     <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-      <MapPin
-        className={iconClass}
-        strokeWidth={1.5}
-        style={{ top: inset, left: inset }}
-      />
-      <Box
-        className={iconClass}
-        strokeWidth={1.5}
-        style={{ top: inset, right: inset }}
-      />
-      <Box
-        className={iconClass}
-        strokeWidth={1.5}
-        style={{ bottom: inset, left: inset }}
-      />
-      <MapPin
-        className={iconClass}
-        strokeWidth={1.5}
-        style={{ bottom: inset, right: inset }}
-      />
+      <MapPin className={iconClass} strokeWidth={1.5} style={positions[0]} />
+      <Box className={iconClass} strokeWidth={1.5} style={positions[1]} />
+      <Box className={iconClass} strokeWidth={1.5} style={positions[2]} />
+      <MapPin className={iconClass} strokeWidth={1.5} style={positions[3]} />
     </div>
   );
 };
@@ -100,7 +89,7 @@ const keyframes = `
 export default function LoadingScreen({
   isLoading = true,
   variant = "fullscreen",
-  label = "Loading to Container",
+  label = "Preparing",
   className,
 }: LoadingScreenProps) {
   if (!isLoading) return null;
@@ -130,7 +119,11 @@ export default function LoadingScreen({
       >
         <DecorativeIcons compact={!isFullscreen} />
 
-        <AnimatedTruck
+        <img
+          src="/svgs/truck.png"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
           className={cn(
             "relative z-10 h-auto select-none",
             isFullscreen
@@ -157,8 +150,6 @@ export default function LoadingScreen({
           </p>
           <DotSpinner />
         </div>
-
-        <DotSpinner />
       </div>
     </>
   );
