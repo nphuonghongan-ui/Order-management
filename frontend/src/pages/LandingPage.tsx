@@ -1,10 +1,21 @@
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { ArrowRight, Box, Container, Globe, Truck, Warehouse } from "lucide-react";
+import {
+  ArrowRight,
+  Box,
+  Check,
+  Globe,
+  Mail,
+  Pause,
+  Phone,
+  Play,
+  ShoppingCart,
+  Truck,
+  Warehouse,
+} from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
 
 const TRUSTED_LOGOS = [
@@ -18,11 +29,37 @@ const TRUSTED_LOGOS = [
   { name: "UPS", slug: "ups" },
 ];
 
-const SAMPLE_ROWS = [
-  { sku: "AX-1042", qty: 240, container: "MAEU 3041872", status: "shipped" },
-  { sku: "AX-2218", qty: 96, container: "TCLU 8810445", status: "submitted" },
-  { sku: "AX-3371", qty: 512, container: "MSCU 7209118", status: "pending" },
+const PRICING_PLANS = [
+  {
+    name: "Basic Plan",
+    price: 19,
+    description:
+      "For small ops teams getting started with consolidated freight visibility.",
+    features: [
+      { text: "Up to 100 packing lists / month", included: true },
+      { text: "Standard email support", included: true },
+      { text: "Carrier & port integrations", included: false },
+      { text: "Custom roles & permissions", included: false },
+      { text: "Dedicated account manager", included: false },
+    ],
+  },
+  {
+    name: "Enterprise Plan",
+    price: 29,
+    description:
+      "For high-volume shippers running bonded, FTZ, and multi-port operations.",
+    features: [
+      { text: "Unlimited packing lists", included: true },
+      { text: "Priority 24/7 support", included: true },
+      { text: "Carrier & port integrations", included: true },
+      { text: "Custom roles & permissions", included: true },
+      { text: "Dedicated account manager", included: true },
+    ],
+  },
 ] as const;
+
+// TODO: replace with the final AxonLog demo MP4 (or self-hosted URL)
+const DEMO_VIDEO_URL = "/assets/demo.mp4";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -182,53 +219,6 @@ function LogoMarquee() {
   );
 }
 
-function HeroPreviewCard() {
-  return (
-    <Card className="w-full ring-1 ring-foreground/10 shadow-overlay">
-      <div className="flex items-center justify-between px-4 pt-1">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
-            Packing list
-          </p>
-          <p className="mt-1 font-heading text-sm font-medium text-card-foreground">
-            PL-2026-0381
-          </p>
-        </div>
-        <StatusBadge status="active" />
-      </div>
-      <div className="mt-3 divide-y divide-border border-y border-border">
-        {SAMPLE_ROWS.map((row) => (
-          <div
-            key={row.sku}
-            className="grid grid-cols-12 items-center gap-2 px-4 py-2.5 text-xs"
-          >
-            <span className="col-span-4 font-mono text-foreground">
-              {row.sku}
-            </span>
-            <span className="col-span-2 text-right font-mono text-slate">
-              {row.qty}
-            </span>
-            <span className="col-span-4 truncate font-mono text-slate">
-              {row.container}
-            </span>
-            <span className="col-span-2 flex justify-end">
-              <StatusBadge status={row.status} />
-            </span>
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center justify-between px-4 pb-1 pt-3">
-        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
-          3 of 14 lines
-        </span>
-        <span className="font-mono text-[10px] text-slate">
-          synced 2s ago
-        </span>
-      </div>
-    </Card>
-  );
-}
-
 function BentoCell({
   className,
   children,
@@ -255,7 +245,7 @@ function BentoCell({
 
 function StatNumber({ value, label }: { value: string; label: string }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col items-center gap-1">
       <span className="font-mono text-3xl md:text-4xl text-foreground tracking-tight">
         {value}
       </span>
@@ -264,31 +254,174 @@ function StatNumber({ value, label }: { value: string; label: string }) {
   );
 }
 
-function HexGrid() {
+function PricingCard({
+  name,
+  price,
+  description,
+  features,
+  onCta,
+}: {
+  name: string;
+  price: number;
+  description: string;
+  features: readonly { text: string; included: boolean }[];
+  onCta: () => void;
+}) {
   return (
-    <svg
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      preserveAspectRatio="xMidYMid slice"
-      aria-hidden="true"
-      style={{ opacity: 0.6 }}
-    >
-      <defs>
-        <pattern
-          id="hexgrid"
-          width="28"
-          height="49"
-          patternUnits="userSpaceOnUse"
+    <div className="flex h-full flex-col rounded-xl bg-card p-6 ring-1 ring-foreground/10">
+      <h3 className="font-heading text-lg font-semibold text-primary">{name}</h3>
+      <div className="mt-3 flex items-baseline gap-1">
+        <span className="font-heading text-5xl font-semibold tracking-tight text-foreground">
+          ${price}
+        </span>
+        <span className="text-sm text-foreground-muted">/month</span>
+      </div>
+      <p
+        className="mt-3 text-sm text-foreground-muted"
+        style={{ lineHeight: 1.6 }}
+      >
+        {description}
+      </p>
+      <div className="my-5 h-px bg-border" />
+      <ul className="space-y-2.5">
+        {features.map((f, i) => (
+          <li key={i} className="flex items-center gap-2.5 text-sm">
+            <span
+              className={cn(
+                "flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
+                f.included
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-surface-container-high text-slate"
+              )}
+            >
+              <Check size={12} strokeWidth={3} />
+            </span>
+            <span className={f.included ? "text-foreground" : "text-slate"}>
+              {f.text}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-auto pt-6">
+        <Button
+          onClick={onCta}
+          className="h-11 w-full rounded-full bg-primary-light text-white hover:bg-primary-light/90 hover:text-white cursor-pointer"
         >
-          <path
-            d="M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z"
-            fill="white"
-            fillOpacity="0.12"
-          />
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#hexgrid)" />
-    </svg>
+          Get Started
+        </Button>
+      </div>
+    </div>
   );
+}
+
+function DemoVideoPlayer({ src }: { src: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) v.play();
+    else v.pause();
+  };
+
+  return (
+    <div
+      className="group relative aspect-video w-full overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10"
+      onClick={togglePlay}
+    >
+      <video
+        ref={videoRef}
+        src={src}
+        playsInline
+        preload="metadata"
+        className="h-full w-full object-cover"
+        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onEnded={() => setIsPlaying(false)}
+        onTimeUpdate={(e) => {
+          const v = e.currentTarget;
+          setCurrentTime(v.currentTime);
+          if (v.duration) setProgress((v.currentTime / v.duration) * 100);
+        }}
+      />
+
+      {/* Dark scrim while paused, fades on play */}
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-0 bg-foreground/30 transition-opacity duration-300",
+          isPlaying ? "opacity-0" : "opacity-100"
+        )}
+        aria-hidden="true"
+      />
+
+      {/* Center play button — only visible when paused */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          togglePlay();
+        }}
+        aria-label="Play demo"
+        className={cn(
+          "absolute top-1/2 left-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary-light text-white shadow-[0_8px_24px_rgba(0,82,204,0.45)] transition-all duration-300",
+          isPlaying
+            ? "pointer-events-none scale-75 opacity-0"
+            : "scale-100 opacity-100 hover:scale-105"
+        )}
+      >
+        <Play size={28} fill="currentColor" className="ml-1" />
+      </button>
+
+      {/* Bottom control bar — visible while paused, fades in on hover while playing */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={cn(
+          "absolute inset-x-0 bottom-0 flex items-center gap-3 bg-gradient-to-t from-foreground/70 to-transparent px-4 py-3 text-xs text-white transition-opacity duration-300",
+          isPlaying ? "opacity-0 group-hover:opacity-100" : "opacity-100"
+        )}
+      >
+        <button
+          type="button"
+          onClick={togglePlay}
+          aria-label={isPlaying ? "Pause" : "Play"}
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 hover:bg-white/25"
+        >
+          {isPlaying ? (
+            <Pause size={14} fill="currentColor" />
+          ) : (
+            <Play size={14} fill="currentColor" />
+          )}
+        </button>
+        <div
+          className="h-1 flex-1 overflow-hidden rounded-full bg-white/20"
+          role="progressbar"
+          aria-valuenow={Math.round(progress)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <div
+            className="h-full bg-primary-light transition-[width] duration-150"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <span className="font-mono text-[11px] tabular-nums text-white/80">
+          {formatTime(currentTime)} / {formatTime(duration)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function formatTime(s: number) {
+  if (!isFinite(s) || s < 0) return "0:00";
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
 export default function LandingPage() {
@@ -339,7 +472,7 @@ export default function LandingPage() {
               Services
             </a>
             <a
-              href="#solutions"
+              href="#pricing"
               className="relative pb-1 border-b-2 border-transparent transition-colors duration-200 ease-in hover:text-foreground hover:border-nav-accent"
             >
               Pricing
@@ -361,7 +494,7 @@ export default function LandingPage() {
       {/* ══════════════════════════════════════════════════
           1. HERO — full-bleed video, dark overlay, floating cards
       ══════════════════════════════════════════════════ */}
-      <section id="top" className="relative min-h-[90dvh] overflow-hidden">
+      <section id="top" className="relative min-h-[100dvh] overflow-hidden flex items-center justify-center">
         {/* Video background — logistics footage */}
         <video
           className="absolute inset-0 w-full h-full object-cover"
@@ -396,10 +529,10 @@ export default function LandingPage() {
         />
 
         {/* Main content — anchored to bottom, centered */}
-        <main className="relative z-10 min-h-[75dvh] flex flex-col justify-end pb-12 md:pb-20">
+        <main className="relative z-10 w-full px-6">
           <div className="mx-auto w-full max-w-3xl  text-center">
             <div
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-8 font-mono"
+              className="inline-flex items-center gap-2 px-8 py-1 rounded-full text-base font-medium mb-8 font-mono"
               style={{
                 background: "rgba(0,82,204,0.28)",
                 border: "1px solid rgba(0,82,204,0.5)",
@@ -407,7 +540,7 @@ export default function LandingPage() {
               }}
             >
               <span
-                className="w-1.5 h-1.5 rounded-full animate-pulse"
+                className="w-2 h-2 rounded-full animate-pulse"
                 style={{ background: "#3B82F6" }}
               />
               Global logistics platform
@@ -430,13 +563,13 @@ export default function LandingPage() {
               </p>
             </Reveal>
             <Reveal delay={0.15}>
-              <div className="mt-8 flex flex-col flex-wrap items-center justify-center gap-3">
+              <div className="mt-10 flex flex-col flex-wrap items-center justify-center gap-3">
                 <Button
                   size="lg"
                   onClick={goToLogin}
-                  className="h-11 px-5 text-sm bg-white text-primary-light hover:bg-white/90 hover:text-primary cursor-pointer"
+                  className="h-15 px-10 text-lg bg-white text-primary-light hover:bg-white/90 hover:text-primary cursor-pointer"
                 >
-                  Get started
+                  Get Started
                   <ArrowRight />
                 </Button>
 
@@ -471,7 +604,7 @@ export default function LandingPage() {
       {/* ══════════════════════════════════════════════════
           3. ABOUT — short editorial block + inline stat tiles
       ══════════════════════════════════════════════════ */}
-      <section id="about" className="border-b border-border">
+      <section id="about" className="">
         <div className="mx-auto max-w-7xl px-6 py-20 md:py-28">
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
             <Reveal className="lg:col-span-5">
@@ -532,7 +665,31 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════════════════
-          4. SOLUTIONS — bento grid (4 cells, asymmetric)
+          4. STATS STRIP — floating band between About and Solutions
+      ══════════════════════════════════════════════════ */}
+      <section
+        className="border-y border-border"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.55) 100%)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          boxShadow:
+            "inset 0 1px 0 rgba(255,255,255,0.75), inset 0 -1px 0 rgba(0,0,0,0.04), 0 4px 12px rgba(9, 30, 66, 0.06)",
+        }}
+      >
+        <div className="mx-auto max-w-7xl px-6 py-12 md:py-14">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+            <StatNumber value="12,400+" label="Shipments this month" />
+            <StatNumber value="180+" label="Countries served" />
+            <StatNumber value="0.4%" label="Manifest error rate" />
+            <StatNumber value="< 2s" label="Average sync time" />
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════
+          5. SOLUTIONS — bento grid (4 cells, asymmetric)
       ══════════════════════════════════════════════════ */}
       <section id="solutions" className="bg-surface-container-low">
         <div className="mx-auto max-w-7xl px-6 py-20 md:py-28">
@@ -683,141 +840,104 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════════════════
-          5. PRODUCT PREVIEW — split with real Card
+          6. PRICING — intro column + two plan cards
+      ══════════════════════════════════════════════════ */}
+      <section id="pricing" className="border-b border-border">
+        <div className="mx-auto max-w-7xl px-6 py-20 md:py-28">
+          <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-12">
+            {/* Left intro column */}
+            <div className="lg:col-span-4">
+              <Reveal>
+                <span className="inline-flex items-center px-3 py-1 rounded-full font-mono text-xs font-medium bg-primary-fixed text-on-primary-fixed border border-primary-fixed">
+                  Our Pricing
+                </span>
+              </Reveal>
+              <Reveal delay={0.05}>
+                <h2
+                  className="mt-6 font-heading text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl"
+                  style={{ letterSpacing: "-0.025em", lineHeight: 1.1 }}
+                >
+                  The most honest pricing in the world.
+                </h2>
+              </Reveal>
+              <Reveal delay={0.1}>
+                <p
+                  className="mt-5 max-w-prose text-base text-foreground-muted"
+                  style={{ lineHeight: 1.65 }}
+                >
+                  Transparent pricing that scales with the load you move — not
+                  the seats you add. Every plan covers ocean, air, road, and
+                  customs on a single timeline.
+                </p>
+              </Reveal>
+              <Reveal delay={0.15}>
+                <ul className="mt-8 space-y-3 text-sm">
+                  <li className="flex items-center gap-3 text-foreground">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary-fixed text-on-primary-fixed">
+                      <Mail size={16} />
+                    </span>
+                    <a
+                      href="mailto:hello@axonlog.com"
+                      className="hover:text-primary transition-colors"
+                    >
+                      hello@axonlog.com
+                    </a>
+                  </li>
+                  <li className="flex items-center gap-3 text-foreground">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary-fixed text-on-primary-fixed">
+                      <Phone size={16} />
+                    </span>
+                    <span>+1 606 555 0123</span>
+                  </li>
+                </ul>
+              </Reveal>
+            </div>
+
+            {/* Right cards column */}
+            <div className="lg:col-span-8">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                {PRICING_PLANS.map((plan, i) => (
+                  <Reveal key={plan.name} delay={i * 0.05}>
+                    <PricingCard
+                      name={plan.name}
+                      price={plan.price}
+                      description={plan.description}
+                      features={plan.features}
+                      onCta={goToLogin}
+                    />
+                  </Reveal>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════
+          7. DEMO — embedded product walkthrough
       ══════════════════════════════════════════════════ */}
       <section className="border-b border-border">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-6 py-20 md:py-28 lg:grid-cols-12 lg:gap-10">
-          <Reveal className="lg:col-span-5">
-            <div className="lg:sticky lg:top-24">
+        <div className="mx-auto max-w-7xl px-6 py-20 md:py-28">
+          <Reveal>
+            <div className="max-w-2xl">
               <h2
                 className="font-heading text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl"
                 style={{ letterSpacing: "-0.025em", lineHeight: 1.1 }}
               >
-                Built for the floor. Trusted by ops.
+                Watch the demo.
               </h2>
               <p
                 className="mt-4 max-w-prose text-base text-foreground-muted"
                 style={{ lineHeight: 1.6 }}
               >
-                Packing lists, loading manifests, and production schedules on
-                one screen. Roles, statuses, and audit trail included.
-              </p>
-              <ul className="mt-6 space-y-2 text-sm text-foreground-muted">
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                  Role-based access for sales, manufacture, and loading
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                  Live status across every container
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                  Audit trail on every line item
-                </li>
-              </ul>
-            </div>
-          </Reveal>
-
-          <Reveal className="lg:col-span-7" delay={0.1}>
-            <div className="relative">
-              <HeroPreviewCard />
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Card className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-md bg-tertiary-container text-tertiary">
-                      <Container size={18} />
-                    </div>
-                    <div>
-                      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
-                        Containers
-                      </p>
-                      <p className="mt-0.5 font-heading text-base font-medium text-card-foreground">
-                        28 in transit
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-                <Card className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-md bg-success-container text-success">
-                      <Box size={18} />
-                    </div>
-                    <div>
-                      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
-                        Picked today
-                      </p>
-                      <p className="mt-0.5 font-heading text-base font-medium text-card-foreground">
-                        1,847 units
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-              <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
-                Sample data
+                A two-minute walkthrough of how AxonLog consolidates sales,
+                manufacturing, and the loading floor into one timeline.
               </p>
             </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════
-          6. STATS STRIP
-      ══════════════════════════════════════════════════ */}
-      <section className="bg-surface-container-low border-b border-border">
-        <div className="mx-auto max-w-7xl px-6 py-14">
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-            <StatNumber value="12,400+" label="Shipments this month" />
-            <StatNumber value="180+" label="Countries served" />
-            <StatNumber value="0.4%" label="Manifest error rate" />
-            <StatNumber value="< 2s" label="Average sync time" />
-          </div>
-          <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
-            Sample data
-          </p>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════
-          7. CTA — single intent, brand-blue block
-      ══════════════════════════════════════════════════ */}
-      <section
-        className="relative overflow-hidden"
-        style={{
-          background:
-            "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary-container)) 100%)",
-        }}
-      >
-        <HexGrid />
-
-        <div className="relative mx-auto max-w-2xl px-6 py-24 md:py-32 text-center">
-          <Reveal>
-            <h2
-              className="font-heading text-3xl font-semibold text-primary-foreground sm:text-4xl md:text-5xl"
-              style={{ letterSpacing: "-0.025em", lineHeight: 1.1 }}
-            >
-              Start using AxonLog today.
-            </h2>
-          </Reveal>
-          <Reveal delay={0.05}>
-            <p
-              className="mt-4 text-base text-primary-foreground/80"
-              style={{ lineHeight: 1.6 }}
-            >
-              Set up in under five minutes. No card required.
-            </p>
           </Reveal>
           <Reveal delay={0.1}>
-            <div className="mt-8 flex justify-center">
-              <Button
-                size="lg"
-                onClick={goToLogin}
-                className="h-11 px-6 text-sm bg-card text-primary hover:bg-card/90 hover:text-primary"
-              >
-                Get started
-                <ArrowRight />
-              </Button>
+            <div className="mt-10">
+              <DemoVideoPlayer src={DEMO_VIDEO_URL} />
             </div>
           </Reveal>
         </div>
