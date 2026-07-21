@@ -307,8 +307,7 @@ function PricingCard({
           onClick={onCta}
           className="h-11 w-full rounded-full bg-primary-light text-white hover:bg-primary-light/90 hover:text-white cursor-pointer"
         >
-          Add To Cart
-          <ShoppingCart size={16} className="ml-1.5" />
+          Get Started
         </Button>
       </div>
     </div>
@@ -533,7 +532,7 @@ export default function LandingPage() {
         <main className="relative z-10 w-full px-6">
           <div className="mx-auto w-full max-w-3xl  text-center">
             <div
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-8 font-mono"
+              className="inline-flex items-center gap-2 px-8 py-1 rounded-full text-base font-medium mb-8 font-mono"
               style={{
                 background: "rgba(0,82,204,0.28)",
                 border: "1px solid rgba(0,82,204,0.5)",
@@ -541,7 +540,7 @@ export default function LandingPage() {
               }}
             >
               <span
-                className="w-1.5 h-1.5 rounded-full animate-pulse"
+                className="w-2 h-2 rounded-full animate-pulse"
                 style={{ background: "#3B82F6" }}
               />
               Global logistics platform
@@ -564,13 +563,13 @@ export default function LandingPage() {
               </p>
             </Reveal>
             <Reveal delay={0.15}>
-              <div className="mt-8 flex flex-col flex-wrap items-center justify-center gap-3">
+              <div className="mt-10 flex flex-col flex-wrap items-center justify-center gap-3">
                 <Button
                   size="lg"
                   onClick={goToLogin}
-                  className="h-11 px-5 text-sm bg-white text-primary-light hover:bg-white/90 hover:text-primary cursor-pointer"
+                  className="h-15 px-10 text-lg bg-white text-primary-light hover:bg-white/90 hover:text-primary cursor-pointer"
                 >
-                  Get started
+                  Get Started
                   <ArrowRight />
                 </Button>
 
