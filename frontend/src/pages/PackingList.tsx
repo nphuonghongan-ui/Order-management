@@ -4,7 +4,9 @@ import { toast } from "sonner";
 import {
   AlertCircle,
   Box,
+  CalendarDays,
   Check,
+  DollarSign,
   Inbox,
   Loader2,
   Play,
@@ -12,6 +14,7 @@ import {
   Save,
   SquarePen,
   Trash2,
+  TrendingUp,
   X,
 } from "lucide-react";
 import ActionToolbar from "@/components/ActionToolbar";
@@ -295,6 +298,11 @@ export default function PackingList() {
     : records;
 
   const totalValue = records.reduce((s, r) => s + r.total, 0);
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const thisWeek = records.filter(
+    (r) => new Date(r.createdAt).getTime() >= sevenDaysAgo
+  ).length;
+  const avgValue = records.length > 0 ? totalValue / records.length : 0;
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
@@ -629,26 +637,31 @@ export default function PackingList() {
 
   return (
     <PageShell className="gap-4">
+      <StatBar
+        items={[
+          { label: "Total Lists", value: formatNumber(records.length), icon: Box },
+          {
+            label: "Total Value",
+            value: `$${totalValue > 0 ? fmt(totalValue) : "0.00"}`,
+            icon: DollarSign,
+            primary: true,
+          },
+          {
+            label: "This Week",
+            value: formatNumber(thisWeek),
+            icon: CalendarDays,
+          },
+          {
+            label: "Avg Value",
+            value: `$${records.length > 0 ? fmt(avgValue) : "0.00"}`,
+            icon: TrendingUp,
+          },
+        ]}
+      />
+
       <SectionHeader
         title="Packing Lists"
         description={`${records.length} record${records.length !== 1 ? "s" : ""}`}
-        actions={
-          <Button onClick={() => navigate("new")}>
-            <Plus />
-            New Packing List
-          </Button>
-        }
-      />
-
-      <StatBar
-        items={[
-          { label: "Total Lists", value: formatNumber(records.length) },
-          {
-            label: "Total Value",
-            value: `$ ${totalValue > 0 ? fmt(totalValue) : "0.00"}`,
-            primary: true,
-          },
-        ]}
       />
 
       {loadError && (
@@ -676,6 +689,8 @@ export default function PackingList() {
         search={q}
         setSearch={setQ}
         searchPlaceholder="Search by PL number, customer, or recipient..."
+        ctaLabel="New Packing List"
+        onCTA={() => navigate("new")}
       />
 
       <DataTable
@@ -716,17 +731,17 @@ export default function PackingList() {
                 <div className="flex flex-col">
                   <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-4">
                     <SheetHeader className="p-0">
-                      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      <span className="text-[15px] font-bold uppercase tracking-widest text-foreground">
                         Packing List
                       </span>
-                      <SheetTitle className="font-mono text-xl mt-1">
+                      <SheetTitle className="font-mono text-[15px] mt-1">
                         {selected.plNumber}
                       </SheetTitle>
                     </SheetHeader>
                     <button
                       type="button"
                       onClick={() => handleSheetOpenChange(false)}
-                      className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                      className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
                       aria-label="Close"
                     >
                       <X size={16} />
@@ -905,7 +920,7 @@ export default function PackingList() {
                       )}
                     </div>
 
-                    <div className="rounded-lg bg-primary text-primary-foreground p-4 flex items-center justify-between">
+                    <div className="rounded-lg bg-primary-light text-primary-foreground p-4 flex items-center justify-between">
                       <span className="text-xs font-semibold uppercase tracking-widest">
                         Total
                       </span>

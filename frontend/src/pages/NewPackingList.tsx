@@ -134,55 +134,55 @@ export default function NewPackingList() {
   return (
     <PageShell>
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-5">
-        <div className="flex items-center justify-between gap-4">
-          <SectionHeader
-            title={
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-normal">
-                <Link
-                  to="/dashboard/packing-list"
-                  className="hover:text-foreground"
-                >
-                  Packing List
-                </Link>
-                <span>/</span>
-                <span className="text-foreground">New</span>
-              </div>
-            }
-            actions={
-              <div className="flex items-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon-sm"
-                  onClick={() => navigate("/dashboard/packing-list")}
-                  aria-label="Back to packing lists"
-                >
-                  <ArrowLeft />
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={!canSubmit}
-                  title={
-                    picked.length === 0
-                      ? "Pick at least one item"
-                      : !customerValid
-                        ? "Customer name and address are required"
-                        : !deliveryValid
-                          ? "Recipient name and address are required"
-                          : undefined
-                  }
-                >
-                  {submitting ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    <Send />
-                  )}
-                  {submitting ? "Submitting..." : "Submit"}
-                </Button>
-              </div>
-            }
-          />
-        </div>
+        <SectionHeader
+          className="w-full items-center"
+          title={
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground font-normal">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                onClick={() => navigate("/dashboard/packing-list")}
+                aria-label="Back to packing lists"
+                className="mr-2"
+              >
+                <ArrowLeft />
+              </Button>
+              <Link
+                to="/dashboard/packing-list"
+                className="hover:text-foreground"
+              >
+                Packing List
+              </Link>
+              <span>/</span>
+              <span className="text-foreground">New</span>
+            </div>
+          }
+          actions={
+            <div className="flex items-center gap-3">
+              <Button
+                type="submit"
+                disabled={!canSubmit}
+                title={
+                  picked.length === 0
+                    ? "Pick at least one item"
+                    : !customerValid
+                      ? "Customer name and address are required"
+                      : !deliveryValid
+                        ? "Recipient name and address are required"
+                        : undefined
+                }
+              >
+                {submitting ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Send />
+                )}
+                {submitting ? "Submitting..." : "Submit"}
+              </Button>
+            </div>
+          }
+        />
 
         {submitError && (
           <div
@@ -199,7 +199,7 @@ export default function NewPackingList() {
 
         <Card>
           <CardHeader className="flex flex-row items-center gap-3 border-b border-border">
-            <div className="size-8 rounded-md flex items-center justify-center bg-primary/10 flex-shrink-0">
+            <div className="size-8 rounded-md flex items-center justify-center flex-shrink-0">
               <Building2 className="text-primary-light" />
             </div>
             <div>
@@ -252,7 +252,7 @@ export default function NewPackingList() {
 
         <Card>
           <CardHeader className="flex flex-row items-center gap-3 border-b border-border">
-            <div className="size-8 rounded-md flex items-center justify-center bg-primary/10 flex-shrink-0">
+            <div className="size-8 rounded-md flex items-center justify-center flex-shrink-0">
               <MapPin className="text-primary-light" />
             </div>
             <div>
@@ -308,7 +308,7 @@ export default function NewPackingList() {
 
         <Card>
           <CardHeader className="flex flex-row items-center gap-3 border-b border-border">
-            <div className="size-8 rounded-md flex items-center justify-center bg-primary/10 flex-shrink-0">
+            <div className="size-8 rounded-md flex items-center justify-center flex-shrink-0">
               <ClipboardCheck className="text-primary-light" />
             </div>
             <div>
