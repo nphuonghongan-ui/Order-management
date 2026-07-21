@@ -33,14 +33,14 @@ export default function ActionToolbar({
   return (
     <div className={cn("flex items-center justify-between gap-4 mb-4", className)}>
       <div className="flex items-center gap-3 flex-1 min-w-0">
-        <div className="flex items-center border border-border rounded-md px-3 h-9 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30 transition-colors w-full sm:w-72 bg-card">
+        <div className="flex items-center border border-border rounded-md px-3 h-9 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30 transition-colors w-full sm:w-80 bg-card">
           <Search size={16} className="text-muted-foreground mr-2 shrink-0" />
           <input
             type="text"
             placeholder={searchPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent outline-none w-full text-sm text-foreground placeholder:text-muted-foreground/60 min-w-0"
+            className="bg-transparent outline-none w-full text-sm text-foreground placeholder:text-muted-foreground/65 min-w-0"
           />
           {search && (
             <button
@@ -75,7 +75,7 @@ export default function ActionToolbar({
       </div>
 
       {ctaLabel && onCTA && (
-        <Button onClick={onCTA} className="shrink-0">
+        <Button onClick={onCTA} className="shrink-0 cursor-pointer">
           <Plus />
           {ctaLabel}
         </Button>

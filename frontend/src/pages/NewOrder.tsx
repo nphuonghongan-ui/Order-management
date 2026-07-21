@@ -347,7 +347,7 @@ export default function NewOrder() {
                 <p className="text-[11px] text-destructive mt-1 font-mono">PONum is required</p>
               )}
             </div>
-            <Separator orientation="vertical" className="h-10 bg-border" />
+            <Separator orientation="vertical" className="h-10 bg-border mr-5" />
             <div className="min-w-[140px]">
               <div className="text-[11px] font-semibold uppercase tracking-widest mb-1 text-slate font-mono">
                 Customer ID
@@ -508,7 +508,7 @@ export default function NewOrder() {
           type="button"
           variant="outline"
           onClick={addLine}
-          className="w-full h-auto py-3 border-2 border-dashed border-primary/30 text-primary-light font-semibold hover:bg-accent hover:border-primary/50"
+          className="w-full h-auto py-3 border-2 border-dashed border-primary/30 text-primary-light font-semibold hover:bg-accent hover:border-primary/50 cursor-pointer"
         >
           <Plus size={16} /> Add another line
         </Button>
@@ -542,7 +542,7 @@ export default function NewOrder() {
 
         {/* Action buttons */}
         <div className="flex items-center justify-end gap-4 pb-8">
-          <Button type="submit" disabled={submitting} className="h-10 px-7">
+          <Button type="submit" disabled={submitting} className="h-10 px-7 cursor-pointer">
             {submitting ? (
               <Loader2 size={15} className="animate-spin" />
             ) : (

@@ -333,17 +333,22 @@ export default function MyOrders() {
       <div className="shrink-0">
         <StatBar
           items={[
-            { label: "Total Lines", value: formatNumber(totalLines) },
+            {
+              label: "Total Lines",
+              value: formatNumber(totalLines),
+              icon: Box,
+            },
             {
               label: "Total Value",
               value: `$ ${totalValue > 0 ? fmt(totalValue) : "0.00"}`,
+              icon: DollarSign,
               primary: true,
             },
           ]}
         />
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between mb-3 gap-4">
+        <div className="flex items-center justify-between gap-4 mt-8">
           <ActionToolbar
             search={qDraft}
             setSearch={setQDraft}

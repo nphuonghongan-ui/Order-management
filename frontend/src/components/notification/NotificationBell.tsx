@@ -129,7 +129,9 @@ function NotificationRow({
           "relative flex items-start gap-3 px-4 py-4 cursor-pointer select-none",
           !dragging && "transition-transform duration-200 ease-out",
           exiting && "transition-transform duration-200 ease-in",
-          n.read ? "bg-card" : "bg-primary/5"
+          n.read
+            ? "bg-card"
+            : "bg-card border-l-2 border-primary"
         )}
       >
         <div className="relative shrink-0">

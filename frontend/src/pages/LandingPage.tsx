@@ -5,6 +5,7 @@ import {
   Box,
   Check,
   Globe,
+  LogIn,
   Mail,
   Pause,
   Phone,
@@ -307,7 +308,7 @@ function PricingCard({
           onClick={onCta}
           className="h-11 w-full rounded-full bg-primary-light text-white hover:bg-primary-light/90 hover:text-white cursor-pointer"
         >
-          Get Started
+          Choose plan
         </Button>
       </div>
     </div>
@@ -469,7 +470,7 @@ export default function LandingPage() {
               href="#solutions"
               className="relative pb-1 border-b-2 border-transparent transition-colors duration-200 ease-in hover:text-foreground hover:border-nav-accent"
             >
-              Services
+              Solutions
             </a>
             <a
               href="#pricing"
@@ -486,6 +487,16 @@ export default function LandingPage() {
               className="h-10 px-5 text-sm rounded-full cursor-pointer"
             >
               Book a demo
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={goToLogin}
+              aria-label="Sign in"
+              title="Sign in"
+              className="h-10 w-10 rounded-full cursor-pointer bg-muted text-foreground"
+            >
+              <LogIn />
             </Button>
           </div>
         </div>
@@ -632,35 +643,6 @@ export default function LandingPage() {
               </Reveal>
             </div>
           </div>
-
-          <Reveal delay={0.15}>
-            <dl className="mt-14 grid grid-cols-2 gap-x-8 gap-y-10 border-t border-border pt-10 md:grid-cols-3">
-              <div>
-                <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
-                  Headquartered
-                </dt>
-                <dd className="mt-2 text-base text-foreground">
-                  Manchester, Kentucky
-                </dd>
-              </div>
-              <div>
-                <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
-                  Coverage
-                </dt>
-                <dd className="mt-2 text-base text-foreground">
-                  180+ countries
-                </dd>
-              </div>
-              <div>
-                <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate">
-                  Carrier network
-                </dt>
-                <dd className="mt-2 text-base text-foreground">
-                  2,500+ trucks
-                </dd>
-              </div>
-            </dl>
-          </Reveal>
         </div>
       </section>
 
@@ -848,7 +830,7 @@ export default function LandingPage() {
             {/* Left intro column */}
             <div className="lg:col-span-4">
               <Reveal>
-                <span className="inline-flex items-center px-3 py-1 rounded-full font-mono text-xs font-medium bg-primary-fixed text-on-primary-fixed border border-primary-fixed">
+                <span className="inline-flex items-center px-3 py-1 rounded-full font-mono text-sm font-medium bg-primary-fixed text-on-primary-fixed border border-primary-fixed">
                   Our Pricing
                 </span>
               </Reveal>
