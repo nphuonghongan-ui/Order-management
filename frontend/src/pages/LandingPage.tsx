@@ -60,7 +60,7 @@ const PRICING_PLANS = [
 ] as const;
 
 // TODO: replace with the final AxonLog demo MP4 (or self-hosted URL)
-const DEMO_VIDEO_URL = "/assets/demo.mp4";
+const DEMO_VIDEO_URL = "https://cdn.axonlog.site/demo.mp4";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -517,7 +517,7 @@ export default function LandingPage() {
         >
           {/* Container port aerial / logistics footage */}
           <source
-            src="/assets/herovid.mp4"
+            src="https://cdn.axonlog.site/herovid.mp4"
             type="video/mp4"
           />
         </video>
@@ -720,7 +720,7 @@ export default function LandingPage() {
                   </div>
                   <div className="relative min-h-[200px] overflow-hidden">
                     <img
-                      src="/assets/solution-1.png"
+                      src="https://cdn.axonlog.site/solution-1.png"
                       alt="Organized fulfillment center inventory"
                       className="absolute inset-0 h-full w-full object-cover"
                       loading="lazy"
@@ -784,7 +784,7 @@ export default function LandingPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 h-full">
                   <div className="relative min-h-[200px] overflow-hidden order-2 sm:order-1">
                     <img
-                      src="/assets/warehouse-1.png"
+                      src="https://cdn.axonlog.site/warehouse-1.png"
                       alt="Logistics operations floor"
                       className="absolute inset-0 h-full w-full object-cover"
                       loading="lazy"

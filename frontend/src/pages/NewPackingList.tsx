@@ -17,7 +17,6 @@ import {
 import { PageShell } from "@/components/PageShell";
 import { Field } from "@/components/po/Field";
 import { ItemPicker } from "@/components/packing-list/ItemPicker";
-import { SectionHeader } from "@/components/SectionHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import {
@@ -134,55 +133,50 @@ export default function NewPackingList() {
   return (
     <PageShell>
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-5">
-        <SectionHeader
-          className="w-full items-center"
-          title={
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground font-normal">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                onClick={() => navigate("/dashboard/packing-list")}
-                aria-label="Back to packing lists"
-                className="mr-2"
-              >
-                <ArrowLeft />
-              </Button>
-              <Link
-                to="/dashboard/packing-list"
-                className="hover:text-foreground"
-              >
-                Packing List
-              </Link>
-              <span>/</span>
-              <span className="text-foreground">New</span>
-            </div>
-          }
-          actions={
-            <div className="flex items-center gap-3">
-              <Button
-                type="submit"
-                disabled={!canSubmit}
-                title={
-                  picked.length === 0
-                    ? "Pick at least one item"
-                    : !customerValid
-                      ? "Customer name and address are required"
-                      : !deliveryValid
-                        ? "Recipient name and address are required"
-                        : undefined
-                }
-              >
-                {submitting ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  <Send />
-                )}
-                {submitting ? "Submitting..." : "Submit"}
-              </Button>
-            </div>
-          }
-        />
+        <div className="w-full flex items-center justify-between gap-4 min-w-0">
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground font-normal min-w-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              onClick={() => navigate("/dashboard/packing-list")}
+              aria-label="Back to packing lists"
+              className="mr-2"
+            >
+              <ArrowLeft />
+            </Button>
+            <Link
+              to="/dashboard/packing-list"
+              className="hover:text-foreground"
+            >
+              Packing List
+            </Link>
+            <span>/</span>
+            <span className="text-foreground">New</span>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <Button
+              type="submit"
+              disabled={!canSubmit}
+              title={
+                picked.length === 0
+                  ? "Pick at least one item"
+                  : !customerValid
+                    ? "Customer name and address are required"
+                    : !deliveryValid
+                      ? "Recipient name and address are required"
+                      : undefined
+              }
+            >
+              {submitting ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <Send />
+              )}
+              {submitting ? "Submitting..." : "Submit"}
+            </Button>
+          </div>
+        </div>
 
         {submitError && (
           <div

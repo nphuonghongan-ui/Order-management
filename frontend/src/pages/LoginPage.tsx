@@ -49,7 +49,7 @@ export default function LoginPage() {
       ══════════════════════════════════════════════════ */}
       <div
         className="hidden lg:block flex-1 relative overflow-hidden bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/assets/login-scene.png')" }}
+        style={{ backgroundImage: "url('https://cdn.axonlog.site/login-scene.png')" }}
       >
         {/* Soft tint overlay for legibility */}
         <div
