@@ -27,7 +27,7 @@ import { calcTotal, fmt } from "./utils";
 import { EMPTY } from "@/lib/format";
 import type { FieldError, LineItem, Mode } from "./types";
 import { Field } from "./Field";
-import type { PartNumOption } from "@/lib/partNumApi";
+import type { PartNumOption } from "@/lib/apis/partNumApi";
 
 interface LineCardProps {
   item: LineItem;

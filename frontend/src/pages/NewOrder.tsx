@@ -40,8 +40,8 @@ import {
   fetchNextPONum,
   submitPO,
   toSubmitPayload,
-} from "@/lib/poApi";
-import { listPartNums, type PartNumOption } from "@/lib/partNumApi";
+} from "@/lib/apis/poApi";
+import { listPartNums, type PartNumOption } from "@/lib/apis/partNumApi";
 import { Separator } from "@/components/ui/separator";
 import { EMPTY } from "@/lib/format";
 

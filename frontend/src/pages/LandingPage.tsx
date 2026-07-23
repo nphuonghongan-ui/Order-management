@@ -17,7 +17,7 @@ import {
 import { motion, useReducedMotion } from "motion/react";
 import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 
 const TRUSTED_LOGOS = [
   { name: "Maersk", slug: "maersk" },

@@ -18,9 +18,9 @@ import {
   deleteNotification,
   listMyNotifications,
   markAllRead,
-} from "@/lib/notificationApi";
+} from "@/lib/apis/notificationApi";
 import type { NotificationItem } from "./types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { getAvatarColor, getInitials } from "./avatar";
 
 const SWIPE_THRESHOLD = 100;

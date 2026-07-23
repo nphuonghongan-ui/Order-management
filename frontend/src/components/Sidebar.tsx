@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { MENU_BY_ROLE } from "@/lib/roles";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import Logo from "@/components/Logo";
 
 const ICONS: Record<string, LucideIcon> = {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Box, MapPin } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 
 type LoadingScreenProps = {
   isLoading?: boolean;

@@ -23,7 +23,7 @@ import {
   listManufactureRecipients,
   sendUrgeUpdate,
   notifyManufactureQtyMismatch,
-} from "@/lib/notificationApi";
+} from "@/lib/apis/notificationApi";
 import type {
   ManufactureRecipient,
   NotificationRiskLine,

@@ -1,6 +1,6 @@
 import { Plane, Ship, TrainFront, Truck, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { formatDisplay as _formatDisplay, formatNumber, formatCurrency } from "@/lib/format";
 import type { Mode } from "./types";
 

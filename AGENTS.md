@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **Order-management** (1105 symbols, 2497 relationships, 88 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **Order-management** (1114 symbols, 2511 relationships, 89 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
@@ -40,5 +40,16 @@ This project is indexed by GitNexus as **Order-management** (1105 symbols, 2497 
 | Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
 | Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
 | Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
+| Work in the Pages area (87 symbols) | `.claude/skills/generated/pages/SKILL.md` |
+| Work in the Ui area (85 symbols) | `.claude/skills/generated/ui/SKILL.md` |
+| Work in the Controllers area (56 symbols) | `.claude/skills/generated/controllers/SKILL.md` |
+| Work in the Packing-list area (42 symbols) | `.claude/skills/generated/packing-list/SKILL.md` |
+| Work in the Po area (25 symbols) | `.claude/skills/generated/po/SKILL.md` |
+| Work in the Apis area (18 symbols) | `.claude/skills/generated/apis/SKILL.md` |
+| Work in the Components area (14 symbols) | `.claude/skills/generated/components/SKILL.md` |
+| Work in the Notification area (12 symbols) | `.claude/skills/generated/notification/SKILL.md` |
+| Work in the Hooks area (6 symbols) | `.claude/skills/generated/hooks/SKILL.md` |
+| Work in the Config area (5 symbols) | `.claude/skills/generated/config/SKILL.md` |
+| Work in the Stores area (5 symbols) | `.claude/skills/generated/stores/SKILL.md` |
 
 <!-- gitnexus:end -->

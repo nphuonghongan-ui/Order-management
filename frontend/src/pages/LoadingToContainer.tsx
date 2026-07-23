@@ -13,7 +13,7 @@ import {
 import { PageShell } from "@/components/PageShell";
 import { SectionCard } from "@/components/Detail/SectionCard";
 import { Button } from "@/components/ui/button";
-import { getPackingList } from "@/lib/packingListApi";
+import { getPackingList } from "@/lib/apis/packingListApi";
 import { formatPackingListForModel } from "@/components/packing-list/formatPackingListForModel";
 import { getPartNumDimensions } from "@/components/packing-list/exportEnrichment";
 import type { PackingListRecord } from "@/components/packing-list/types";

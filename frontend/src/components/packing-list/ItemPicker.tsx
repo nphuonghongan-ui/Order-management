@@ -24,8 +24,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { listLineItems } from "@/lib/lineItemApi";
-import { listPartNums } from "@/lib/partNumApi";
+import { listLineItems } from "@/lib/apis/lineItemApi";
+import { listPartNums } from "@/lib/apis/partNumApi";
 import { calcContainersNeeded, fmt } from "@/components/po/utils";
 import {
   currencyCell,
@@ -374,6 +374,7 @@ const buildColumns = (
   {
     key: "cbm",
     label: "CBM",
+    labelTooltip: "Calculated as: Length × Width × Height × Sell Qty",
     align: "right",
     width: "min-w-[7rem]",
     sortable: true,

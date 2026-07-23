@@ -22,11 +22,11 @@ import {
 import ActionToolbar from "@/components/ActionToolbar";
 import DataTable, { type Column } from "@/components/DataTable";
 import { PageShell } from "@/components/PageShell";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import {
   listManufactureItems,
   patchManufactureItem,
-} from "@/lib/manufactureApi";
+} from "@/lib/apis/manufactureApi";
 import { calcContainersNeeded } from "@/components/po/utils";
 import type { ManufactureItem } from "@/components/po/types";
 import {

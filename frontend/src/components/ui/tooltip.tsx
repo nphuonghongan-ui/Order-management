@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 import { Tooltip as TooltipPrimitive } from "radix-ui";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 
 function TooltipProvider({
   ...props
