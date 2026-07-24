@@ -154,7 +154,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3 text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all mt-2"
+              className="w-full py-3 text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all mt-2 cursor-pointer"
               style={{ background: "#0052CC", borderRadius: "6px", border: "none" }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLElement).style.background = "#003B9A";

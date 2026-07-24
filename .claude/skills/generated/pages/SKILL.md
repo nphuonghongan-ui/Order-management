@@ -1,11 +1,11 @@
 ---
 name: pages
-description: "Skill for the Pages area of Order-management. 87 symbols across 27 files."
+description: "Skill for the Pages area of Order-management. 109 symbols across 32 files."
 ---
 
 # Pages
 
-87 symbols | 27 files | Cohesion: 71%
+109 symbols | 32 files | Cohesion: 72%
 
 ## When to Use
 
@@ -19,14 +19,14 @@ description: "Skill for the Pages area of Order-management. 87 symbols across 27
 |------|---------|
 | `frontend/src/pages/PackingList.tsx` | PackingList, handleSheetOpenChange, EditableTextField, cancel, commit (+8) |
 | `frontend/src/pages/LandingPage.tsx` | LinkedInIcon, FooterColumn, Reveal, AnimatedWord, LogoMarquee (+7) |
+| `frontend/src/pages/ContainerViewer.tsx` | load, seedBoxes, ContainerViewer, setBoxes, reset (+4) |
 | `frontend/src/pages/MyOrders.tsx` | MyOrders, buildColumns, isAxiosError, loadPage, handlePrev (+3) |
+| `frontend/src/App.tsx` | ContainerViewer, AuthBootstrap, restoreSession, PublicRoute, ProtectedRoute (+3) |
 | `frontend/src/pages/NewOrder.tsx` | NewOrder, loadNextPONum, updatePoNum, resetForm, updateItem (+2) |
 | `frontend/src/pages/ProductionSchedule.tsx` | loadPage, handlePrev, handleNext, handlePageJump, isAxiosError (+2) |
-| `frontend/src/components/ui/sheet.tsx` | Sheet, SheetPortal, SheetOverlay, SheetContent, SheetHeader (+1) |
-| `frontend/src/pages/LoadingToContainer.tsx` | copyToClipboard, LoadingToContainer, handleCopy, handleDownload |
-| `frontend/src/components/ui/select.tsx` | Select, SelectValue, SelectTrigger, SelectItem |
-| `frontend/src/components/po/utils.ts` | fmt, newLineId, emptyLine |
-| `frontend/src/components/SkeletonRow.tsx` | SkeletonRow, SkeletonTable |
+| `frontend/src/components/ui/sheet.tsx` | Sheet, SheetClose, SheetOverlay, SheetContent, SheetHeader (+1) |
+| `frontend/src/pages/LoadingToContainer.tsx` | copyToClipboard, LoadingToContainer, handleCopy, handleDownload, load (+1) |
+| `frontend/src/pages/LoginPage.tsx` | LoginPage, inputBorder, login, handleSubmit |
 
 ## Entry Points
 
@@ -60,8 +60,8 @@ Start here when exploring this area:
 | `buildColumns` | Function | `frontend/src/pages/MyOrders.tsx` | 209 |
 | `PackingList` | Function | `frontend/src/pages/PackingList.tsx` | 238 |
 | `handleSheetOpenChange` | Function | `frontend/src/pages/PackingList.tsx` | 433 |
-| `newLineId` | Function | `frontend/src/components/po/utils.ts` | 18 |
-| `emptyLine` | Function | `frontend/src/components/po/utils.ts` | 20 |
+| `useAuthStore` | Function | `frontend/src/stores/authStore.ts` | 28 |
+| `Sidebar` | Function | `frontend/src/components/Sidebar.tsx` | 23 |
 
 ## Execution Flows
 
@@ -70,23 +70,23 @@ Start here when exploring this area:
 | `Render → IsAxiosError` | cross_community | 5 |
 | `PackingList → IsAxiosError` | cross_community | 4 |
 | `NewOrder → NewLineId` | intra_community | 4 |
+| `ContainerViewer → ListPartNums` | cross_community | 4 |
 | `LoadingToContainer → ListPartNums` | cross_community | 4 |
 | `HandleConfirmSave → ListManufactureItems` | cross_community | 4 |
 | `HandleConfirmSave → IsAxiosError` | cross_community | 4 |
 | `HandlePageJump → ListLineItems` | cross_community | 4 |
 | `HandlePageJump → IsAxiosError` | intra_community | 4 |
 | `Render → ListPackingLists` | intra_community | 4 |
-| `HandlePageJump → ListManufactureItems` | intra_community | 4 |
 
 ## Connected Areas
 
 | Area | Connections |
 |------|-------------|
-| Ui | 28 calls |
-| Po | 5 calls |
+| Ui | 30 calls |
+| Container-viewer | 9 calls |
+| Po | 3 calls |
 | Packing-list | 3 calls |
 | Apis | 2 calls |
-| Components | 2 calls |
 
 ## How to Explore
 

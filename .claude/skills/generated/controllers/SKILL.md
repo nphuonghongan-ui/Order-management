@@ -71,6 +71,8 @@ Start here when exploring this area:
 | `UpdatePackingList → ToDate` | intra_community | 3 |
 | `Login → NewId` | intra_community | 3 |
 | `Login → SignAccessToken` | intra_community | 3 |
+| `Login → SignRefreshToken` | intra_community | 3 |
+| `Login → HashToken` | intra_community | 3 |
 
 ## How to Explore
 

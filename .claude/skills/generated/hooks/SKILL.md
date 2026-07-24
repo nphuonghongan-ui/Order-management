@@ -40,6 +40,12 @@ Start here when exploring this area:
 | `jumpTo` | Function | `frontend/src/lib/hooks/useCursorPagination.ts` | 103 |
 | `retry` | Function | `frontend/src/lib/hooks/useCursorPagination.ts` | 119 |
 
+## Execution Flows
+
+| Flow | Type | Steps |
+|------|------|-------|
+| `JumpTo → LoadPage` | intra_community | 3 |
+
 ## How to Explore
 
 1. `context({name: "useCursorPagination"})` — see callers and callees

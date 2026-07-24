@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "sonner";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router";
 import { useAuthStore } from "./stores/authStore";
@@ -13,6 +13,8 @@ import LoadingToContainer from "./pages/LoadingToContainer";
 import ProductionSchedule from "./pages/ProductionSchedule";
 import MyOrders from "./pages/MyOrders";
 import NotFound from "./pages/NotFound";
+
+const ContainerViewer = lazy(() => import("./pages/ContainerViewer"));
 
 function AuthBootstrap() {
   const restoreSession = useAuthStore((s) => s.restoreSession);
@@ -109,6 +111,16 @@ function App() {
                 element={
                   <RoleGuard allowed={[ROLES.SALE]}>
                     <LoadingToContainer />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path=":plId/container-viewer"
+                element={
+                  <RoleGuard allowed={[ROLES.SALE]}>
+                    <Suspense fallback={null}>
+                      <ContainerViewer />
+                    </Suspense>
                   </RoleGuard>
                 }
               />

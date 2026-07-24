@@ -576,7 +576,7 @@ export default function PackingList() {
               loadingTimerRef.current = setTimeout(() => {
                 setLoadingToContainerId(null);
                 loadingTimerRef.current = null;
-                navigate(`${row._id}/loading`);
+                navigate(`${row._id}/container-viewer`);
               }, 5000);
             }}
             disabled={loadingToContainerId === row._id}
@@ -628,7 +628,6 @@ export default function PackingList() {
           <DataTable
             columns={columns}
             data={[]}
-            emptyMessage={<SkeletonTable rows={8} columns={7} />}
           />
         </div>
       </PageShell>
