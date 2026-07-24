@@ -1,11 +1,11 @@
 ---
 name: packing-list
-description: "Skill for the Packing-list area of Order-management. 37 symbols across 8 files."
+description: "Skill for the Packing-list area of Order-management. 39 symbols across 10 files."
 ---
 
 # Packing-list
 
-37 symbols | 8 files | Cohesion: 80%
+39 symbols | 10 files | Cohesion: 81%
 
 ## When to Use
 
@@ -25,6 +25,8 @@ description: "Skill for the Packing-list area of Order-management. 37 symbols ac
 | `frontend/src/lib/apis/lineItemApi.ts` | listLineItems |
 | `frontend/src/lib/apis/partNumApi.ts` | listPartNums |
 | `frontend/src/pages/NewOrder.tsx` | loadPartNums |
+| `frontend/src/components/packing-list/formatPackingListForModel.ts` | formatPackingListForModel |
+| `frontend/src/pages/LoadingToContainer.tsx` | text |
 
 ## Entry Points
 
@@ -59,7 +61,7 @@ Start here when exploring this area:
 | `listPartNums` | Function | `frontend/src/lib/apis/partNumApi.ts` | 8 |
 | `load` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 429 |
 | `loadPartNums` | Function | `frontend/src/pages/NewOrder.tsx` | 111 |
-| `pickedAsLines` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 506 |
+| `formatPackingListForModel` | Function | `frontend/src/components/packing-list/formatPackingListForModel.ts` | 16 |
 
 ## Execution Flows
 

@@ -1,11 +1,11 @@
 ---
 name: pages
-description: "Skill for the Pages area of Order-management. 109 symbols across 32 files."
+description: "Skill for the Pages area of Order-management. 104 symbols across 30 files."
 ---
 
 # Pages
 
-109 symbols | 32 files | Cohesion: 72%
+104 symbols | 30 files | Cohesion: 71%
 
 ## When to Use
 
@@ -19,13 +19,13 @@ description: "Skill for the Pages area of Order-management. 109 symbols across 3
 |------|---------|
 | `frontend/src/pages/PackingList.tsx` | PackingList, handleSheetOpenChange, EditableTextField, cancel, commit (+8) |
 | `frontend/src/pages/LandingPage.tsx` | LinkedInIcon, FooterColumn, Reveal, AnimatedWord, LogoMarquee (+7) |
-| `frontend/src/pages/ContainerViewer.tsx` | load, seedBoxes, ContainerViewer, setBoxes, reset (+4) |
 | `frontend/src/pages/MyOrders.tsx` | MyOrders, buildColumns, isAxiosError, loadPage, handlePrev (+3) |
 | `frontend/src/App.tsx` | ContainerViewer, AuthBootstrap, restoreSession, PublicRoute, ProtectedRoute (+3) |
+| `frontend/src/pages/ContainerViewer.tsx` | load, seedBoxes, ContainerViewer, setBoxes, reset (+3) |
 | `frontend/src/pages/NewOrder.tsx` | NewOrder, loadNextPONum, updatePoNum, resetForm, updateItem (+2) |
 | `frontend/src/pages/ProductionSchedule.tsx` | loadPage, handlePrev, handleNext, handlePageJump, isAxiosError (+2) |
 | `frontend/src/components/ui/sheet.tsx` | Sheet, SheetClose, SheetOverlay, SheetContent, SheetHeader (+1) |
-| `frontend/src/pages/LoadingToContainer.tsx` | copyToClipboard, LoadingToContainer, handleCopy, handleDownload, load (+1) |
+| `frontend/src/pages/LoadingToContainer.tsx` | copyToClipboard, LoadingToContainer, handleCopy, handleDownload, load |
 | `frontend/src/pages/LoginPage.tsx` | LoginPage, inputBorder, login, handleSubmit |
 
 ## Entry Points
@@ -50,8 +50,6 @@ Start here when exploring this area:
 | `EmptyState` | Function | `frontend/src/components/EmptyState.tsx` | 26 |
 | `PageShell` | Function | `frontend/src/components/PageShell.tsx` | 3 |
 | `SectionHeader` | Function | `frontend/src/components/SectionHeader.tsx` | 12 |
-| `SkeletonRow` | Function | `frontend/src/components/SkeletonRow.tsx` | 10 |
-| `SkeletonTable` | Function | `frontend/src/components/SkeletonRow.tsx` | 36 |
 | `StatBar` | Function | `frontend/src/components/StatBar.tsx` | 36 |
 | `LoadingToContainer` | Function | `frontend/src/pages/LoadingToContainer.tsx` | 41 |
 | `handleCopy` | Function | `frontend/src/pages/LoadingToContainer.tsx` | 92 |
@@ -62,6 +60,8 @@ Start here when exploring this area:
 | `handleSheetOpenChange` | Function | `frontend/src/pages/PackingList.tsx` | 433 |
 | `useAuthStore` | Function | `frontend/src/stores/authStore.ts` | 28 |
 | `Sidebar` | Function | `frontend/src/components/Sidebar.tsx` | 23 |
+| `LoginPage` | Function | `frontend/src/pages/LoginPage.tsx` | 9 |
+| `inputBorder` | Function | `frontend/src/pages/LoginPage.tsx` | 33 |
 
 ## Execution Flows
 
@@ -82,9 +82,9 @@ Start here when exploring this area:
 
 | Area | Connections |
 |------|-------------|
-| Ui | 30 calls |
+| Ui | 27 calls |
 | Container-viewer | 9 calls |
-| Po | 3 calls |
+| Po | 5 calls |
 | Packing-list | 3 calls |
 | Apis | 2 calls |
 

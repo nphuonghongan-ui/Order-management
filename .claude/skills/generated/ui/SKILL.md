@@ -1,11 +1,11 @@
 ---
 name: ui
-description: "Skill for the Ui area of Order-management. 99 symbols across 35 files."
+description: "Skill for the Ui area of Order-management. 91 symbols across 33 files."
 ---
 
 # Ui
 
-99 symbols | 35 files | Cohesion: 62%
+91 symbols | 33 files | Cohesion: 63%
 
 ## When to Use
 
@@ -17,15 +17,15 @@ description: "Skill for the Ui area of Order-management. 99 symbols across 35 fi
 
 | File | Symbols |
 |------|---------|
-| `frontend/src/components/ui/command.tsx` | CommandInput, CommandSeparator, CommandShortcut, CommandDialog, Command (+4) |
 | `frontend/src/components/ui/dialog.tsx` | Dialog, DialogTrigger, DialogPortal, DialogOverlay, DialogContent (+4) |
 | `frontend/src/components/ui/card.tsx` | CardAction, CardFooter, Card, CardHeader, CardTitle (+2) |
 | `frontend/src/components/ui/pagination.tsx` | Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious (+2) |
-| `frontend/src/components/ui/popover.tsx` | PopoverHeader, PopoverTitle, PopoverDescription, PopoverTrigger, PopoverContent (+1) |
+| `frontend/src/components/ui/popover.tsx` | PopoverHeader, PopoverTitle, PopoverDescription, Popover, PopoverTrigger (+1) |
 | `frontend/src/components/ui/select.tsx` | SelectGroup, SelectContent, SelectLabel, SelectSeparator, SelectScrollUpButton (+1) |
 | `frontend/src/components/ui/input-group.tsx` | InputGroup, InputGroupAddon, InputGroupText, InputGroupTextarea, InputGroupButton |
 | `frontend/src/components/packing-list/ItemPicker.tsx` | ItemPicker, promptMaxFor, openQtyPromptFor, ContextMenu, Box |
 | `frontend/src/components/LoadingScreen.tsx` | DotSpinner, DecorativeIcons, rng, LoadingScreen |
+| `frontend/src/components/ui/command.tsx` | CommandInput, CommandSeparator, CommandShortcut, CommandDialog |
 | `frontend/src/components/ui/tabs.tsx` | Tabs, TabsList, TabsTrigger, TabsContent |
 
 ## Entry Points
@@ -47,6 +47,8 @@ Start here when exploring this area:
 | `LoadingScreen` | Function | `frontend/src/components/LoadingScreen.tsx` | 88 |
 | `Logo` | Function | `frontend/src/components/Logo.tsx` | 15 |
 | `QtyCell` | Function | `frontend/src/components/QtyCell.tsx` | 9 |
+| `SkeletonRow` | Function | `frontend/src/components/SkeletonRow.tsx` | 10 |
+| `SkeletonTable` | Function | `frontend/src/components/SkeletonRow.tsx` | 36 |
 | `StatusBadge` | Function | `frontend/src/components/StatusBadge.tsx` | 35 |
 | `listManufactureRecipients` | Function | `frontend/src/lib/apis/notificationApi.ts` | 70 |
 | `ActionToolbar` | Function | `frontend/src/components/ActionToolbar.tsx` | 21 |
@@ -60,8 +62,6 @@ Start here when exploring this area:
 | `listMyNotifications` | Function | `frontend/src/lib/apis/notificationApi.ts` | 15 |
 | `useNotificationStore` | Function | `frontend/src/stores/notificationStore.ts` | 15 |
 | `Header` | Function | `frontend/src/components/Header.tsx` | 5 |
-| `NotificationBell` | Function | `frontend/src/components/notification/NotificationBell.tsx` | 212 |
-| `setAll` | Function | `frontend/src/components/notification/NotificationBell.tsx` | 223 |
 
 ## Execution Flows
 
@@ -82,7 +82,7 @@ Start here when exploring this area:
 
 | Area | Connections |
 |------|-------------|
-| Pages | 12 calls |
+| Pages | 10 calls |
 | Container-viewer | 4 calls |
 | Packing-list | 3 calls |
 | Notification | 1 calls |
