@@ -3,19 +3,19 @@ import { listPartNums, type PartNumOption } from "@/lib/apis/partNumApi";
 export async function getPartNumDimensions(): Promise<
   Map<string, { length: number; width: number; height: number }>
 > {
-  const cached = sessionStorage.getItem("partNums");
+  const cached = sessionStorage.getItem("partNums_v2");
   let items: PartNumOption[];
   if (cached) {
     try {
       items = JSON.parse(cached) as PartNumOption[];
     } catch {
-      sessionStorage.removeItem("partNums");
+      sessionStorage.removeItem("partNums_v2");
       items = await listPartNums();
-      sessionStorage.setItem("partNums", JSON.stringify(items));
+      sessionStorage.setItem("partNums_v2", JSON.stringify(items));
     }
   } else {
     items = await listPartNums();
-    sessionStorage.setItem("partNums", JSON.stringify(items));
+    sessionStorage.setItem("partNums_v2", JSON.stringify(items));
   }
   return new Map(
     items.map((p) => [p.partNum, p.dimension])

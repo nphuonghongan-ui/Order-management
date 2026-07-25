@@ -8,7 +8,8 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "seed:accounts": "node src/seeds/accounts.seed.js",
-    "seed:part-nums": "node src/seeds/partNums.seed.js"
+    "seed:part-nums": "node src/seeds/partNums.seed.js",
+    "seed:containers": "node src/seeds/containers.seed.js"
   },
   "keywords": [],
   "author": "",

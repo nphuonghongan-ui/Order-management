@@ -15,6 +15,7 @@ import manufactureRoutes from './routes/manufactureRoutes.js';
 import lineItemRoutes from './routes/lineItemRoutes.js';
 import packingListRoutes from './routes/packingListRoutes.js';
 import partNumRoutes from './routes/partNumRoutes.js';
+import containerRoutes from './routes/containerRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 
 if (!process.env.JWT_SECRET) {
@@ -43,6 +44,7 @@ app.use("/api/manufacture", manufactureRoutes);
 app.use("/api/line-items", lineItemRoutes);
 app.use("/api/packing-list", packingListRoutes);
 app.use("/api/part-nums", partNumRoutes);
+app.use("/api/containers", containerRoutes);
 app.use("/api/notifications", notificationRoutes);
 
 app.get('/', apiReference({ pageTitle: 'Order Management API', content: spec }));

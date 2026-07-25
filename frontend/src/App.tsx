@@ -15,6 +15,9 @@ import MyOrders from "./pages/MyOrders";
 import NotFound from "./pages/NotFound";
 
 const ContainerViewer = lazy(() => import("./pages/ContainerViewer"));
+const OptimizationRunPage = lazy(
+  () => import("./pages/OptimizationRunPage")
+);
 
 function AuthBootstrap() {
   const restoreSession = useAuthStore((s) => s.restoreSession);
@@ -120,6 +123,16 @@ function App() {
                   <RoleGuard allowed={[ROLES.SALE]}>
                     <Suspense fallback={null}>
                       <ContainerViewer />
+                    </Suspense>
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path=":plId/loading/run"
+                element={
+                  <RoleGuard allowed={[ROLES.SALE]}>
+                    <Suspense fallback={null}>
+                      <OptimizationRunPage />
                     </Suspense>
                   </RoleGuard>
                 }

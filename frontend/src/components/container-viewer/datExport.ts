@@ -19,10 +19,10 @@ export interface DatExportOptions {
  * so the model sees a drop-in replacement.
  *
  * - `m`       = total box count (sum of qty across all placements)
- * - `l/w/h`   = per-box dimensions in mm
+ * - `l/w/h`   = per-box dimensions in cm
  * - `M`       = model capacity constant
  * - `v`       = model velocity array
- * - `L/W/H`   = inner container dimensions in mm
+ * - `L/W/H`   = inner container dimensions in cm
  * - `X0/Y0/Z0`= origin offset (kept at 0 for now)
  */
 export function exportDat(

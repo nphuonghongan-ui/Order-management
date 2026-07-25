@@ -5,6 +5,8 @@ import { LOADING_CONSTANTS } from "./loadingConstants";
  * Format a PackingListRecord as a plain-text block in the same shape the
  * Data Engineer team pastes into their trained model.
  *
+ * All dimensions are in centimetres (cm).
+ *
  * - `m`, `l`, `w`, `h` come from the packing list's items (dimensions are
  *   looked up in the supplied `partNumToDim` map because the API response
  *   does not embed them — see exportEnrichment.ts).

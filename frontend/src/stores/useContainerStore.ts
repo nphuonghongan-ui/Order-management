@@ -19,7 +19,7 @@ interface Actions {
   setBoxes: (boxes: BoxPlacement[]) => void;
   selectBox: (id: string | null) => void;
   setTool: (t: ToolMode) => void;
-  setSnapMm: (n: number) => void;
+  setSnapCm: (n: number) => void;
   setRotationSnapDeg: (n: number) => void;
   setShowWalls: (b: boolean) => void;
   setShowGrid: (b: boolean) => void;
@@ -38,12 +38,17 @@ interface Actions {
   undo: () => void;
   redo: () => void;
   reset: () => void;
+  setContextLost: (lost: boolean) => void;
+  forceContextRestore: () => number;
 }
 
 type Store = ContainerSceneState & {
   view: ViewPreset;
   past: HistoryEntry[];
   future: HistoryEntry[];
+  contextLost: boolean;
+  /** Increments on every forceContextRestore() call. The Canvas remounts on change. */
+  contextEpoch: number;
 } & Actions;
 
 const HISTORY_LIMIT = 50;
@@ -67,7 +72,7 @@ export const useContainerStore = create<Store>((set) => ({
   boxes: initialBoxes,
   selectedId: null,
   tool: "select",
-  snapMm: 10,
+  snapCm: 1,
   rotationSnapDeg: 90,
   showWalls: true,
   showGrid: true,
@@ -78,6 +83,8 @@ export const useContainerStore = create<Store>((set) => ({
   view: "iso",
   past: [],
   future: [],
+  contextLost: false,
+  contextEpoch: 0,
 
   setContainerType: (id) =>
     set((s) => {
@@ -100,7 +107,7 @@ export const useContainerStore = create<Store>((set) => ({
 
   setTool: (tool) => set({ tool }),
 
-  setSnapMm: (n) => set({ snapMm: Math.max(0, n) }),
+  setSnapCm: (n) => set({ snapCm: Math.max(0, n) }),
 
   setRotationSnapDeg: (n) =>
     set({ rotationSnapDeg: Math.max(1, Math.min(180, n)) }),
@@ -117,7 +124,7 @@ export const useContainerStore = create<Store>((set) => ({
 
   updateBoxPosition: (id, x, y, z) =>
     set((s) => {
-      const step = s.snapMm;
+      const step = s.snapCm;
       const boxes = s.boxes.map((b) =>
         b.id === id
           ? {
@@ -181,7 +188,7 @@ export const useContainerStore = create<Store>((set) => ({
 
   setBoxPositionXYZ: (id, x, y, z) =>
     set((s) => {
-      const step = s.snapMm;
+      const step = s.snapCm;
       const boxes = s.boxes.map((b) =>
         b.id === id
           ? {
@@ -227,6 +234,18 @@ export const useContainerStore = create<Store>((set) => ({
       past: pushHistory(s.past, s.boxes),
       future: [],
     })),
+
+  setContextLost: (lost) =>
+    set((s) => (s.contextLost === lost ? s : { contextLost: lost })),
+
+  forceContextRestore: () => {
+    let epoch = 0;
+    set((s) => {
+      epoch = s.contextEpoch + 1;
+      return { contextEpoch: epoch, contextLost: false };
+    });
+    return epoch;
+  },
 }));
 
 function pushHistory(past: HistoryEntry[], boxes: BoxPlacement[]): HistoryEntry[] {

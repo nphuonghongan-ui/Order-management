@@ -20,6 +20,7 @@ export function Scene() {
   const showGrid = useContainerStore((s) => s.showGrid);
   const showAxes = useContainerStore((s) => s.showAxes);
   const view = useContainerStore((s) => s.view);
+  const contextEpoch = useContainerStore((s) => s.contextEpoch);
   const container = getContainerType(containerTypeId);
   const { l, h, w } = container.inner;
   const cameraPos = useMemo<[number, number, number]>(
@@ -29,7 +30,11 @@ export function Scene() {
 
   return (
     <Canvas
-      shadows
+      // `key` forces a full remount on contextEpoch bump — the cleanest
+      // recovery path when the GL context is lost and cannot be restored
+      // in-place. Keyed remount gives us a fresh WebGL context.
+      key={contextEpoch}
+      shadows="soft"
       frameloop="demand"
       dpr={[1, 1.5]}
       gl={{ antialias: true, preserveDrawingBuffer: false }}
@@ -38,6 +43,7 @@ export function Scene() {
       }}
     >
       <DemandInvalidator />
+      <ContextLossHandler />
 
       <color attach="background" args={["#0b0f1a"]} />
       <fog attach="fog" args={["#0b0f1a", l * 2, l * 5]} />
@@ -45,7 +51,7 @@ export function Scene() {
       <PerspectiveCamera
         makeDefault
         fov={35}
-        near={10}
+        near={1}
         far={l * 6}
         position={cameraPos}
       />
@@ -75,10 +81,10 @@ export function Scene() {
       {showGrid && (
         <Grid
           args={[l * 1.5, w * 1.5]}
-          cellSize={100}
+          cellSize={10}
           cellThickness={0.5}
           cellColor="#1f2a3d"
-          sectionSize={1000}
+          sectionSize={100}
           sectionThickness={1}
           sectionColor="#3b4a63"
           fadeDistance={l * 1.2}
@@ -101,7 +107,7 @@ export function Scene() {
         scale={l * 1.4}
         blur={2.4}
         far={h * 0.8}
-        resolution={512}
+        resolution={256}
         frames={1}
       />
 
@@ -115,9 +121,6 @@ export function Scene() {
       />
 
       <AxisGizmo />
-      <PrecompileShaders
-        deps={[containerTypeId, showGrid]}
-      />
     </Canvas>
   );
 }
@@ -141,29 +144,36 @@ function DemandInvalidator() {
 }
 
 /**
- * Pre-compile all GLSL shaders on a microtask after mount and whenever
- * the parts of the scene that introduce new materials change. This moves
- * the 50-300ms shader-compile hitch from "first user interaction" to
- * "page load", where the existing 5s loading splash absorbs it.
+ * Wire WebGL context-loss recovery. We must call preventDefault() on
+ * `webglcontextlost` for the browser to later fire `webglcontextrestored`;
+ * if the browser never restores, the Scene's `key={contextEpoch}` remount
+ * is the fallback (driven by `forceContextRestore()` in the store).
+ *
+ * The previous `PrecompileShaders` microtask is gone — it forced
+ * `gl.compile()` during the same frame the Environment HDR and
+ * ContactShadows render targets were still binding, which could produce
+ * the upstream `GL_INVALID_OPERATION: …sampler type` that escalated into
+ * `webglcontextlost`. Three.js compiles shaders lazily on first real
+ * render, which now happens after Suspense has settled.
  */
-function PrecompileShaders({ deps }: { deps: unknown[] }) {
+function ContextLossHandler() {
   const gl = useThree((s) => s.gl);
-  const scene = useThree((s) => s.scene);
-  const camera = useThree((s) => s.camera);
   useEffect(() => {
-    // Wait one microtask so child <mesh>es have committed and are in scene.
-    const id = queueMicrotask(() => {
-      gl.compile(scene, camera);
-    });
-    return () => {
-      // queueMicrotask has no cancellation handle, but the closure guard
-      // (deps) makes a stale compile call harmless.
-      void id;
+    const canvas = gl.domElement;
+    const onLost = (event: Event) => {
+      event.preventDefault();
+      useContainerStore.getState().setContextLost(true);
     };
-    // The `deps` array is intentionally spread — callers pass whatever
-    // store slices should trigger a recompile.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gl, scene, camera, ...deps]);
+    const onRestored = () => {
+      useContainerStore.getState().setContextLost(false);
+    };
+    canvas.addEventListener("webglcontextlost", onLost, false);
+    canvas.addEventListener("webglcontextrestored", onRestored, false);
+    return () => {
+      canvas.removeEventListener("webglcontextlost", onLost);
+      canvas.removeEventListener("webglcontextrestored", onRestored);
+    };
+  }, [gl]);
   return null;
 }
 

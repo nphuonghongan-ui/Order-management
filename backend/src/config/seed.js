@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import Account from '../models/Account.js';
 import PartNum from '../models/PartNum.js';
+import Container from '../models/Container.js';
 import SeedDataHistory from '../models/SeedDataHistory.js';
 
 const ACCOUNTS = [
@@ -9,6 +10,7 @@ const ACCOUNTS = [
   { customerCustId: 'AIG', userName: 'AIGTH', password: '345678', role: 'Manufacture' },
 ];
 
+// Dimensions in centimetres (cm).
 const PART_NUMS = [
   { no: 1, partNum: 'RMS120.1', dimension: { length: 5, width: 5, height: 5 } },
   { no: 2, partNum: 'RMS121.1', dimension: { length: 3, width: 6, height: 6 } },
@@ -16,6 +18,41 @@ const PART_NUMS = [
   { no: 4, partNum: 'XMAFL040', dimension: { length: 6, width: 4, height: 5 } },
   { no: 5, partNum: 'XMAFL150', dimension: { length: 5, width: 5, height: 5 } },
   { no: 6, partNum: 'SCS01010', dimension: { length: 3, width: 4, height: 5 } },
+];
+
+const CONTAINERS = [
+  {
+    typeId: '20GP',
+    isoDesignation: '1CC',
+    label: "20' Standard (Dry)",
+    inner: { length: 586.7, width: 233.0, height: 235.0 },
+    maxWeightKg: 30480,
+    costFactor: 1.0,
+  },
+  {
+    typeId: '40GP',
+    isoDesignation: '1AA',
+    label: "40' Standard (Dry)",
+    inner: { length: 1199.8, width: 233.0, height: 235.0 },
+    maxWeightKg: 30480,
+    costFactor: 1.6,
+  },
+  {
+    typeId: '40HC',
+    isoDesignation: '1AAA',
+    label: "40' High Cube (Dry)",
+    inner: { length: 1199.8, width: 233.0, height: 265.5 },
+    maxWeightKg: 30480,
+    costFactor: 1.8,
+  },
+  {
+    typeId: '45HC',
+    isoDesignation: '1EEE',
+    label: "45' High Cube (Dry)",
+    inner: { length: 1354.2, width: 233.0, height: 265.5 },
+    maxWeightKg: 30480,
+    costFactor: 2.0,
+  },
 ];
 
 async function runSeedIfNeeded(name, run) {
@@ -57,7 +94,18 @@ async function seedPartNums() {
   }
 }
 
+async function seedContainers() {
+  for (const entry of CONTAINERS) {
+    await Container.findOneAndUpdate(
+      { typeId: entry.typeId },
+      { $set: entry },
+      { upsert: true, returnDocument: 'after' }
+    );
+  }
+}
+
 export async function autoSeed() {
   await runSeedIfNeeded('accounts', seedAccounts);
   await runSeedIfNeeded('part_nums', seedPartNums);
+  await runSeedIfNeeded('containers', seedContainers);
 }

@@ -47,6 +47,7 @@ import {
 import { extractErrorMessage } from "@/lib/apis/api";
 import { EMPTY } from "@/lib/format";
 import { useSaveShortcut } from "@/lib/hooks/useSaveShortcut";
+import { colorForPo } from "@/lib/clp/poColor";
 import {
   deletePackingList,
   listPackingLists,
@@ -576,13 +577,13 @@ export default function PackingList() {
               loadingTimerRef.current = setTimeout(() => {
                 setLoadingToContainerId(null);
                 loadingTimerRef.current = null;
-                navigate(`${row._id}/container-viewer`);
-              }, 5000);
+                navigate(`${row._id}/loading/run?auto=1`);
+              }, 500);
             }}
             disabled={loadingToContainerId === row._id}
             className="p-1.5 rounded text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
-            title="Load to Container"
-            aria-label="Load to Container"
+            title="Run Loading Optimization"
+            aria-label="Run Loading Optimization"
           >
             {loadingToContainerId === row._id ? (
               <Loader2 size={14} className="animate-spin" />
@@ -861,6 +862,7 @@ export default function PackingList() {
                             <div
                               key={group.poNum}
                               className="rounded-md border border-border bg-background overflow-hidden"
+                              style={{ borderLeft: `4px solid ${colorForPo(group.poNum)}` }}
                             >
                               <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/40">
                                 <span className="font-mono text-sm font-semibold">

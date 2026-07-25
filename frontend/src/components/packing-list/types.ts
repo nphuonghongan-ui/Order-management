@@ -1,5 +1,15 @@
 import type { Mode } from "@/components/po/types";
 
+/** 1 m³ = 1 000 000 cm³. l/w/h must be in cm. */
+const CM3_PER_M3 = 1_000_000;
+
+export const calcCbm = (
+  l: number,
+  w: number,
+  h: number,
+  qty: number
+): number => (l * w * h * qty) / CM3_PER_M3;
+
 export type AvailableLine = {
   _id: string;
   poNum: string;

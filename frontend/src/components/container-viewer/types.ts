@@ -39,7 +39,8 @@ export interface ContainerSceneState {
   boxes: BoxPlacement[];
   selectedId: string | null;
   tool: ToolMode;
-  snapMm: number;
+  /** Translate snap step in cm. */
+  snapCm: number;
   rotationSnapDeg: number;
   showWalls: boolean;
   showGrid: boolean;

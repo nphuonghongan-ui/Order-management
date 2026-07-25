@@ -1,12 +1,19 @@
 /**
- * Shipping container types and unit helpers.
+ * Shipping container type definitions and unit helpers.
  *
- * Internal unit: millimeters (mm). The 3D scene is rendered at 1 world unit
- * per millimeter so a 40HC container (~12 000 mm long) stays at a sensible
+ * Internal unit: centimetres (cm). The 3D scene is rendered at 1 world unit
+ * per centimetre so a 40HC container (~1 200 cm long) stays at a sensible
  * camera distance without further scaling.
+ *
+ * The actual list of container types is fetched at runtime from
+ * `/api/containers` (see `lib/apis/containerApi.ts`) and cached in
+ * sessionStorage. This module only owns the TypeScript types and the
+ * synchronous lookups used by the optimizer and the 3D scene; they read
+ * from `useContainerListStore`. Call `loadContainersCached()` once before
+ * the scene mounts (the ContainerViewer page does this).
  */
 
-export type ContainerTypeId = "20GP" | "40GP" | "40HC" | "45HC" | "20OT" | "40RF";
+export type ContainerTypeId = "20GP" | "40GP" | "40HC" | "45HC";
 
 export interface ContainerType {
   typeId: ContainerTypeId;
@@ -15,75 +22,40 @@ export interface ContainerType {
   maxWeightKg: number;
   /** RGBA color (0..1) for the wireframe shell. */
   shellColor: string;
+  /**
+   * Relative cost factor used as a tiebreaker when two container types
+   * achieve the same fill ratio. Lower = cheaper. 20GP = 1.0 baseline.
+   */
+  costFactor: number;
 }
 
-/**
- * Inner dimensions (mm) for the most common ISO shipping containers.
- * "inner" excludes wall/corner casting thickness.
- */
-export const CONTAINER_TYPES: ContainerType[] = [
-  {
-    typeId: "20GP",
-    label: "20' Standard (Dry)",
-    inner: { l: 5898, w: 2352, h: 2393 },
-    maxWeightKg: 28200,
-    shellColor: "#8b9bb4",
-  },
-  {
-    typeId: "40GP",
-    label: "40' Standard (Dry)",
-    inner: { l: 12032, w: 2352, h: 2393 },
-    maxWeightKg: 26780,
-    shellColor: "#8b9bb4",
-  },
-  {
-    typeId: "40HC",
-    label: "40' High Cube (Dry)",
-    inner: { l: 12032, w: 2352, h: 2698 },
-    maxWeightKg: 26580,
-    shellColor: "#8b9bb4",
-  },
-  {
-    typeId: "45HC",
-    label: "45' High Cube (Dry)",
-    inner: { l: 13556, w: 2352, h: 2698 },
-    maxWeightKg: 27600,
-    shellColor: "#8b9bb4",
-  },
-  {
-    typeId: "20OT",
-    label: "20' Open Top",
-    inner: { l: 5898, w: 2352, h: 2393 },
-    maxWeightKg: 28200,
-    shellColor: "#a8a07a",
-  },
-  {
-    typeId: "40RF",
-    label: "40' Reefer",
-    inner: { l: 11583, w: 2294, h: 2554 },
-    maxWeightKg: 27380,
-    shellColor: "#7a9bb4",
-  },
-];
+import { useContainerListStore } from "@/stores/useContainerListStore";
+
+function requireLoaded(): import("@/components/container-viewer/units").ContainerType[] {
+  const { types } = useContainerListStore.getState();
+  if (types.length === 0) {
+    throw new Error(
+      "Container types are not loaded. Call loadContainersCached() before accessing them.",
+    );
+  }
+  return types;
+}
 
 export function getContainerType(typeId: ContainerTypeId): ContainerType {
-  const t = CONTAINER_TYPES.find((c) => c.typeId === typeId);
-  if (!t) {
-    const fallback = CONTAINER_TYPES[2];
-    if (!fallback) {
-      throw new Error("CONTAINER_TYPES is empty");
-    }
-    return fallback;
-  }
-  return t;
+  const types = requireLoaded();
+  return types.find((c) => c.typeId === typeId) ?? types[0]!;
 }
 
-export const MM_PER_M = 1000;
+export function getContainerTypes(): ContainerType[] {
+  return requireLoaded();
+}
 
-/** Format a length in mm as "1.20 m" or "850 mm" depending on size. */
-export function formatMm(mm: number): string {
-  if (Math.abs(mm) >= MM_PER_M) {
-    return `${(mm / MM_PER_M).toFixed(2)} m`;
+export const CM_PER_M = 100;
+
+/** Format a length in cm as "1.20 m" or "85 cm" depending on size. */
+export function formatCm(cm: number): string {
+  if (Math.abs(cm) >= CM_PER_M) {
+    return `${(cm / CM_PER_M).toFixed(2)} m`;
   }
-  return `${Math.round(mm)} mm`;
+  return `${Math.round(cm)} cm`;
 }

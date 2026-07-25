@@ -38,7 +38,7 @@ import type {
   TransformSpace,
 } from "./types";
 
-const SNAP_OPTIONS = [1, 10, 50, 100] as const;
+const SNAP_OPTIONS = [0.1, 1, 5, 10] as const;
 const ROT_SNAP_OPTIONS = [1, 15, 30, 45, 90] as const;
 const ROT_PRESETS = [0, 90, 180, 270] as const;
 const AXIS_COLORS: Record<"x" | "y" | "z", string> = {
@@ -55,8 +55,8 @@ interface ToolbarProps {
 export function Toolbar({ plNumber }: ToolbarProps) {
   const tool = useContainerStore((s) => s.tool);
   const setTool = useContainerStore((s) => s.setTool);
-  const snapMm = useContainerStore((s) => s.snapMm);
-  const setSnapMm = useContainerStore((s) => s.setSnapMm);
+  const snapCm = useContainerStore((s) => s.snapCm);
+  const setSnapCm = useContainerStore((s) => s.setSnapCm);
   const rotSnap = useContainerStore((s) => s.rotationSnapDeg);
   const setRotSnap = useContainerStore((s) => s.setRotationSnapDeg);
   const showWalls = useContainerStore((s) => s.showWalls);
@@ -302,8 +302,8 @@ export function Toolbar({ plNumber }: ToolbarProps) {
               Translate
             </span>
             <Select
-              value={String(snapMm)}
-              onValueChange={(v) => setSnapMm(Number(v))}
+              value={String(snapCm)}
+              onValueChange={(v) => setSnapCm(Number(v))}
             >
               <SelectTrigger size="sm" className="h-6 w-20 text-xs">
                 <SelectValue />
@@ -311,7 +311,7 @@ export function Toolbar({ plNumber }: ToolbarProps) {
               <SelectContent>
                 {SNAP_OPTIONS.map((n) => (
                   <SelectItem key={n} value={String(n)}>
-                    {n} mm
+                    {n} cm
                   </SelectItem>
                 ))}
               </SelectContent>

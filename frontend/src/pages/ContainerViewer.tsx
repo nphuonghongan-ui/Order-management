@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import { ArrowLeft, Loader2, AlertCircle, Truck } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,9 @@ import { Scene } from "@/components/container-viewer/Scene";
 import { TopBar } from "@/components/container-viewer/TopBar";
 import { Toolbar } from "@/components/container-viewer/Toolbar";
 import { useContainerStore } from "@/stores/useContainerStore";
+import { useContainerListStore } from "@/stores/useContainerListStore";
+import { useOptimizerStore } from "@/stores/useOptimizerStore";
+import { loadContainersCached } from "@/lib/apis/containerApi";
 import type { BoxPlacement } from "@/components/container-viewer/types";
 import { getContainerType, type ContainerTypeId } from "@/components/container-viewer/units";
 
@@ -79,6 +82,7 @@ function seedBoxes(
 
 export default function ContainerViewer() {
   const { plId } = useParams<{ plId: string }>();
+  const [search] = useSearchParams();
   const navigate = useNavigate();
   const [toolbarOpen, setToolbarOpen] = useState(true);
 
@@ -90,9 +94,23 @@ export default function ContainerViewer() {
   const [error, setError] = useState<string | null>(null);
 
   const setBoxes = useContainerStore((s) => s.setBoxes);
+  const setContainerType = useContainerStore((s) => s.setContainerType);
   const reset = useContainerStore((s) => s.reset);
   const undo = useContainerStore((s) => s.undo);
   const redo = useContainerStore((s) => s.redo);
+  const contextLost = useContainerStore((s) => s.contextLost);
+  const forceContextRestore = useContainerStore((s) => s.forceContextRestore);
+
+  const containersLoaded = useContainerListStore((s) => s.loaded);
+  const setContainerTypes = useContainerListStore((s) => s.setTypes);
+  const [containerLoadError, setContainerLoadError] = useState<string | null>(null);
+
+  const runIdParam = search.get("runId");
+  const containerParam = search.get("container") as ContainerTypeId | null;
+  const idxParam = search.get("idx");
+  const fromOptimizer = Boolean(runIdParam && containerParam);
+
+  const optimizerResult = useOptimizerStore((s) => s.result);
 
   const load = useCallback(async () => {
     if (!plId) {
@@ -124,14 +142,47 @@ export default function ContainerViewer() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (containersLoaded) return;
+    let alive = true;
+    (async () => {
+      try {
+        const types = await loadContainersCached();
+        if (!alive) return;
+        setContainerTypes(types);
+      } catch (err) {
+        if (!alive) return;
+        const msg =
+          err instanceof Error ? err.message : "Failed to load container types";
+        setContainerLoadError(msg);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [containersLoaded, setContainerTypes]);
+
   // Seed the 3D scene once data is ready.
   useEffect(() => {
     if (!record) return;
+    // 1) If we navigated from the optimizer result view, prefer the
+    //    optimizer's placements for the chosen container.
+    if (fromOptimizer && optimizerResult && containerParam) {
+      const c = optimizerResult.containers.find(
+        (x) => x.containerTypeId === containerParam
+      );
+      if (c) {
+        setContainerType(containerParam);
+        setBoxes(c.placements);
+        return;
+      }
+    }
+    // 2) Otherwise fall back to the naive seed.
     const state = useContainerStore.getState();
     const seeded = seedBoxes(record, partNumToDim, state.containerTypeId);
     setBoxes(seeded);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [record, partNumToDim]);
+  }, [record, partNumToDim, fromOptimizer, optimizerResult, containerParam, idxParam]);
 
   useEffect(() => {
     return () => reset();
@@ -189,10 +240,11 @@ export default function ContainerViewer() {
   return (
     <PageShell className="h-screen overflow-hidden">
       <div className="fixed inset-0 bg-[#0b0f1a]">
-        {/* 3D viewport fills the window */}
-        <Scene />
+        {/* 3D viewport fills the window. Only mount once container types are
+            loaded — getContainerType() throws if called too early. */}
+        {containersLoaded && <Scene />}
 
-        {loading && (
+        {(loading || !containersLoaded) && !containerLoadError && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <Loader2 size={28} className="animate-spin text-white/70" />
           </div>
@@ -210,17 +262,45 @@ export default function ContainerViewer() {
           </div>
         )}
 
+        {containerLoadError && !error && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
+            <div className="rounded-full bg-destructive/10 p-3">
+              <AlertCircle size={22} className="text-destructive" />
+            </div>
+            <p className="text-sm text-destructive max-w-sm">{containerLoadError}</p>
+          </div>
+        )}
+
+        {contextLost && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
+            <div className="rounded-full bg-destructive/10 p-3">
+              <AlertCircle size={22} className="text-destructive" />
+            </div>
+            <p className="text-sm text-destructive max-w-sm">
+              The 3D scene lost its WebGL context. This is usually a GPU or
+              driver hiccup — reloading the scene almost always fixes it.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => forceContextRestore()}
+            >
+              Reload scene
+            </Button>
+          </div>
+        )}
+
         {/* Floating top bar — container picker + fill stats */}
-        {!loading && !error && (
-          <div className="absolute top-3 left-3 right-3 sm:right-[272px] pointer-events-auto z-10">
-            <div className="rounded-xl bg-card/85 backdrop-blur border border-border shadow-lg overflow-hidden">
+        {!loading && !error && containersLoaded && (
+          <div className="absolute top-3 left-3 right-3 sm:right-[272px] pointer-events-auto z-50">
+            <div className="rounded-xl bg-card/85 border border-border shadow-lg">
               <TopBar />
             </div>
           </div>
         )}
 
         {/* Floating right toolbar — collapsible */}
-        {!loading && !error && toolbarOpen && (
+        {!loading && !error && containersLoaded && toolbarOpen && (
           <div className="absolute top-3 right-3 bottom-3 w-64 pointer-events-auto z-10">
             <div className="h-full rounded-xl bg-card/85 backdrop-blur border border-border shadow-lg overflow-hidden">
               <Toolbar plNumber={record?.plNumber} partNumToDim={partNumToDim} />
@@ -229,7 +309,7 @@ export default function ContainerViewer() {
         )}
 
         {/* Toolbar pin/unpin toggle */}
-        {!loading && !error && (
+        {!loading && !error && containersLoaded && (
           <button
             type="button"
             onClick={() => setToolbarOpen((v) => !v)}

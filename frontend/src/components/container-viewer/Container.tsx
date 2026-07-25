@@ -4,8 +4,8 @@ import { Edges } from "@react-three/drei";
 import { getContainerType } from "./units";
 import { useContainerStore } from "../../stores/useContainerStore";
 
-const WALL_THICKNESS_MM = 30;
-const FLOOR_THICKNESS_MM = 28;
+const WALL_THICKNESS_CM = 3;
+const FLOOR_THICKNESS_CM = 2.8;
 
 export function Container() {
   const typeId = useContainerStore((s) => s.containerTypeId);
@@ -49,62 +49,62 @@ export function Container() {
     <group>
       {/* Floor — sits at y=0 */}
       <mesh
-        position={[0, -FLOOR_THICKNESS_MM / 2, 0]}
+        position={[0, -FLOOR_THICKNESS_CM / 2, 0]}
         receiveShadow
       >
-        <boxGeometry args={[l + 60, FLOOR_THICKNESS_MM, w + 60]} />
+        <boxGeometry args={[l + 6, FLOOR_THICKNESS_CM, w + 6]} />
         <meshStandardMaterial color={floorColor} metalness={0.1} roughness={0.85} />
         <Edges color="#2c3340" />
       </mesh>
 
       {/* Left wall (-X) */}
       <mesh
-        position={[-halfL - WALL_THICKNESS_MM / 2, h / 2, 0]}
+        position={[-halfL - WALL_THICKNESS_CM / 2, h / 2, 0]}
         material={wallMaterial}
         castShadow
         receiveShadow
       >
-        <boxGeometry args={[WALL_THICKNESS_MM, h, w]} />
+        <boxGeometry args={[WALL_THICKNESS_CM, h, w]} />
       </mesh>
 
       {/* Right wall (+X) */}
       <mesh
-        position={[halfL + WALL_THICKNESS_MM / 2, h / 2, 0]}
+        position={[halfL + WALL_THICKNESS_CM / 2, h / 2, 0]}
         material={wallMaterial}
         castShadow
         receiveShadow
       >
-        <boxGeometry args={[WALL_THICKNESS_MM, h, w]} />
+        <boxGeometry args={[WALL_THICKNESS_CM, h, w]} />
       </mesh>
 
       {/* Top (+Y) */}
       <mesh
-        position={[0, h + WALL_THICKNESS_MM / 2, 0]}
+        position={[0, h + WALL_THICKNESS_CM / 2, 0]}
         material={wallMaterial}
         castShadow
         receiveShadow
       >
-        <boxGeometry args={[l, WALL_THICKNESS_MM, w]} />
+        <boxGeometry args={[l, WALL_THICKNESS_CM, w]} />
       </mesh>
 
       {/* Front wall (-Z) */}
       <mesh
-        position={[0, h / 2, -halfW - WALL_THICKNESS_MM / 2]}
+        position={[0, h / 2, -halfW - WALL_THICKNESS_CM / 2]}
         material={wallMaterial}
         castShadow
         receiveShadow
       >
-        <boxGeometry args={[l, h, WALL_THICKNESS_MM]} />
+        <boxGeometry args={[l, h, WALL_THICKNESS_CM]} />
       </mesh>
 
       {/* Back wall (+Z) */}
       <mesh
-        position={[0, h / 2, halfW + WALL_THICKNESS_MM / 2]}
+        position={[0, h / 2, halfW + WALL_THICKNESS_CM / 2]}
         material={wallMaterial}
         castShadow
         receiveShadow
       >
-        <boxGeometry args={[l, h, WALL_THICKNESS_MM]} />
+        <boxGeometry args={[l, h, WALL_THICKNESS_CM]} />
       </mesh>
 
       {/* Inner volume edges — always visible, sharp outline */}
@@ -119,7 +119,7 @@ export function Container() {
           position={[dx * halfL, dy * h, dz * halfW]}
           castShadow
         >
-          <boxGeometry args={[60, 60, 60]} />
+          <boxGeometry args={[6, 6, 6]} />
           <meshStandardMaterial color="#2a2f3a" metalness={0.8} roughness={0.4} />
         </mesh>
       ))}

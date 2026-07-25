@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 
 import PartNum from '../models/PartNum.js';
 
+// Dimensions in centimetres (cm).
 const SEED_DATA = [
   { no: 1, partNum: 'RMS120.1', dimension: { length: 5, width: 5, height: 5 } },
   { no: 2, partNum: 'RMS121.1', dimension: { length: 3, width: 6, height: 6 } },

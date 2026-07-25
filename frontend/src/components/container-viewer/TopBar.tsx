@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useContainerStore, computeStats } from "../../stores/useContainerStore";
-import { CONTAINER_TYPES, formatMm } from "./units";
+import { useContainerListStore } from "@/stores/useContainerListStore";
+import { formatCm, type ContainerTypeId } from "./units";
 import {
   Select,
   SelectContent,
@@ -18,6 +19,7 @@ export function TopBar() {
   const showGrid = useContainerStore((s) => s.showGrid);
   const showAxes = useContainerStore((s) => s.showAxes);
   const showLabels = useContainerStore((s) => s.showLabels);
+  const types = useContainerListStore((s) => s.types);
 
   const stats = useMemo(
     () =>
@@ -26,7 +28,7 @@ export function TopBar() {
         boxes,
         selectedId: null,
         tool: "select",
-        snapMm: 10,
+        snapCm: 1,
         rotationSnapDeg: 90,
         showWalls,
         showGrid,
@@ -46,21 +48,24 @@ export function TopBar() {
         : "text-success";
 
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-border bg-card/80 backdrop-blur px-5 py-2.5">
+    <div className="rounded-xl overflow-hidden flex items-center justify-between gap-4 border-b border-border bg-card/80 backdrop-blur px-5 py-2.5">
       <div className="flex items-center gap-3 min-w-0">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Truck size={16} className="text-primary-light" />
         </div>
-        <Select value={containerTypeId} onValueChange={(v) => setContainerType(v as never)}>
+        <Select
+          value={containerTypeId}
+          onValueChange={(v) => setContainerType(v as ContainerTypeId)}
+        >
           <SelectTrigger className="h-8 min-w-[220px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {CONTAINER_TYPES.map((c) => (
+            {types.map((c) => (
               <SelectItem key={c.typeId} value={c.typeId}>
                 {c.label} ·{" "}
                 <span className="text-muted-foreground">
-                  {formatMm(c.inner.l)} × {formatMm(c.inner.w)} × {formatMm(c.inner.h)}
+                  {formatCm(c.inner.l)} × {formatCm(c.inner.w)} × {formatCm(c.inner.h)}
                 </span>
               </SelectItem>
             ))}
