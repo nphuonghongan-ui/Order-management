@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx";
 import type { PackingListRecord } from "./types";
+import { calcCbm } from "./types";
 import { calcContainersNeeded } from "@/components/po/utils";
 
 const fmtCurrency = (n: number) =>
@@ -90,7 +91,7 @@ export async function exportPackingListToExcel(
       const l = dim?.length ?? 0;
       const w = dim?.width ?? 0;
       const h = dim?.height ?? 0;
-      const cbm = hasDim ? l * w * h * it.qty : 0;
+      const cbm = hasDim ? calcCbm(l, w, h, it.qty) : 0;
       const qpc = it.quantityPerCont ?? 0;
       const ctn = qpc > 0 ? calcContainersNeeded(it.qty, qpc) : 0;
       aoa.push([
@@ -114,7 +115,7 @@ export async function exportPackingListToExcel(
   const totalCbm = record.items.reduce((s, it) => {
     const dim = partNumToDim.get(it.partNum);
     if (!dim) return s;
-    return s + dim.length * dim.width * dim.height * it.qty;
+    return s + calcCbm(dim.length, dim.width, dim.height, it.qty);
   }, 0);
 
   aoa.push(["Total NO OF CTN", "", "", "", "", "", totalCtn]);

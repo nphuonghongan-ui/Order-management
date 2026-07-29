@@ -67,6 +67,12 @@ const packingListSchema = new mongoose.Schema(
     },
     itemsCount: { type: Number, required: true, min: 1 },
     total: { type: Number, required: true, min: 0 },
+    // easy-cargo sync state
+    easycargoShipmentId: { type: String, default: null },
+    easycargoShipmentUrl: { type: String, default: null },
+    easycargoSentAt: { type: Date, default: null },
+    isUpdated: { type: Boolean, default: false },
+    isShipmentCreated: { type: Boolean, default: false },
   },
   { timestamps: true, collection: 'packing_lists' }
 );
@@ -107,7 +113,15 @@ packingListSchema.statics.toClient = (doc, orderSellingByLineId = new Map()) => 
   }),
   itemsCount: doc.itemsCount,
   total: doc.total,
+  easycargoShipmentId: doc.easycargoShipmentId ?? null,
+  easycargoShipmentUrl: doc.easycargoShipmentUrl ?? null,
+  easycargoSentAt: doc.easycargoSentAt
+    ? doc.easycargoSentAt.toISOString()
+    : null,
+  isUpdated: doc.isUpdated ?? false,
+  isShipmentCreated: doc.isShipmentCreated ?? false,
   createdAt: doc.createdAt,
+  updatedAt: doc.updatedAt,
 });
 
 export default mongoose.model('PackingList', packingListSchema);

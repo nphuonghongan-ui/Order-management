@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { MENU_BY_ROLE } from "@/lib/roles";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import Logo from "@/components/Logo";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -65,7 +65,7 @@ export default function Sidebar() {
       <div className="border-t border-sidebar-border py-4">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-6 py-3 text-sm text-sidebar-foreground border-l-2 border-transparent hover:bg-muted hover:text-foreground transition-colors w-full"
+          className="flex items-center gap-3 px-6 py-3 text-sm text-sidebar-foreground border-l-2 border-transparent hover:bg-muted hover:text-foreground transition-colors w-full cursor-pointer"
         >
           <LogOut size={18} />
           Logout

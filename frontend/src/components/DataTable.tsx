@@ -5,13 +5,16 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Info,
   Inbox,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export interface Column<T> {
   key: string;
   label: string;
+  labelTooltip?: ReactNode;
   align?: "left" | "right";
   mono?: boolean;
   width?: string;
@@ -102,8 +105,25 @@ export default function DataTable<T extends { _id: string }>({
                   col.width
                 )}
               >
-                <span className="inline-flex items-center">
+                <span className="inline-flex items-center gap-0.5">
                   {col.label}
+                  {col.labelTooltip && (
+                    <TooltipProvider delayDuration={300}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span
+                            className="inline-flex items-center cursor-help"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Info size={13} className="text-muted-foreground/50 hover:text-muted-foreground" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-[16rem] text-xs">
+                          {col.labelTooltip}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
                   {col.sortable !== false && (
                     sortKey === col.key ? (
                       sortDir === "asc"
@@ -128,7 +148,6 @@ export default function DataTable<T extends { _id: string }>({
             <tr>
               <td colSpan={colCount} className="py-12 text-center">
                 <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                  <Inbox size={32} className="opacity-40" />
                   <span className="text-sm">{emptyMessage}</span>
                 </div>
               </td>

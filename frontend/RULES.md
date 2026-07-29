@@ -107,10 +107,14 @@ src/
 │   ├── ActionToolbar.jsx     # NEW: search, filter chips, primary CTA
 │   └── ui/                   # existing shadcn components
 ├── lib/
-│   ├── axios.js              # existing (add auth header later)
-│   ├── roles.js              # NEW: role enum, menu map, permissions
-│   ├── data.js               # existing (FilterType)
-│   └── utils.js              # existing (cn)
+│   ├── apis/                 # API clients (axios, poApi, packingListApi, etc.)
+│   ├── hooks/                # custom hooks (useCursorPagination, useSaveShortcut)
+│   ├── utils/                # utilities (utils.ts — cn helper)
+│   ├── data.ts               # FilterType
+│   ├── format.ts             # number/currency/date formatting
+│   ├── motion.ts             # animation presets
+│   ├── roles.ts              # role enum, menu map, permissions
+│   └── socket.ts             # Socket.IO real-time client
 └── App.jsx                   # rewritten: routes updated to match map above
 ```
 
@@ -122,7 +126,7 @@ src/
 
 **Action Toolbar** (above table):
 - Search input (outlined, 2px primary focus ring per DESIGN.md)
-- Filter chips: All / Submitted / Confirmed (reuse `lib/data.js` `FilterType`)
+- Filter chips: All / Submitted / Confirmed (reuse `lib/data.ts` `FilterType`)
 - Primary CTA button: "Create Order" (primary `#003d9b` bg, `on-primary` `#ffffff` text, 0.25rem radius)
 
 **Data Table**:
@@ -188,7 +192,7 @@ A nested route at `/dashboard/packing-list/new`. Same `Sale`-only guard as the i
 - Footer: `Cancel` (outline) + `Confirm (n)` (primary, disabled when `n === 0`).
 - Clicking a row toggles its selection; selected rows use `bg-primary/10` and hover uses `bg-muted` (matches the `DataTable` row-hover convention).
 
-**PL Number generation** is client-side (`PL-YYYY-NNNN`) until the backend exposes `GET /api/packing-list/next-pl-num`; then swap to that endpoint (same pattern as `fetchNextPONum` in `lib/poApi.ts`).
+**PL Number generation** is client-side (`PL-YYYY-NNNN`) until the backend exposes `GET /api/packing-list/next-pl-num`; then swap to that endpoint (same pattern as `fetchNextPONum` in `lib/apis/poApi.ts`).
 
 **Submit button** is enabled only when:
 - `picked.length > 0` (at least one item picked)
@@ -377,11 +381,11 @@ Every component references specific sections of `DESIGN.md`:
 ## 9. State Management
 
 - **`AuthContext`** — provides `{ role, login(username), logout() }` to the entire app via a provider in `App.jsx`.
-- **Role enum** in `lib/roles.js`:
+- **Role enum** in `lib/roles.ts`:
   ```js
   export const ROLES = { PO: 'PO', SALE: 'Sale', MANUFACTURE: 'Manufacture' };
   ```
-- **Menu map** in `lib/roles.js`:
+- **Menu map** in `lib/roles.ts`:
   ```js
   export const MENU_BY_ROLE = {
     PO:          [{ label: 'Inventory', path: '/dashboard/inventory', icon: 'Package' }],
@@ -389,7 +393,7 @@ Every component references specific sections of `DESIGN.md`:
     Sale:        [{ label: 'Packing List', path: '/dashboard/packing-list', icon: 'ClipboardList' }],
   };
   ```
-- **Permissions** in `lib/roles.js`:
+- **Permissions** in `lib/roles.ts`:
   ```js
   export const canAccess = (role, path) => { /* check MENU_BY_ROLE */ };
   ```
@@ -399,7 +403,7 @@ Every component references specific sections of `DESIGN.md`:
 
 ## 10. Implementation Order
 
-1. Create `lib/roles.js` — role enum + menu map + `canAccess`
+1. Create `lib/roles.ts` — role enum + menu map + `canAccess`
 2. Create `context/AuthContext.jsx` — role + `login(username)` + `logout()`
 3. Rewrite `LoginPage.jsx` — mock username-to-role lookup, navigate to `/dashboard`
 4. Rewrite `App.jsx` — new routes, `ProtectedRoute` wrapper, `AuthContext` provider, `<Outlet>` layout
@@ -412,7 +416,7 @@ Every component references specific sections of `DESIGN.md`:
 11. Create `pages/Inventory.jsx` — wired with mock data, uses DataTable + ActionToolbar + StatusBadge
 12. Create `pages/PackingList.jsx` — wired with mock data, same component pattern
 13. Delete stale files (section 6)
-14. When backend endpoints exist → swap mock data for real API calls via `lib/axios.js`
+14. When backend endpoints exist → swap mock data for real API calls via `lib/apis/axios.ts`
 
 ---
 

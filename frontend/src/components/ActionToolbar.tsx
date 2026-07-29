@@ -1,5 +1,5 @@
 import { Search, Plus, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 
 export interface FilterOption {

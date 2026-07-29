@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import api from "@/lib/axios";
+import api from "@/lib/apis/axios";
 import { connectSocket, disconnectSocket } from "@/lib/socket";
 import { useNotificationStore } from "@/stores/notificationStore";
 import type { Role } from "@/lib/roles";

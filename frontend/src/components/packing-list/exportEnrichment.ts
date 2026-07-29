@@ -1,4 +1,4 @@
-import { listPartNums, type PartNumOption } from "@/lib/partNumApi";
+import { listPartNums, type PartNumOption } from "@/lib/apis/partNumApi";
 
 export async function getPartNumDimensions(): Promise<
   Map<string, { length: number; width: number; height: number }>

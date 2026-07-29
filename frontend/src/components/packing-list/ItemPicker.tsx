@@ -24,8 +24,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { listLineItems } from "@/lib/lineItemApi";
-import { listPartNums } from "@/lib/partNumApi";
+import { listLineItems } from "@/lib/apis/lineItemApi";
+import { listPartNums } from "@/lib/apis/partNumApi";
 import { calcContainersNeeded, fmt } from "@/components/po/utils";
 import {
   currencyCell,
@@ -43,6 +43,7 @@ import type {
   AvailableLine,
   PickedItem,
 } from "./types";
+import { calcCbm } from "./types";
 import DataTable, { type Column } from "@/components/DataTable";
 
 const toAvailableLine = (
@@ -110,7 +111,7 @@ const toPickedItem = (l: AvailableLine, qty: number): PickedItem => ({
   length: l.length,
   width: l.width,
   height: l.height,
-  cbm: l.length * l.width * l.height * qty,
+  cbm: calcCbm(l.length, l.width, l.height, qty),
 });
 
 function QtyCell({
@@ -373,7 +374,8 @@ const buildColumns = (
   },
   {
     key: "cbm",
-    label: "CBM",
+    label: "CBM (m³)",
+    labelTooltip: "Calculated as: (L × W × H in cm × Sell Qty) ÷ 1,000,000",
     align: "right",
     width: "min-w-[7rem]",
     sortable: true,
@@ -526,7 +528,7 @@ export function ItemPicker({
       buildColumns(
         (row) => monoCell(formatNumber(remainingFor(row))),
         (row) => remainingFor(row),
-        (row) => row.length * row.width * row.height * remainingFor(row),
+        (row) => calcCbm(row.length, row.width, row.height, remainingFor(row)),
         (row) => remainingFor(row),
         (row) => <AwaitingManufactureFlag row={row} role={role} />
       ),
@@ -545,7 +547,7 @@ export function ItemPicker({
       const updated: PickedItem = {
         ...item,
         qty: clamped,
-        cbm: item.length * item.width * item.height * clamped,
+        cbm: calcCbm(item.length, item.width, item.height, clamped),
       };
       const copy = [...prev];
       copy[idx] = updated;
@@ -566,10 +568,12 @@ export function ItemPicker({
         ),
         (row) => pickedQtyByLineId.get(row._id) ?? row.sellingQuantity,
         (row) =>
-          row.length *
-          row.width *
-          row.height *
-          (pickedQtyByLineId.get(row._id) ?? row.sellingQuantity),
+          calcCbm(
+            row.length,
+            row.width,
+            row.height,
+            pickedQtyByLineId.get(row._id) ?? row.sellingQuantity
+          ),
         (row) => pickedQtyByLineId.get(row._id) ?? row.sellingQuantity
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -630,7 +634,7 @@ export function ItemPicker({
       const updated: PickedItem = {
         ...existing,
         qty: newQty,
-        cbm: existing.length * existing.width * existing.height * newQty,
+        cbm: calcCbm(existing.length, existing.width, existing.height, newQty),
       };
       const copy = [...prev];
       copy[idx] = updated;

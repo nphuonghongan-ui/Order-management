@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "sonner";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router";
 import { useAuthStore } from "./stores/authStore";
@@ -9,10 +9,13 @@ import Dashboard from "./pages/Dashboard";
 import NewOrder from "./pages/NewOrder";
 import PackingList from "./pages/PackingList";
 import NewPackingList from "./pages/NewPackingList";
-import LoadingToContainer from "./pages/LoadingToContainer";
 import ProductionSchedule from "./pages/ProductionSchedule";
 import MyOrders from "./pages/MyOrders";
 import NotFound from "./pages/NotFound";
+
+const LoadingToContainer = lazy(
+  () => import("./pages/LoadingToContainer")
+);
 
 function AuthBootstrap() {
   const restoreSession = useAuthStore((s) => s.restoreSession);
@@ -105,10 +108,12 @@ function App() {
                 }
               />
               <Route
-                path=":plId/loading"
+                path=":plId/loading/run"
                 element={
                   <RoleGuard allowed={[ROLES.SALE]}>
-                    <LoadingToContainer />
+                    <Suspense fallback={null}>
+                      <LoadingToContainer />
+                    </Suspense>
                   </RoleGuard>
                 }
               />

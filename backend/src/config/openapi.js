@@ -326,11 +326,33 @@ const options = {
             dimension: {
               type: 'object',
               properties: {
-                length: { type: 'number', minimum: 0 },
-                width: { type: 'number', minimum: 0 },
-                height: { type: 'number', minimum: 0 },
+                length: { type: 'number', minimum: 0, description: 'cm' },
+                width: { type: 'number', minimum: 0, description: 'cm' },
+                height: { type: 'number', minimum: 0, description: 'cm' },
               },
             },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        ContainerPublic: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            typeId: { type: 'string', enum: ['20GP', '40GP', '40HC', '45HC'] },
+            isoDesignation: { type: 'string', nullable: true },
+            label: { type: 'string' },
+            inner: {
+              type: 'object',
+              properties: {
+                length: { type: 'number', minimum: 0, description: 'cm' },
+                width: { type: 'number', minimum: 0, description: 'cm' },
+                height: { type: 'number', minimum: 0, description: 'cm' },
+              },
+            },
+            maxWeightKg: { type: 'number', minimum: 0 },
+            shellColor: { type: 'string' },
+            costFactor: { type: 'number', minimum: 0 },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
           },

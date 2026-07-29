@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 
+/** All dimensions in centimetres (cm). */
 const dimensionSchema = new mongoose.Schema(
   {
     length: { type: Number, required: true, min: 0 },
