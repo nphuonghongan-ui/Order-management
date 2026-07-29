@@ -103,7 +103,6 @@ export default function LoadingToContainer() {
           Missing packing list id
         </p>
         <Button
-          variant="outline"
           onClick={() => navigate("/dashboard/packing-list")}
         >
           Back
@@ -135,7 +134,6 @@ export default function LoadingToContainer() {
             Retry
           </Button>
           <Button
-            variant="outline"
             onClick={() => navigate("/dashboard/packing-list")}
           >
             Back
@@ -188,7 +186,6 @@ export default function LoadingToContainer() {
           </p>
         )}
         <Button
-          variant="outline"
           onClick={() => navigate("/dashboard/packing-list")}
         >
           Back
@@ -239,7 +236,6 @@ export default function LoadingToContainer() {
         <ButtonIcon size={16} /> {buttonLabel}
       </Button>
       <Button
-        variant="outline"
         onClick={() => navigate("/dashboard/packing-list")}
       >
         Back
