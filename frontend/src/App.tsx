@@ -9,14 +9,12 @@ import Dashboard from "./pages/Dashboard";
 import NewOrder from "./pages/NewOrder";
 import PackingList from "./pages/PackingList";
 import NewPackingList from "./pages/NewPackingList";
-import LoadingToContainer from "./pages/LoadingToContainer";
 import ProductionSchedule from "./pages/ProductionSchedule";
 import MyOrders from "./pages/MyOrders";
 import NotFound from "./pages/NotFound";
 
-const ContainerViewer = lazy(() => import("./pages/ContainerViewer"));
-const OptimizationRunPage = lazy(
-  () => import("./pages/OptimizationRunPage")
+const LoadingToContainer = lazy(
+  () => import("./pages/LoadingToContainer")
 );
 
 function AuthBootstrap() {
@@ -110,29 +108,11 @@ function App() {
                 }
               />
               <Route
-                path=":plId/loading"
-                element={
-                  <RoleGuard allowed={[ROLES.SALE]}>
-                    <LoadingToContainer />
-                  </RoleGuard>
-                }
-              />
-              <Route
-                path=":plId/container-viewer"
-                element={
-                  <RoleGuard allowed={[ROLES.SALE]}>
-                    <Suspense fallback={null}>
-                      <ContainerViewer />
-                    </Suspense>
-                  </RoleGuard>
-                }
-              />
-              <Route
                 path=":plId/loading/run"
                 element={
                   <RoleGuard allowed={[ROLES.SALE]}>
                     <Suspense fallback={null}>
-                      <OptimizationRunPage />
+                      <LoadingToContainer />
                     </Suspense>
                   </RoleGuard>
                 }

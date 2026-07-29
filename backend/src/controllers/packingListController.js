@@ -471,7 +471,7 @@ export const updatePackingList = async (req, res) => {
 
       const itemsCount = items.length;
       const total = items.reduce((s, it) => s + it.qty * it.unitPrice, 0);
-      pl.set({ customer, delivery, items, itemsCount, total });
+      pl.set({ customer, delivery, items, itemsCount, total, isUpdated: true });
       await pl.save({ session });
       updatedDoc = pl;
     });

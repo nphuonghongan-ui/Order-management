@@ -148,7 +148,6 @@ export default function DataTable<T extends { _id: string }>({
             <tr>
               <td colSpan={colCount} className="py-12 text-center">
                 <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                  <Inbox size={32} className="opacity-40" />
                   <span className="text-sm">{emptyMessage}</span>
                 </div>
               </td>

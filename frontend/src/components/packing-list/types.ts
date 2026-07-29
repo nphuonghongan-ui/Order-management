@@ -73,4 +73,11 @@ export interface PackingListRecord {
   itemsCount: number;
   total: number;
   createdAt: string;
+  // easy-cargo sync state
+  easycargoShipmentId: string | null;
+  easycargoShipmentUrl: string | null;
+  easycargoSentAt: string | null;
+  isUpdated: boolean;
+  isShipmentCreated: boolean;
+  updatedAt?: string;
 }

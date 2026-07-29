@@ -170,16 +170,16 @@ function QtyCell({
 }
 
 async function loadPartNumsCached() {
-  const cached = sessionStorage.getItem("partNums_v2");
+  const cached = sessionStorage.getItem("partNums");
   if (cached) {
     try {
       return JSON.parse(cached) as Awaited<ReturnType<typeof listPartNums>>;
     } catch {
-      sessionStorage.removeItem("partNums_v2");
+      sessionStorage.removeItem("partNums");
     }
   }
   const res = await listPartNums();
-  sessionStorage.setItem("partNums_v2", JSON.stringify(res));
+  sessionStorage.setItem("partNums", JSON.stringify(res));
   return res;
 }
 

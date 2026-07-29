@@ -110,19 +110,19 @@ export default function NewOrder() {
   }
 
   async function loadPartNums() {
-    const cached = sessionStorage.getItem("partNums_v2");
+    const cached = sessionStorage.getItem("partNums");
     if (cached) {
       try {
         setPartNums(JSON.parse(cached) as PartNumOption[]);
         return;
       } catch {
-        sessionStorage.removeItem("partNums_v2");
+        sessionStorage.removeItem("partNNums_v2");
       }
     }
     try {
       const res = await listPartNums();
       setPartNums(res);
-      sessionStorage.setItem("partNums_v2", JSON.stringify(res));
+      sessionStorage.setItem("partNums", JSON.stringify(res));
     } catch {
       toast.error("Failed to load part numbers. Please try again.");
     }

@@ -43,10 +43,9 @@ export function EmptyState({
       <div
         className={cn(
           "size-10 rounded-full flex items-center justify-center",
-          ICON_BG[variant]
         )}
       >
-        <Icon size={18} />
+        <Icon size={32} className="opacity-40" />
       </div>
       <div className="flex flex-col gap-1 max-w-sm">
         <p className="text-sm font-medium text-foreground">{title}</p>

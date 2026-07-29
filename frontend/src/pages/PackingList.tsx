@@ -47,7 +47,6 @@ import {
 import { extractErrorMessage } from "@/lib/apis/api";
 import { EMPTY } from "@/lib/format";
 import { useSaveShortcut } from "@/lib/hooks/useSaveShortcut";
-import { colorForPo } from "@/lib/clp/poColor";
 import {
   deletePackingList,
   listPackingLists,
@@ -235,6 +234,28 @@ function QtyCellInline({
       )}
     </div>
   );
+}
+
+const PO_PALETTE = [
+  "#7da3d6",
+  "#c08bd6",
+  "#86c08a",
+  "#d6a07d",
+  "#7dcdcd",
+  "#d6d27d",
+  "#a47dd6",
+  "#d67d9e",
+  "#7d9ed6",
+  "#b1d67d",
+  "#d6867d",
+  "#7dd6a4",
+];
+
+function poColorHex(key: string | undefined): string {
+  if (!key) return "#5a6678";
+  let h = 5381;
+  for (let i = 0; i < key.length; i++) h = ((h << 5) + h + key.charCodeAt(i)) | 0;
+  return PO_PALETTE[Math.abs(h) % PO_PALETTE.length] ?? "#5a6678";
 }
 
 export default function PackingList() {
@@ -862,7 +883,7 @@ export default function PackingList() {
                             <div
                               key={group.poNum}
                               className="rounded-md border border-border bg-background overflow-hidden"
-                              style={{ borderLeft: `4px solid ${colorForPo(group.poNum)}` }}
+                              style={{ borderLeft: `4px solid ${poColorHex(group.poNum)}` }}
                             >
                               <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/40">
                                 <span className="font-mono text-sm font-semibold">
