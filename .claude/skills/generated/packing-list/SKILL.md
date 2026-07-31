@@ -47,7 +47,7 @@ Start here when exploring this area:
 | `availableColumns` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 525 |
 | `setPickedQtyForLine` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 538 |
 | `pickedColumns` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 557 |
-| `getPartNumDimensions` | Function | `frontend/src/components/packing-list/exportEnrichment.ts` | 2 |
+| `getPartNumDimensions` | Function | `frontend/src/components/packing-list/exportEnrichment.ts` | 9 |
 | `exportPackingListToExcel` | Function | `frontend/src/components/packing-list/exportPackingListExcel.ts` | 29 |
 | `handlePdf` | Function | `frontend/src/components/packing-list/ExportButtons.tsx` | 18 |
 | `handleExcel` | Function | `frontend/src/components/packing-list/ExportButtons.tsx` | 35 |
@@ -60,7 +60,7 @@ Start here when exploring this area:
 | `submitQtyPrompt` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 719 |
 | `PackingListDocument` | Function | `frontend/src/components/packing-list/PackingListPDF.tsx` | 224 |
 | `listLineItems` | Function | `frontend/src/lib/apis/lineItemApi.ts` | 19 |
-| `listPartNums` | Function | `frontend/src/lib/apis/partNumApi.ts` | 8 |
+| `listPartNums` | Function | `frontend/src/lib/apis/partNumApi.ts` | 13 |
 | `load` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 430 |
 
 ## Execution Flows

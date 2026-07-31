@@ -18,7 +18,7 @@ description: "Skill for the Hooks area of Order-management. 9 symbols across 3 f
 | File | Symbols |
 |------|---------|
 | `frontend/src/lib/hooks/useCursorPagination.ts` | useCursorPagination, loadPage, prev, next, jumpTo (+1) |
-| `frontend/src/hooks/useEasyCargo.ts` | run, extractErrorMessage |
+| `frontend/src/lib/hooks/useEasyCargo.ts` | run, extractErrorMessage |
 | `frontend/src/lib/apis/easycargoApi.ts` | createShipment |
 
 ## Entry Points
@@ -41,9 +41,9 @@ Start here when exploring this area:
 | `next` | Function | `frontend/src/lib/hooks/useCursorPagination.ts` | 97 |
 | `jumpTo` | Function | `frontend/src/lib/hooks/useCursorPagination.ts` | 103 |
 | `retry` | Function | `frontend/src/lib/hooks/useCursorPagination.ts` | 119 |
-| `run` | Function | `frontend/src/hooks/useEasyCargo.ts` | 24 |
 | `createShipment` | Function | `frontend/src/lib/apis/easycargoApi.ts` | 16 |
-| `extractErrorMessage` | Function | `frontend/src/hooks/useEasyCargo.ts` | 56 |
+| `run` | Function | `frontend/src/lib/hooks/useEasyCargo.ts` | 24 |
+| `extractErrorMessage` | Function | `frontend/src/lib/hooks/useEasyCargo.ts` | 56 |
 
 ## How to Explore
 

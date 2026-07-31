@@ -5,12 +5,12 @@ import PartNum from '../models/PartNum.js';
 
 // Dimensions in centimetres (cm).
 const SEED_DATA = [
-  { no: 1, partNum: 'RMS120.1', dimension: { length: 5, width: 5, height: 5 } },
-  { no: 2, partNum: 'RMS121.1', dimension: { length: 3, width: 6, height: 6 } },
-  { no: 3, partNum: 'RMS122.1', dimension: { length: 2, width: 3, height: 6 } },
-  { no: 4, partNum: 'XMAFL040', dimension: { length: 6, width: 4, height: 5 } },
-  { no: 5, partNum: 'XMAFL150', dimension: { length: 5, width: 5, height: 5 } },
-  { no: 6, partNum: 'SCS01010', dimension: { length: 3, width: 4, height: 5 } },
+  { no: 1, partNum: 'RMS120.1', dimension: { length: 5, width: 5, height: 5 }, weightKg: 2 },
+  { no: 2, partNum: 'RMS121.1', dimension: { length: 3, width: 6, height: 6 }, weightKg: 4 },
+  { no: 3, partNum: 'RMS122.1', dimension: { length: 2, width: 3, height: 6 }, weightKg: 6 },
+  { no: 4, partNum: 'XMAFL040', dimension: { length: 6, width: 4, height: 5 }, weightKg: 1.5 },
+  { no: 5, partNum: 'XMAFL150', dimension: { length: 5, width: 5, height: 5 }, weightKg: 10 },
+  { no: 6, partNum: 'SCS01010', dimension: { length: 3, width: 4, height: 5 }, weightKg: 4.5 },
 ];
 
 async function main() {
@@ -20,7 +20,7 @@ async function main() {
   for (const entry of SEED_DATA) {
     await PartNum.findOneAndUpdate(
       { partNum: entry.partNum },
-      { $set: { no: entry.no, dimension: entry.dimension } },
+      { $set: { no: entry.no, dimension: entry.dimension, weightKg: entry.weightKg } },
       { upsert: true, new: true }
     );
     console.log(`Upserted ${entry.partNum}`);

@@ -331,6 +331,7 @@ const options = {
                 height: { type: 'number', minimum: 0, description: 'cm' },
               },
             },
+            weightKg: { type: 'number', minimum: 0, description: 'kg (per piece)' },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
           },
@@ -355,6 +356,70 @@ const options = {
             costFactor: { type: 'number', minimum: 0 },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        ClpBoxPlacement: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            partNum: { type: 'string' },
+            poNum: { type: 'string' },
+            size: {
+              type: 'object',
+              properties: {
+                l: { type: 'number', minimum: 0, description: 'mm' },
+                w: { type: 'number', minimum: 0, description: 'mm' },
+                h: { type: 'number', minimum: 0, description: 'mm' },
+              },
+            },
+            position: {
+              type: 'object',
+              properties: {
+                x: { type: 'number', minimum: 0, description: 'mm' },
+                y: { type: 'number', minimum: 0, description: 'mm' },
+                z: { type: 'number', minimum: 0, description: 'mm' },
+              },
+            },
+            rotationY: { type: 'number' },
+            weightKg: { type: 'number', minimum: 0 },
+            qty: { type: 'integer', minimum: 1 },
+            color: { type: 'string' },
+          },
+        },
+        ClpStats: {
+          type: 'object',
+          properties: {
+            fillPct: { type: 'number', minimum: 0, maximum: 100 },
+            weightKg: { type: 'number', minimum: 0 },
+            itemCount: { type: 'integer', minimum: 0 },
+            volumeMm3: { type: 'number', minimum: 0 },
+            usedVolumeMm3: { type: 'number', minimum: 0 },
+          },
+        },
+        ClpOptimizeRequest: {
+          type: 'object',
+          required: ['plId', 'containerTypeId'],
+          properties: {
+            plId: { type: 'string' },
+            containerTypeId: {
+              type: 'string',
+              enum: ['20GP', '40GP', '40HC', '45HC'],
+            },
+          },
+        },
+        ClpOptimizeResponse: {
+          type: 'object',
+          properties: {
+            containerTypeId: { type: 'string' },
+            placements: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/ClpBoxPlacement' },
+            },
+            stats: { $ref: '#/components/schemas/ClpStats' },
+            skippedPartNums: {
+              type: 'array',
+              items: { type: 'string' },
+            },
           },
         },
       },

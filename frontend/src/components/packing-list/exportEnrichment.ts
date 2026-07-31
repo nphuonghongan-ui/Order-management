@@ -1,7 +1,14 @@
 import { listPartNums, type PartNumOption } from "@/lib/apis/partNumApi";
 
+export interface PartNumDimension {
+  length: number;
+  width: number;
+  height: number;
+  weightKg: number;
+}
+
 export async function getPartNumDimensions(): Promise<
-  Map<string, { length: number; width: number; height: number }>
+  Map<string, PartNumDimension>
 > {
   const cached = sessionStorage.getItem("partNums");
   let items: PartNumOption[];
@@ -18,6 +25,9 @@ export async function getPartNumDimensions(): Promise<
     sessionStorage.setItem("partNums", JSON.stringify(items));
   }
   return new Map(
-    items.map((p) => [p.partNum, p.dimension])
+    items.map((p) => [
+      p.partNum,
+      { ...p.dimension, weightKg: p.weightKg },
+    ])
   );
 }

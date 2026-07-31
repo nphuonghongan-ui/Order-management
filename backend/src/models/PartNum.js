@@ -22,6 +22,7 @@ const partNumSchema = new mongoose.Schema(
       index: true,
     },
     dimension: { type: dimensionSchema, required: true },
+    weightKg: { type: Number, required: true, min: 0, default: 0 },
   },
   { timestamps: true, collection: 'part_nums' }
 );
@@ -35,6 +36,7 @@ partNumSchema.statics.toClient = (doc) => ({
     width: doc.dimension.width,
     height: doc.dimension.height,
   },
+  weightKg: doc.weightKg ?? 0,
   createdAt: doc.createdAt,
   updatedAt: doc.updatedAt,
 });
