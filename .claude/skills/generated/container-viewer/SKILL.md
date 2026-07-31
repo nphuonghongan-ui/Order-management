@@ -1,92 +1,86 @@
 ---
 name: container-viewer
-description: "Skill for the Container-viewer area of Order-management. 60 symbols across 11 files."
+description: "Skill for the Container-viewer area of Order-management. 26 symbols across 9 files."
 ---
 
 # Container-viewer
 
-60 symbols | 11 files | Cohesion: 74%
+26 symbols | 9 files | Cohesion: 80%
 
 ## When to Use
 
 - Working with code in `frontend/`
-- Understanding how Toolbar, setTool, setSnapMm work
+- Understanding how useClpStore, PackedBox, setSelectedId work
 - Modifying container-viewer-related functionality
 
 ## Key Files
 
 | File | Symbols |
 |------|---------|
-| `frontend/src/components/container-viewer/Toolbar.tsx` | Toolbar, setTool, setSnapMm, setRotSnap, setShowWalls (+19) |
-| `frontend/src/components/container-viewer/PackedBox.tsx` | PackedBoxes, PackedBox, selectBox, SelectedGizmo, updateBoxPosition (+5) |
-| `frontend/src/components/container-viewer/Scene.tsx` | Scene, DemandInvalidator, invalidate, PrecompileShaders, CameraRig (+2) |
-| `frontend/src/components/container-viewer/TopBar.tsx` | stats, TopBar, setContainerType, Stat |
-| `frontend/src/components/ui/select.tsx` | Select, SelectValue, SelectTrigger, SelectItem |
-| `frontend/src/components/container-viewer/registry.ts` | registerBoxGroup, getBoxGroup |
-| `frontend/src/components/container-viewer/units.ts` | getContainerType, formatMm |
-| `frontend/src/stores/useContainerStore.ts` | useContainerStore, computeStats |
-| `frontend/src/components/container-viewer/AxisGizmo.tsx` | AxisGizmo, setView |
-| `frontend/src/components/container-viewer/datExport.ts` | exportDat, copyDatToClipboard |
+| `frontend/src/components/container-viewer/Toolbar.tsx` | ToolButton, setTool, Section, Toolbar, setAxisConstraint (+3) |
+| `frontend/src/components/container-viewer/Scene.tsx` | cameraPositionFor, ViewController, TransformGizmo, Scene, setSelectedId (+1) |
+| `frontend/src/components/container-viewer/datExport.ts` | buildDatText, downloadDatFile, copyDatToClipboard |
+| `frontend/src/components/container-viewer/PackedBox.tsx` | PackedBox, setSelectedId |
+| `frontend/src/components/ui/tabs.tsx` | Tabs, TabsTrigger |
+| `frontend/src/pages/CLPViewer.tsx` | handleGenerateDat, handleCopyDat |
+| `frontend/src/stores/useClpStore.ts` | useClpStore |
+| `frontend/src/lib/format.ts` | formatNumber |
+| `frontend/src/components/QtyCell.tsx` | QtyCell |
 
 ## Entry Points
 
 Start here when exploring this area:
 
-- **`Toolbar`** (Function) — `frontend/src/components/container-viewer/Toolbar.tsx:54`
-- **`setTool`** (Function) — `frontend/src/components/container-viewer/Toolbar.tsx:56`
-- **`setSnapMm`** (Function) — `frontend/src/components/container-viewer/Toolbar.tsx:58`
-- **`setRotSnap`** (Function) — `frontend/src/components/container-viewer/Toolbar.tsx:60`
-- **`setShowWalls`** (Function) — `frontend/src/components/container-viewer/Toolbar.tsx:62`
+- **`useClpStore`** (Function) — `frontend/src/stores/useClpStore.ts:43`
+- **`PackedBox`** (Function) — `frontend/src/components/container-viewer/PackedBox.tsx:9`
+- **`setSelectedId`** (Function) — `frontend/src/components/container-viewer/PackedBox.tsx:11`
+- **`Scene`** (Function) — `frontend/src/components/container-viewer/Scene.tsx:84`
+- **`setSelectedId`** (Function) — `frontend/src/components/container-viewer/Scene.tsx:91`
 
 ## Key Symbols
 
 | Symbol | Type | File | Line |
 |--------|------|------|------|
-| `Toolbar` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 54 |
-| `setTool` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 56 |
-| `setSnapMm` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 58 |
-| `setRotSnap` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 60 |
-| `setShowWalls` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 62 |
-| `setShowGrid` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 64 |
-| `setShowAxes` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 66 |
-| `setShowLabels` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 68 |
-| `setView` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 69 |
-| `setAxisConstraint` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 79 |
-| `setBoxPositionXYZ` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 82 |
-| `setBoxRotation90` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 83 |
-| `resetBoxTransform` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 84 |
-| `recenterBox` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 85 |
-| `registerBoxGroup` | Function | `frontend/src/components/container-viewer/registry.ts` | 10 |
-| `getContainerType` | Function | `frontend/src/components/container-viewer/units.ts` | 68 |
-| `useContainerStore` | Function | `frontend/src/stores/useContainerStore.ts` | 64 |
-| `computeStats` | Function | `frontend/src/stores/useContainerStore.ts` | 238 |
-| `AxisGizmo` | Function | `frontend/src/components/container-viewer/AxisGizmo.tsx` | 8 |
-| `setView` | Function | `frontend/src/components/container-viewer/AxisGizmo.tsx` | 9 |
+| `useClpStore` | Function | `frontend/src/stores/useClpStore.ts` | 43 |
+| `PackedBox` | Function | `frontend/src/components/container-viewer/PackedBox.tsx` | 9 |
+| `setSelectedId` | Function | `frontend/src/components/container-viewer/PackedBox.tsx` | 11 |
+| `Scene` | Function | `frontend/src/components/container-viewer/Scene.tsx` | 84 |
+| `setSelectedId` | Function | `frontend/src/components/container-viewer/Scene.tsx` | 91 |
+| `onKey` | Function | `frontend/src/components/container-viewer/Scene.tsx` | 94 |
+| `formatNumber` | Function | `frontend/src/lib/format.ts` | 2 |
+| `QtyCell` | Function | `frontend/src/components/QtyCell.tsx` | 9 |
+| `Toolbar` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 96 |
+| `setAxisConstraint` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 106 |
+| `setSpace` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 108 |
+| `setView` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 110 |
+| `buildDatText` | Function | `frontend/src/components/container-viewer/datExport.ts` | 14 |
+| `downloadDatFile` | Function | `frontend/src/components/container-viewer/datExport.ts` | 34 |
+| `copyDatToClipboard` | Function | `frontend/src/components/container-viewer/datExport.ts` | 47 |
+| `handleGenerateDat` | Function | `frontend/src/pages/CLPViewer.tsx` | 132 |
+| `handleCopyDat` | Function | `frontend/src/pages/CLPViewer.tsx` | 138 |
+| `cameraPositionFor` | Function | `frontend/src/components/container-viewer/Scene.tsx` | 19 |
+| `ViewController` | Function | `frontend/src/components/container-viewer/Scene.tsx` | 38 |
+| `TransformGizmo` | Function | `frontend/src/components/container-viewer/Scene.tsx` | 69 |
 
 ## Execution Flows
 
 | Flow | Type | Steps |
 |------|------|-------|
-| `HandleDownload → GetContainerType` | cross_community | 4 |
-| `HandleCopy → GetContainerType` | cross_community | 4 |
-| `ContainerViewer → GetContainerType` | cross_community | 3 |
 | `Toolbar → Cn` | cross_community | 3 |
-| `Scene → UseContainerStore` | intra_community | 3 |
-| `Scene → Invalidate` | intra_community | 3 |
-| `Scene → AnimateCamera` | intra_community | 3 |
-| `TopBar → Cn` | cross_community | 3 |
-| `SelectedGizmo → GetBoxGroup` | intra_community | 3 |
-| `PackedBoxes → UseContainerStore` | intra_community | 3 |
+| `Scene → CameraPositionFor` | intra_community | 3 |
+| `Scene → UseClpStore` | intra_community | 3 |
+| `HandleGenerateDat → BuildDatText` | intra_community | 3 |
+| `HandleCopyDat → BuildDatText` | intra_community | 3 |
 
 ## Connected Areas
 
 | Area | Connections |
 |------|-------------|
-| Ui | 12 calls |
+| Ui | 9 calls |
 
 ## How to Explore
 
-1. `context({name: "Toolbar"})` — see callers and callees
+1. `context({name: "useClpStore"})` — see callers and callees
 2. `query({search_query: "container-viewer"})` — find related execution flows
 3. Read key files listed above for implementation details
 4. `explain({target: "<file or symbol>"})` — persisted taint findings (source→sink data flows), when indexed with `--pdg`

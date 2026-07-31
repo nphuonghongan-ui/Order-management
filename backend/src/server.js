@@ -18,6 +18,7 @@ import partNumRoutes from './routes/partNumRoutes.js';
 import containerRoutes from './routes/containerRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import easycargoRoutes from './routes/easycargoRoutes.js';
+import clpRoutes from './routes/clpRoutes.js';
 
 if (!process.env.JWT_SECRET) {
   console.warn('[WARN] JWT_SECRET is not set. Auth will fail until it is.');
@@ -48,6 +49,7 @@ app.use("/api/part-nums", partNumRoutes);
 app.use("/api/containers", containerRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/easycargo", easycargoRoutes);
+app.use("/api/clp", clpRoutes);
 
 app.get('/', apiReference({ pageTitle: 'Order Management API', content: spec }));
 

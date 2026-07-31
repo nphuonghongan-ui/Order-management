@@ -3,7 +3,12 @@ import api from "./axios";
 export interface PartNumOption {
   no: number;
   partNum: string;
-  dimension: { length: number; width: number; height: number };
+  dimension: {
+    length: number;
+    width: number;
+    height: number;
+  };
+  weightKg: number;
 }
 
 export async function listPartNums(): Promise<PartNumOption[]> {
