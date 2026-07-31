@@ -53,8 +53,8 @@ Start here when exploring this area:
 | `submitPackingList` | Function | `frontend/src/lib/apis/packingListApi.ts` | 29 |
 | `updatePackingList` | Function | `frontend/src/lib/apis/packingListApi.ts` | 36 |
 | `handleSubmit` | Function | `frontend/src/pages/NewPackingList.tsx` | 79 |
-| `applyUpdated` | Function | `frontend/src/pages/PackingList.tsx` | 320 |
-| `handleSave` | Function | `frontend/src/pages/PackingList.tsx` | 414 |
+| `applyUpdated` | Function | `frontend/src/pages/PackingList.tsx` | 342 |
+| `handleSave` | Function | `frontend/src/pages/PackingList.tsx` | 436 |
 | `sendUrgeUpdate` | Function | `frontend/src/lib/apis/notificationApi.ts` | 39 |
 | `notifyManufactureQtyMismatch` | Function | `frontend/src/lib/apis/notificationApi.ts` | 90 |
 | `reset` | Function | `frontend/src/components/notification/NotifyManufactureDialog.tsx` | 93 |

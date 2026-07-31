@@ -1,67 +1,67 @@
 ---
 name: pages
-description: "Skill for the Pages area of Order-management. 104 symbols across 30 files."
+description: "Skill for the Pages area of Order-management. 78 symbols across 21 files."
 ---
 
 # Pages
 
-104 symbols | 30 files | Cohesion: 71%
+78 symbols | 21 files | Cohesion: 75%
 
 ## When to Use
 
 - Working with code in `frontend/`
-- Understanding how fmt, useSaveShortcut, IconField work
+- Understanding how newLineId, emptyLine, fetchNextPONum work
 - Modifying pages-related functionality
 
 ## Key Files
 
 | File | Symbols |
 |------|---------|
-| `frontend/src/pages/PackingList.tsx` | PackingList, handleSheetOpenChange, EditableTextField, cancel, commit (+8) |
 | `frontend/src/pages/LandingPage.tsx` | LinkedInIcon, FooterColumn, Reveal, AnimatedWord, LogoMarquee (+7) |
-| `frontend/src/pages/MyOrders.tsx` | MyOrders, buildColumns, isAxiosError, loadPage, handlePrev (+3) |
-| `frontend/src/App.tsx` | ContainerViewer, AuthBootstrap, restoreSession, PublicRoute, ProtectedRoute (+3) |
-| `frontend/src/pages/ContainerViewer.tsx` | load, seedBoxes, ContainerViewer, setBoxes, reset (+3) |
+| `frontend/src/pages/PackingList.tsx` | EditableTextField, cancel, commit, QtyCellInline, load (+6) |
+| `frontend/src/App.tsx` | LoadingToContainer, AuthBootstrap, restoreSession, PublicRoute, ProtectedRoute (+3) |
 | `frontend/src/pages/NewOrder.tsx` | NewOrder, loadNextPONum, updatePoNum, resetForm, updateItem (+2) |
 | `frontend/src/pages/ProductionSchedule.tsx` | loadPage, handlePrev, handleNext, handlePageJump, isAxiosError (+2) |
-| `frontend/src/components/ui/sheet.tsx` | Sheet, SheetClose, SheetOverlay, SheetContent, SheetHeader (+1) |
-| `frontend/src/pages/LoadingToContainer.tsx` | copyToClipboard, LoadingToContainer, handleCopy, handleDownload, load |
+| `frontend/src/pages/MyOrders.tsx` | isAxiosError, loadPage, handlePrev, handleNext, handlePageJump (+1) |
+| `frontend/src/components/ui/select.tsx` | Select, SelectValue, SelectTrigger, SelectItem |
 | `frontend/src/pages/LoginPage.tsx` | LoginPage, inputBorder, login, handleSubmit |
+| `frontend/src/lib/apis/packingListApi.ts` | listPackingLists, deletePackingList, getPackingList |
+| `frontend/src/pages/LoadingToContainer.tsx` | LoadingToContainer, handleSend, FullScreen |
 
 ## Entry Points
 
 Start here when exploring this area:
 
-- **`fmt`** (Function) — `frontend/src/components/po/utils.ts:2`
-- **`useSaveShortcut`** (Function) — `frontend/src/lib/hooks/useSaveShortcut.ts:2`
-- **`IconField`** (Function) — `frontend/src/components/Detail/IconField.tsx:2`
-- **`MetaField`** (Function) — `frontend/src/components/Detail/MetaField.tsx:2`
-- **`SectionCard`** (Function) — `frontend/src/components/Detail/SectionCard.tsx:3`
+- **`newLineId`** (Function) — `frontend/src/components/po/utils.ts:18`
+- **`emptyLine`** (Function) — `frontend/src/components/po/utils.ts:20`
+- **`fetchNextPONum`** (Function) — `frontend/src/lib/apis/poApi.ts:71`
+- **`NewOrder`** (Function) — `frontend/src/pages/NewOrder.tsx:63`
+- **`loadNextPONum`** (Function) — `frontend/src/pages/NewOrder.tsx:82`
 
 ## Key Symbols
 
 | Symbol | Type | File | Line |
 |--------|------|------|------|
-| `fmt` | Function | `frontend/src/components/po/utils.ts` | 2 |
-| `useSaveShortcut` | Function | `frontend/src/lib/hooks/useSaveShortcut.ts` | 2 |
-| `IconField` | Function | `frontend/src/components/Detail/IconField.tsx` | 2 |
-| `MetaField` | Function | `frontend/src/components/Detail/MetaField.tsx` | 2 |
-| `SectionCard` | Function | `frontend/src/components/Detail/SectionCard.tsx` | 3 |
-| `EmptyState` | Function | `frontend/src/components/EmptyState.tsx` | 26 |
-| `PageShell` | Function | `frontend/src/components/PageShell.tsx` | 3 |
-| `SectionHeader` | Function | `frontend/src/components/SectionHeader.tsx` | 12 |
-| `StatBar` | Function | `frontend/src/components/StatBar.tsx` | 36 |
-| `LoadingToContainer` | Function | `frontend/src/pages/LoadingToContainer.tsx` | 41 |
-| `handleCopy` | Function | `frontend/src/pages/LoadingToContainer.tsx` | 92 |
-| `handleDownload` | Function | `frontend/src/pages/LoadingToContainer.tsx` | 106 |
-| `MyOrders` | Function | `frontend/src/pages/MyOrders.tsx` | 60 |
-| `buildColumns` | Function | `frontend/src/pages/MyOrders.tsx` | 209 |
-| `PackingList` | Function | `frontend/src/pages/PackingList.tsx` | 238 |
-| `handleSheetOpenChange` | Function | `frontend/src/pages/PackingList.tsx` | 433 |
+| `newLineId` | Function | `frontend/src/components/po/utils.ts` | 18 |
+| `emptyLine` | Function | `frontend/src/components/po/utils.ts` | 20 |
+| `fetchNextPONum` | Function | `frontend/src/lib/apis/poApi.ts` | 71 |
+| `NewOrder` | Function | `frontend/src/pages/NewOrder.tsx` | 63 |
+| `loadNextPONum` | Function | `frontend/src/pages/NewOrder.tsx` | 82 |
+| `updatePoNum` | Function | `frontend/src/pages/NewOrder.tsx` | 98 |
+| `resetForm` | Function | `frontend/src/pages/NewOrder.tsx` | 136 |
+| `updateItem` | Function | `frontend/src/pages/NewOrder.tsx` | 146 |
+| `addLine` | Function | `frontend/src/pages/NewOrder.tsx` | 163 |
+| `removeLine` | Function | `frontend/src/pages/NewOrder.tsx` | 171 |
 | `useAuthStore` | Function | `frontend/src/stores/authStore.ts` | 28 |
 | `Sidebar` | Function | `frontend/src/components/Sidebar.tsx` | 23 |
 | `LoginPage` | Function | `frontend/src/pages/LoginPage.tsx` | 9 |
 | `inputBorder` | Function | `frontend/src/pages/LoginPage.tsx` | 33 |
+| `LandingPage` | Function | `frontend/src/pages/LandingPage.tsx` | 427 |
+| `DirtyChip` | Function | `frontend/src/components/DirtyChip.tsx` | 8 |
+| `listPackingLists` | Function | `frontend/src/lib/apis/packingListApi.ts` | 19 |
+| `deletePackingList` | Function | `frontend/src/lib/apis/packingListApi.ts` | 47 |
+| `ExportButtons` | Function | `frontend/src/components/packing-list/ExportButtons.tsx` | 14 |
+| `load` | Function | `frontend/src/pages/PackingList.tsx` | 285 |
 
 ## Execution Flows
 
@@ -70,27 +70,26 @@ Start here when exploring this area:
 | `Render → IsAxiosError` | cross_community | 5 |
 | `PackingList → IsAxiosError` | cross_community | 4 |
 | `NewOrder → NewLineId` | intra_community | 4 |
-| `ContainerViewer → ListPartNums` | cross_community | 4 |
-| `LoadingToContainer → ListPartNums` | cross_community | 4 |
 | `HandleConfirmSave → ListManufactureItems` | cross_community | 4 |
 | `HandleConfirmSave → IsAxiosError` | cross_community | 4 |
 | `HandlePageJump → ListLineItems` | cross_community | 4 |
 | `HandlePageJump → IsAxiosError` | intra_community | 4 |
 | `Render → ListPackingLists` | intra_community | 4 |
+| `HandlePageJump → ListManufactureItems` | intra_community | 4 |
+| `HandlePageJump → IsAxiosError` | cross_community | 4 |
 
 ## Connected Areas
 
 | Area | Connections |
 |------|-------------|
-| Ui | 27 calls |
-| Container-viewer | 9 calls |
-| Po | 5 calls |
-| Packing-list | 3 calls |
+| Ui | 20 calls |
+| Po | 3 calls |
 | Apis | 2 calls |
+| Packing-list | 2 calls |
 
 ## How to Explore
 
-1. `context({name: "fmt"})` — see callers and callees
+1. `context({name: "newLineId"})` — see callers and callees
 2. `query({search_query: "pages"})` — find related execution flows
 3. Read key files listed above for implementation details
 4. `explain({target: "<file or symbol>"})` — persisted taint findings (source→sink data flows), when indexed with `--pdg`

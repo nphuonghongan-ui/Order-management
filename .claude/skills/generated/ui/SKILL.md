@@ -1,11 +1,11 @@
 ---
 name: ui
-description: "Skill for the Ui area of Order-management. 91 symbols across 33 files."
+description: "Skill for the Ui area of Order-management. 112 symbols across 44 files."
 ---
 
 # Ui
 
-91 symbols | 33 files | Cohesion: 63%
+112 symbols | 44 files | Cohesion: 64%
 
 ## When to Use
 
@@ -18,6 +18,7 @@ description: "Skill for the Ui area of Order-management. 91 symbols across 33 fi
 | File | Symbols |
 |------|---------|
 | `frontend/src/components/ui/dialog.tsx` | Dialog, DialogTrigger, DialogPortal, DialogOverlay, DialogContent (+4) |
+| `frontend/src/components/ui/sheet.tsx` | SheetFooter, SheetDescription, Sheet, SheetClose, SheetOverlay (+3) |
 | `frontend/src/components/ui/card.tsx` | CardAction, CardFooter, Card, CardHeader, CardTitle (+2) |
 | `frontend/src/components/ui/pagination.tsx` | Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious (+2) |
 | `frontend/src/components/ui/popover.tsx` | PopoverHeader, PopoverTitle, PopoverDescription, Popover, PopoverTrigger (+1) |
@@ -26,7 +27,6 @@ description: "Skill for the Ui area of Order-management. 91 symbols across 33 fi
 | `frontend/src/components/packing-list/ItemPicker.tsx` | ItemPicker, promptMaxFor, openQtyPromptFor, ContextMenu, Box |
 | `frontend/src/components/LoadingScreen.tsx` | DotSpinner, DecorativeIcons, rng, LoadingScreen |
 | `frontend/src/components/ui/command.tsx` | CommandInput, CommandSeparator, CommandShortcut, CommandDialog |
-| `frontend/src/components/ui/tabs.tsx` | Tabs, TabsList, TabsTrigger, TabsContent |
 
 ## Entry Points
 
@@ -55,36 +55,36 @@ Start here when exploring this area:
 | `ConfirmDiscardDialog` | Function | `frontend/src/components/ConfirmDiscardDialog.tsx` | 18 |
 | `NotifyManufactureDialog` | Function | `frontend/src/components/notification/NotifyManufactureDialog.tsx` | 47 |
 | `load` | Function | `frontend/src/components/notification/NotifyManufactureDialog.tsx` | 65 |
-| `ItemPicker` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 394 |
-| `promptMaxFor` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 688 |
-| `openQtyPromptFor` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 694 |
+| `ItemPicker` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 395 |
+| `promptMaxFor` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 691 |
+| `openQtyPromptFor` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 697 |
 | `ProductionSchedule` | Function | `frontend/src/pages/ProductionSchedule.tsx` | 62 |
-| `listMyNotifications` | Function | `frontend/src/lib/apis/notificationApi.ts` | 15 |
-| `useNotificationStore` | Function | `frontend/src/stores/notificationStore.ts` | 15 |
-| `Header` | Function | `frontend/src/components/Header.tsx` | 5 |
+| `fmt` | Function | `frontend/src/components/po/utils.ts` | 2 |
+| `useSaveShortcut` | Function | `frontend/src/lib/hooks/useSaveShortcut.ts` | 2 |
+| `IconField` | Function | `frontend/src/components/Detail/IconField.tsx` | 2 |
 
 ## Execution Flows
 
 | Flow | Type | Steps |
 |------|------|-------|
 | `PagePagination → Cn` | cross_community | 5 |
-| `AvailableColumns → ListManufactureRecipients` | cross_community | 5 |
+| `PackingList → IsAxiosError` | cross_community | 4 |
 | `ItemPicker → ListPartNums` | cross_community | 4 |
 | `ItemPicker → Cn` | cross_community | 4 |
-| `AvailableColumns → BuildDefaultMessage` | cross_community | 4 |
-| `AvailableColumns → Dialog` | cross_community | 4 |
-| `AvailableColumns → DialogTrigger` | cross_community | 4 |
 | `PickedColumns → Cn` | cross_community | 4 |
 | `ConfirmDiscardDialog → Cn` | cross_community | 4 |
 | `Header → ListMyNotifications` | intra_community | 4 |
+| `Header → SetAll` | intra_community | 4 |
+| `PaginationNext → Cn` | cross_community | 4 |
+| `AwaitingManufactureFlag → ListManufactureRecipients` | cross_community | 4 |
 
 ## Connected Areas
 
 | Area | Connections |
 |------|-------------|
-| Pages | 10 calls |
-| Container-viewer | 4 calls |
+| Pages | 18 calls |
 | Packing-list | 3 calls |
+| Po | 2 calls |
 | Notification | 1 calls |
 
 ## How to Explore

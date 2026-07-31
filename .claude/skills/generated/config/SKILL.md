@@ -26,17 +26,17 @@ description: "Skill for the Config area of Order-management. 5 symbols across 3 
 Start here when exploring this area:
 
 - **`connectDB`** (Function) — `backend/src/config/db.js:10`
-- **`autoSeed`** (Function) — `backend/src/config/seed.js:59`
+- **`autoSeed`** (Function) — `backend/src/config/seed.js:106`
 
 ## Key Symbols
 
 | Symbol | Type | File | Line |
 |--------|------|------|------|
 | `connectDB` | Function | `backend/src/config/db.js` | 10 |
-| `autoSeed` | Function | `backend/src/config/seed.js` | 59 |
+| `autoSeed` | Function | `backend/src/config/seed.js` | 106 |
 | `switchingDns` | Function | `backend/src/config/db.js` | 6 |
 | `main` | Function | `backend/src/seeds/accounts.seed.js` | 12 |
-| `runSeedIfNeeded` | Function | `backend/src/config/seed.js` | 20 |
+| `runSeedIfNeeded` | Function | `backend/src/config/seed.js` | 57 |
 
 ## How to Explore
 
