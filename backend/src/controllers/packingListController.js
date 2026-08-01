@@ -364,6 +364,13 @@ export const updatePackingList = async (req, res) => {
       if (Object.keys(errs).length > 0) {
         opErrors.push({ index: i, field: 'delivery', errors: errs });
       }
+    } else if (op.op === 'remove_item') {
+      if (!isObjectId(op.lineId)) opErrors.push({ index: i, message: 'Invalid lineId' });
+    } else if (op.op === 'add_item') {
+      const itemErrs = validateItem(op);
+      if (Object.keys(itemErrs).length > 0) {
+        opErrors.push({ index: i, field: 'item', errors: itemErrs });
+      }
     } else {
       opErrors.push({ index: i, message: `Unknown op: ${op.op}` });
     }
@@ -393,11 +400,50 @@ export const updatePackingList = async (req, res) => {
         ),
       ];
 
+      const removeLineIds = [
+        ...new Set(
+          operations
+            .filter((o) => o.op === 'remove_item')
+            .map((o) => String(o.lineId))
+        ),
+      ];
+
+      const addLineIds = [
+        ...new Set(
+          operations
+            .filter((o) => o.op === 'add_item')
+            .map((o) => String(o.lineId))
+        ),
+      ];
+
+      if (removeLineIds.length > 0) {
+        for (const lineId of removeLineIds) {
+          if (!initialQty.has(lineId)) {
+            const err = new Error(`lineId ${lineId} is not in this packing list`);
+            err.status = 400;
+            throw err;
+          }
+        }
+      }
+
+      if (addLineIds.length > 0) {
+        for (const lineId of addLineIds) {
+          if (initialQty.has(lineId)) {
+            const err = new Error(
+              `lineId ${lineId} is already in this packing list — use set_qty to change its qty`
+            );
+            err.status = 400;
+            throw err;
+          }
+        }
+      }
+
+      const allQueryLineIds = [...new Set([...targetLineIds, ...addLineIds])];
       const orders =
-        targetLineIds.length > 0
+        allQueryLineIds.length > 0
           ? await Order.find({
               _id: {
-                $in: targetLineIds.map((lid) => new mongoose.Types.ObjectId(lid)),
+                $in: allQueryLineIds.map((lid) => new mongoose.Types.ObjectId(lid)),
               },
             })
               .select('_id orderDtl.sellingQuantity')
@@ -427,6 +473,29 @@ export const updatePackingList = async (req, res) => {
             `Over-pack for lineId ${lineId}: requested ${lastQty}, available ${
               order.orderDtl.sellingQuantity + initQ
             }`
+          );
+          err.status = 400;
+          throw err;
+        }
+      }
+
+      for (const lineId of addLineIds) {
+        const order = orderById.get(lineId);
+        if (!order) {
+          const err = new Error(`Order not found for lineId ${lineId}`);
+          err.status = 400;
+          throw err;
+        }
+        const addOps = operations.filter(
+          (o) => o.op === 'add_item' && String(o.lineId) === lineId
+        );
+        const totalAdd = addOps.reduce(
+          (s, o) => s + (toPositiveInt(o.qty) || 0),
+          0
+        );
+        if (totalAdd > order.orderDtl.sellingQuantity) {
+          const err = new Error(
+            `Over-pack for lineId ${lineId}: requested ${totalAdd}, available ${order.orderDtl.sellingQuantity}`
           );
           err.status = 400;
           throw err;
@@ -466,6 +535,43 @@ export const updatePackingList = async (req, res) => {
             shipDate: toDate(op.shipDate),
             notes: toStr(op.notes),
           };
+        } else if (op.op === 'remove_item') {
+          const idx = items.findIndex(
+            (it) => String(it.lineId) === String(op.lineId)
+          );
+          if (idx === -1) continue;
+          const removed = items[idx];
+          const refundQty = Number(removed.qty) || 0;
+          items.splice(idx, 1);
+          if (refundQty > 0) {
+            await Order.updateOne(
+              { _id: op.lineId },
+              { $inc: { 'orderDtl.sellingQuantity': refundQty } },
+              { session }
+            );
+          }
+        } else if (op.op === 'add_item') {
+          const idx = items.findIndex(
+            (it) => String(it.lineId) === String(op.lineId)
+          );
+          if (idx !== -1) continue;
+          const addQty = toPositiveInt(op.qty) || 0;
+          items.push({
+            lineId: op.lineId,
+            poNum: toUpper(op.poNum),
+            partNum: toUpper(op.partNum),
+            shipToNum: toUpper(op.shipToNum),
+            mode: op.mode,
+            qty: addQty,
+            unitPrice: toNonNegNumber(op.unitPrice),
+          });
+          if (addQty > 0) {
+            await Order.updateOne(
+              { _id: op.lineId },
+              { $inc: { 'orderDtl.sellingQuantity': -addQty } },
+              { session }
+            );
+          }
         }
       }
 

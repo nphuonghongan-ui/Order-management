@@ -60,10 +60,6 @@ const packingListSchema = new mongoose.Schema(
     items: {
       type: [packingListItemSchema],
       required: true,
-      validate: {
-        validator: (v) => Array.isArray(v) && v.length > 0,
-        message: 'items must be a non-empty array',
-      },
     },
     itemsCount: { type: Number, required: true, min: 1 },
     total: { type: Number, required: true, min: 0 },

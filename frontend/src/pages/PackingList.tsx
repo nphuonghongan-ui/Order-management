@@ -36,6 +36,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { fmt } from "@/components/po/utils";
 import {
@@ -53,8 +61,9 @@ import {
   updatePackingList,
   type PackingListOperation,
 } from "@/lib/apis/packingListApi";
-import type { PackingListRecord } from "@/components/packing-list/types";
+import type { PackingListRecord, PickedItem } from "@/components/packing-list/types";
 import { ExportButtons } from "@/components/packing-list/ExportButtons";
+import { ItemPicker } from "@/components/packing-list/ItemPicker";
 
 function EditableTextField({
   label,
@@ -270,6 +279,7 @@ export default function PackingList() {
   const [pendingOps, setPendingOps] = useState<PackingListOperation[]>([]);
   const [saving, setSaving] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [addPickerOpen, setAddPickerOpen] = useState(false);
   const [loadingToContainerId, setLoadingToContainerId] = useState<string | null>(
     null
   );
@@ -370,6 +380,10 @@ export default function PackingList() {
       } else if (op.op === "set_qty") {
         const item = selected.items.find((it) => it.lineId === op.lineId);
         if (item && item.qty !== op.qty) set.add(`items.${op.lineId}`);
+      } else if (op.op === "remove_item") {
+        set.add(`items.${op.lineId}`);
+      } else if (op.op === "add_item") {
+        set.add(`items.${op.lineId}`);
       }
     }
     return set;
@@ -378,14 +392,22 @@ export default function PackingList() {
   const enqueueOp = (op: PackingListOperation) => {
     setPendingOps((prev) => {
       let filtered: PackingListOperation[];
-      if (op.op === "set_qty") {
-        filtered = prev.filter(
-          (p) => !(p.op === "set_qty" && p.lineId === op.lineId)
-        );
-      } else if (op.op === "set_customer") {
+      if (op.op === "set_customer") {
         filtered = prev.filter((p) => p.op !== "set_customer");
-      } else {
+      } else if (op.op === "set_delivery") {
         filtered = prev.filter((p) => p.op !== "set_delivery");
+      } else {
+        filtered = prev.filter((p) => {
+          if (p.op === "set_customer" || p.op === "set_delivery") return true;
+          if (
+            p.op === "set_qty" ||
+            p.op === "remove_item" ||
+            p.op === "add_item"
+          ) {
+            return p.lineId !== op.lineId;
+          }
+          return true;
+        });
       }
       return [...filtered, op];
     });
@@ -425,6 +447,66 @@ export default function PackingList() {
         : prev
     );
     enqueueOp({ op: "set_qty", lineId, qty });
+  };
+
+  const commitItemRemove = (lineId: string) => {
+    setDraft((prev) =>
+      prev
+        ? { ...prev, items: prev.items.filter((it) => it.lineId !== lineId) }
+        : prev
+    );
+    enqueueOp({ op: "remove_item", lineId });
+  };
+
+  const [removeLastPrompt, setRemoveLastPrompt] = useState<{
+    lineId: string;
+    partNum: string;
+  } | null>(null);
+
+  const requestRemoveItem = (it: { lineId: string; partNum: string }) => {
+    if (!draft) return;
+    if (draft.items.length <= 1) {
+      setRemoveLastPrompt({ lineId: it.lineId, partNum: it.partNum });
+      return;
+    }
+    commitItemRemove(it.lineId);
+  };
+
+  const confirmRemoveLast = () => {
+    if (!removeLastPrompt) return;
+    const lineId = removeLastPrompt.lineId;
+    setRemoveLastPrompt(null);
+    commitItemRemove(lineId);
+  };
+
+  const handleAddItemsConfirm = (newPicked: PickedItem[]) => {
+    if (!draft) return;
+    setAddPickerOpen(false);
+    const draftByLine = new Map(draft.items.map((it) => [it.lineId, it]));
+    const additions: PickedItem[] = [];
+    for (const picked of newPicked) {
+      const existing = draftByLine.get(picked.lineId);
+      if (!existing) {
+        additions.push(picked);
+        enqueueOp({
+          op: "add_item",
+          lineId: picked.lineId,
+          poNum: picked.poNum,
+          partNum: picked.partNum,
+          shipToNum: picked.shipToNum,
+          mode: picked.mode,
+          qty: picked.qty,
+          unitPrice: picked.unitPrice,
+        });
+      } else if (existing.qty !== picked.qty) {
+        commitItemQty(picked.lineId, picked.qty);
+      }
+    }
+    if (additions.length > 0) {
+      setDraft((prev) =>
+        prev ? { ...prev, items: [...prev.items, ...additions] } : prev
+      );
+    }
   };
 
   const discardPending = () => {
@@ -868,14 +950,24 @@ export default function PackingList() {
                     </SectionCard>
 
                     <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-between gap-2">
                         <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                           Packing List Detail
                         </span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setAddPickerOpen(true)}
+                        >
+                          <Plus />
+                          Add items
+                        </Button>
                       </div>
                       {draft.items.length === 0 ? (
                         <div className="rounded-md border border-border bg-background px-4 py-6 text-center text-xs text-muted-foreground">
-                          No items
+                          No items — use “Add items” to pick from available
+                          lines.
                         </div>
                       ) : (
                         <div className="flex flex-col gap-3">
@@ -931,6 +1023,17 @@ export default function PackingList() {
                                         <span className="font-mono text-sm font-semibold whitespace-nowrap">
                                           x $ {fmt(it.unitPrice)}
                                         </span>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            requestRemoveItem(it)
+                                          }
+                                          className="p-1.5 rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                                          title="Remove from packing list"
+                                          aria-label={`Remove ${it.partNum} from packing list`}
+                                        >
+                                          <Trash2 size={14} />
+                                        </button>
                                       </div>
                                     </div>
                                   );
@@ -999,6 +1102,58 @@ export default function PackingList() {
         count={pendingOps.length}
         onConfirm={confirmDiscardAndClose}
         saving={saving}
+      />
+
+      <Dialog
+        open={!!removeLastPrompt}
+        onOpenChange={(o) => {
+          if (!o) setRemoveLastPrompt(null);
+        }}
+      >
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Remove last item?</DialogTitle>
+            <DialogDescription>
+              {removeLastPrompt ? (
+                <>
+                  <span className="font-mono font-semibold text-foreground">
+                    {removeLastPrompt.partNum}
+                  </span>{" "}
+                  is the last item in this packing list. Removing it will
+                  leave the list empty. Running CLP on an empty packing list
+                  will return zero result, and the list can't be used for
+                  shipment planning. Continue?
+                </>
+              ) : null}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setRemoveLastPrompt(null)}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={confirmRemoveLast}
+              disabled={saving}
+            >
+              <Trash2 size={14} />
+              Remove anyway
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ItemPicker
+        open={addPickerOpen}
+        onOpenChange={setAddPickerOpen}
+        initialPicked={[]}
+        onConfirm={handleAddItemsConfirm}
       />
 
       {loadingToContainerId && (

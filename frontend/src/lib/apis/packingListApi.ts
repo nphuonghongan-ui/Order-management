@@ -1,4 +1,5 @@
 import api from "./axios";
+import type { Mode } from "@/components/po/types";
 import type {
   CustomerInfo,
   DeliveryInfo,
@@ -15,7 +16,18 @@ export interface SubmitPackingListPayload {
 export type PackingListOperation =
   | { op: "set_qty"; lineId: string; qty: number }
   | { op: "set_customer"; name: string; address: string; contact?: string; email?: string }
-  | { op: "set_delivery"; name: string; address: string; shipDate?: string; notes?: string };
+  | { op: "set_delivery"; name: string; address: string; shipDate?: string; notes?: string }
+  | { op: "remove_item"; lineId: string }
+  | {
+      op: "add_item";
+      lineId: string;
+      poNum: string;
+      partNum: string;
+      shipToNum: string;
+      mode: Mode;
+      qty: number;
+      unitPrice: number;
+    };
 
 export async function listPackingLists(): Promise<PackingListRecord[]> {
   const { data } = await api.get<{ lists: PackingListRecord[] }>("/packing-list");
