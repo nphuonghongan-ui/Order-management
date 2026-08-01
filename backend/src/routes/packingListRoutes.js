@@ -190,6 +190,21 @@ router.delete('/:id', deletePackingList);
  *           customer subdoc on the PL.
  *         - `set_delivery { name, address, shipDate?, notes? }` — replace the
  *           delivery subdoc on the PL.
+ *         - `remove_item { lineId }` — remove a packed line item from the
+ *           PL. The Order's `orderDtl.sellingQuantity` is incremented by the
+ *           removed item's current qty (the qty is "returned" to the
+ *           warehouse). Allowed to leave the PL empty — note that running
+ *           CLP or creating an easy-cargo shipment on an empty PL will
+ *           return zero result / fail. Rejected if the `lineId` is not
+ *           present in this PL.
+ *         - `add_item { lineId, poNum, partNum, shipToNum, mode, qty,
+ *           unitPrice }` — append a new line item to the PL. The Order's
+ *           `orderDtl.sellingQuantity` is decremented by `qty` (the qty is
+ *           "picked" into the PL). Rejected if the `lineId` is already
+ *           present in this PL (use `set_qty` to change its qty). Rejected
+ *           if the cumulative `qty` across all `add_item` ops for the same
+ *           `lineId` would exceed the Order's `orderDtl.sellingQuantity`
+ *           (over-pack).
  *       `itemsCount` and `total` are server-computed from the final state.
  *     tags: [PackingList]
  *     security: [{ bearerAuth: [] }]

@@ -1,11 +1,11 @@
 ---
 name: controllers
-description: "Skill for the Controllers area of Order-management. 56 symbols across 8 files."
+description: "Skill for the Controllers area of Order-management. 68 symbols across 9 files."
 ---
 
 # Controllers
 
-56 symbols | 8 files | Cohesion: 100%
+68 symbols | 9 files | Cohesion: 100%
 
 ## When to Use
 
@@ -17,7 +17,8 @@ description: "Skill for the Controllers area of Order-management. 56 symbols acr
 
 | File | Symbols |
 |------|---------|
-| `backend/src/controllers/packingListController.js` | toStr, toUpper, toPositiveInt, toNonNegNumber, toDate (+10) |
+| `backend/src/controllers/packingListController.js` | toStr, toUpper, toPositiveInt, toNonNegNumber, toDate (+11) |
+| `backend/src/controllers/partNumController.js` | toPositiveInt, toNonNegNumber, toUpperTrimmed, validatePartNumInput, sanitizePayload (+6) |
 | `backend/src/controllers/authController.js` | setRefreshCookie, clearRefreshCookie123, issueSession, revokeFamily, login (+2) |
 | `backend/src/utils/tokens.js` | hashToken, newId, signAccessToken, signRefreshToken, verifyRefreshToken (+2) |
 | `backend/src/controllers/poController.js` | toPositiveInt, toNonNegNumber, toDate, upper, validateLine (+2) |
@@ -30,20 +31,20 @@ description: "Skill for the Controllers area of Order-management. 56 symbols acr
 
 Start here when exploring this area:
 
-- **`listPackingLists`** (Function) — `backend/src/controllers/packingListController.js:92`
-- **`getPackingList`** (Function) — `backend/src/controllers/packingListController.js:103`
-- **`createPackingList`** (Function) — `backend/src/controllers/packingListController.js:113`
-- **`updatePackingList`** (Function) — `backend/src/controllers/packingListController.js:339`
+- **`listPackingLists`** (Function) — `backend/src/controllers/packingListController.js:108`
+- **`getPackingList`** (Function) — `backend/src/controllers/packingListController.js:127`
+- **`createPackingList`** (Function) — `backend/src/controllers/packingListController.js:143`
+- **`updatePackingList`** (Function) — `backend/src/controllers/packingListController.js:375`
 - **`login`** (Function) — `backend/src/controllers/authController.js:49`
 
 ## Key Symbols
 
 | Symbol | Type | File | Line |
 |--------|------|------|------|
-| `listPackingLists` | Function | `backend/src/controllers/packingListController.js` | 92 |
-| `getPackingList` | Function | `backend/src/controllers/packingListController.js` | 103 |
-| `createPackingList` | Function | `backend/src/controllers/packingListController.js` | 113 |
-| `updatePackingList` | Function | `backend/src/controllers/packingListController.js` | 339 |
+| `listPackingLists` | Function | `backend/src/controllers/packingListController.js` | 108 |
+| `getPackingList` | Function | `backend/src/controllers/packingListController.js` | 127 |
+| `createPackingList` | Function | `backend/src/controllers/packingListController.js` | 143 |
+| `updatePackingList` | Function | `backend/src/controllers/packingListController.js` | 375 |
 | `login` | Function | `backend/src/controllers/authController.js` | 49 |
 | `refresh` | Function | `backend/src/controllers/authController.js` | 69 |
 | `logout` | Function | `backend/src/controllers/authController.js` | 141 |
@@ -53,13 +54,13 @@ Start here when exploring this area:
 | `signRefreshToken` | Function | `backend/src/utils/tokens.js` | 34 |
 | `verifyRefreshToken` | Function | `backend/src/utils/tokens.js` | 46 |
 | `refreshExpiresAt` | Function | `backend/src/utils/tokens.js` | 54 |
+| `createPartNum` | Function | `backend/src/controllers/partNumController.js` | 126 |
+| `importPartNums` | Function | `backend/src/controllers/partNumController.js` | 169 |
 | `createPO` | Function | `backend/src/controllers/poController.js` | 49 |
 | `pairKey` | Function | `backend/src/controllers/poController.js` | 94 |
 | `sendUrgeUpdate` | Function | `backend/src/controllers/notificationController.js` | 61 |
 | `notifyManufactureQtyMismatch` | Function | `backend/src/controllers/notificationController.js` | 195 |
 | `getIO` | Function | `backend/src/lib/socket.js` | 43 |
-| `roomFor` | Function | `backend/src/lib/socket.js` | 45 |
-| `listLineItems` | Function | `backend/src/controllers/lineItemController.js` | 32 |
 
 ## Execution Flows
 
@@ -69,10 +70,12 @@ Start here when exploring this area:
 | `CreatePackingList → ToDate` | intra_community | 3 |
 | `UpdatePackingList → ToStr` | intra_community | 3 |
 | `UpdatePackingList → ToDate` | intra_community | 3 |
-| `Login → NewId` | intra_community | 3 |
-| `Login → SignAccessToken` | intra_community | 3 |
-| `Login → SignRefreshToken` | intra_community | 3 |
-| `Login → HashToken` | intra_community | 3 |
+| `CreatePartNum → ToUpperTrimmed` | intra_community | 3 |
+| `CreatePartNum → ToNonNegNumber` | intra_community | 3 |
+| `CreatePartNum → ToPositiveInt` | intra_community | 3 |
+| `ImportPartNums → ToUpperTrimmed` | intra_community | 3 |
+| `ImportPartNums → ToNonNegNumber` | intra_community | 3 |
+| `ImportPartNums → ToPositiveInt` | intra_community | 3 |
 
 ## How to Explore
 

@@ -111,6 +111,7 @@ const toPickedItem = (l: AvailableLine, qty: number): PickedItem => ({
   length: l.length,
   width: l.width,
   height: l.height,
+  weightKg: 0,
   cbm: calcCbm(l.length, l.width, l.height, qty),
 });
 

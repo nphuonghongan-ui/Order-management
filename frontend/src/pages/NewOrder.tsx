@@ -508,7 +508,7 @@ export default function NewOrder() {
           type="button"
           variant="outline"
           onClick={addLine}
-          className="w-full h-auto py-3 border-2 border-dashed border-primary/30 text-primary-light font-semibold hover:bg-accent hover:border-primary/50 cursor-pointer"
+          className="w-full h-auto py-3 border-2 border-dashed border-primary/30 text-primary-light font-semibold hover:bg-accent hover:border-primary/50"
         >
           <Plus size={16} /> Add another line
         </Button>
@@ -542,7 +542,7 @@ export default function NewOrder() {
 
         {/* Action buttons */}
         <div className="flex items-center justify-end gap-4 pb-8">
-          <Button type="submit" disabled={submitting} className="h-10 px-7 cursor-pointer">
+          <Button type="submit" disabled={submitting} className="h-10 px-7">
             {submitting ? (
               <Loader2 size={15} className="animate-spin" />
             ) : (

@@ -471,3 +471,16 @@ Any data table that lists line items / order lines (across all roles and pages) 
 - Page-specific columns (e.g., an action column with a chevron, an in-place editor) MAY be added on top of the 13 baseline columns, but none of the 13 above may be omitted from a line-item table.
 - When a row lacks a field (e.g., a packing-list item that has no `exWorkDate` yet), render `—` via `formatDisplay` / the cell's null-handling — do not drop the column.
 - Pickers, dialogs, and any other listing surface that shows line items (e.g., the Item Picker used in `NewPackingList`) MUST use the same 13 columns. Compact 4-cell grids are no longer permitted for line-item displays.
+
+---
+
+## 14. Cursor Style — Every Button
+
+Every clickable button in the application MUST give the browser cursor the `pointer` style so users can see it is interactive.
+
+- **Prefer the shared shadcn `<Button>` component** (`frontend/src/components/ui/button.tsx`). Its base class string includes `cursor-pointer` — every `<Button>` instance is compliant by construction.
+- When you use a native `<button>` element (e.g. for a fully custom-styled icon button or a row-action trigger), add `cursor-pointer` to its `className` explicitly.
+- **Disabled buttons are exempt**: the `<Button>` base class uses `disabled:pointer-events-none`, which suppresses the cursor automatically. No extra class needed.
+- The rule covers `<button>` and `<Button>` only. Non-button clickable surfaces (sortable table headers, clickable list rows, tabs, file-picker labels) are out of scope and have their own conventions.
+
+Enforcement: code review. No automated check today.

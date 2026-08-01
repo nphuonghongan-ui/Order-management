@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Account from '../models/Account.js';
 import Order from '../models/Order.js';
 import PackingList from '../models/PackingList.js';
+import PartNum from '../models/PartNum.js';
 
 const MODE_VALUES = ['SEA', 'AIR', 'ROAD', 'RAIL'];
 
@@ -90,14 +91,37 @@ const buildOrderSellingMap = async (lineIds) => {
   );
 };
 
+const buildPartNumMap = async (partNums) => {
+  if (!partNums || partNums.length === 0) return new Map();
+  const partDocs = await PartNum.find({ partNum: { $in: partNums } })
+    .select('partNum dimension weightKg');
+  return new Map(
+    partDocs.map((p) => [
+      p.partNum,
+      {
+        dimension: p.dimension,
+        weightKg: p.weightKg ?? 0,
+      },
+    ])
+  );
+};
+
 export const listPackingLists = async (_req, res) => {
   const docs = await PackingList.find().sort({ createdAt: -1, _id: -1 });
   const allLineIds = [
     ...new Set(docs.flatMap((d) => d.items.map((it) => String(it.lineId)))),
   ];
-  const orderSellingByLineId = await buildOrderSellingMap(allLineIds);
+  const allPartNums = [
+    ...new Set(docs.flatMap((d) => d.items.map((it) => it.partNum))),
+  ];
+  const [orderSellingByLineId, partNumByPartNum] = await Promise.all([
+    buildOrderSellingMap(allLineIds),
+    buildPartNumMap(allPartNums),
+  ]);
   return res.status(200).json({
-    lists: docs.map((d) => PackingList.toClient(d, orderSellingByLineId)),
+    lists: docs.map((d) =>
+      PackingList.toClient(d, orderSellingByLineId, partNumByPartNum)
+    ),
   });
 };
 
@@ -107,8 +131,14 @@ export const getPackingList = async (req, res) => {
     return res.status(404).json({ message: 'Packing list not found' });
   }
   const lineIds = doc.items.map((it) => String(it.lineId));
-  const orderSellingByLineId = await buildOrderSellingMap(lineIds);
-  return res.status(200).json({ list: PackingList.toClient(doc, orderSellingByLineId) });
+  const partNums = doc.items.map((it) => it.partNum);
+  const [orderSellingByLineId, partNumByPartNum] = await Promise.all([
+    buildOrderSellingMap(lineIds),
+    buildPartNumMap(partNums),
+  ]);
+  return res
+    .status(200)
+    .json({ list: PackingList.toClient(doc, orderSellingByLineId, partNumByPartNum) });
 };
 
 export const createPackingList = async (req, res) => {
@@ -276,8 +306,14 @@ export const createPackingList = async (req, res) => {
     });
 
     const createdLineIds = createdDoc.items.map((it) => String(it.lineId));
-    const orderSellingByLineId = await buildOrderSellingMap(createdLineIds);
-    return res.status(201).json({ list: PackingList.toClient(createdDoc, orderSellingByLineId) });
+    const createdPartNums = createdDoc.items.map((it) => it.partNum);
+    const [orderSellingByLineId, partNumByPartNum] = await Promise.all([
+      buildOrderSellingMap(createdLineIds),
+      buildPartNumMap(createdPartNums),
+    ]);
+    return res
+      .status(201)
+      .json({ list: PackingList.toClient(createdDoc, orderSellingByLineId, partNumByPartNum) });
   } catch (err) {
     if (err && err.code === 11000) {
       return res
@@ -364,6 +400,13 @@ export const updatePackingList = async (req, res) => {
       if (Object.keys(errs).length > 0) {
         opErrors.push({ index: i, field: 'delivery', errors: errs });
       }
+    } else if (op.op === 'remove_item') {
+      if (!isObjectId(op.lineId)) opErrors.push({ index: i, message: 'Invalid lineId' });
+    } else if (op.op === 'add_item') {
+      const itemErrs = validateItem(op);
+      if (Object.keys(itemErrs).length > 0) {
+        opErrors.push({ index: i, field: 'item', errors: itemErrs });
+      }
     } else {
       opErrors.push({ index: i, message: `Unknown op: ${op.op}` });
     }
@@ -393,11 +436,50 @@ export const updatePackingList = async (req, res) => {
         ),
       ];
 
+      const removeLineIds = [
+        ...new Set(
+          operations
+            .filter((o) => o.op === 'remove_item')
+            .map((o) => String(o.lineId))
+        ),
+      ];
+
+      const addLineIds = [
+        ...new Set(
+          operations
+            .filter((o) => o.op === 'add_item')
+            .map((o) => String(o.lineId))
+        ),
+      ];
+
+      if (removeLineIds.length > 0) {
+        for (const lineId of removeLineIds) {
+          if (!initialQty.has(lineId)) {
+            const err = new Error(`lineId ${lineId} is not in this packing list`);
+            err.status = 400;
+            throw err;
+          }
+        }
+      }
+
+      if (addLineIds.length > 0) {
+        for (const lineId of addLineIds) {
+          if (initialQty.has(lineId)) {
+            const err = new Error(
+              `lineId ${lineId} is already in this packing list — use set_qty to change its qty`
+            );
+            err.status = 400;
+            throw err;
+          }
+        }
+      }
+
+      const allQueryLineIds = [...new Set([...targetLineIds, ...addLineIds])];
       const orders =
-        targetLineIds.length > 0
+        allQueryLineIds.length > 0
           ? await Order.find({
               _id: {
-                $in: targetLineIds.map((lid) => new mongoose.Types.ObjectId(lid)),
+                $in: allQueryLineIds.map((lid) => new mongoose.Types.ObjectId(lid)),
               },
             })
               .select('_id orderDtl.sellingQuantity')
@@ -427,6 +509,29 @@ export const updatePackingList = async (req, res) => {
             `Over-pack for lineId ${lineId}: requested ${lastQty}, available ${
               order.orderDtl.sellingQuantity + initQ
             }`
+          );
+          err.status = 400;
+          throw err;
+        }
+      }
+
+      for (const lineId of addLineIds) {
+        const order = orderById.get(lineId);
+        if (!order) {
+          const err = new Error(`Order not found for lineId ${lineId}`);
+          err.status = 400;
+          throw err;
+        }
+        const addOps = operations.filter(
+          (o) => o.op === 'add_item' && String(o.lineId) === lineId
+        );
+        const totalAdd = addOps.reduce(
+          (s, o) => s + (toPositiveInt(o.qty) || 0),
+          0
+        );
+        if (totalAdd > order.orderDtl.sellingQuantity) {
+          const err = new Error(
+            `Over-pack for lineId ${lineId}: requested ${totalAdd}, available ${order.orderDtl.sellingQuantity}`
           );
           err.status = 400;
           throw err;
@@ -466,6 +571,43 @@ export const updatePackingList = async (req, res) => {
             shipDate: toDate(op.shipDate),
             notes: toStr(op.notes),
           };
+        } else if (op.op === 'remove_item') {
+          const idx = items.findIndex(
+            (it) => String(it.lineId) === String(op.lineId)
+          );
+          if (idx === -1) continue;
+          const removed = items[idx];
+          const refundQty = Number(removed.qty) || 0;
+          items.splice(idx, 1);
+          if (refundQty > 0) {
+            await Order.updateOne(
+              { _id: op.lineId },
+              { $inc: { 'orderDtl.sellingQuantity': refundQty } },
+              { session }
+            );
+          }
+        } else if (op.op === 'add_item') {
+          const idx = items.findIndex(
+            (it) => String(it.lineId) === String(op.lineId)
+          );
+          if (idx !== -1) continue;
+          const addQty = toPositiveInt(op.qty) || 0;
+          items.push({
+            lineId: op.lineId,
+            poNum: toUpper(op.poNum),
+            partNum: toUpper(op.partNum),
+            shipToNum: toUpper(op.shipToNum),
+            mode: op.mode,
+            qty: addQty,
+            unitPrice: toNonNegNumber(op.unitPrice),
+          });
+          if (addQty > 0) {
+            await Order.updateOne(
+              { _id: op.lineId },
+              { $inc: { 'orderDtl.sellingQuantity': -addQty } },
+              { session }
+            );
+          }
         }
       }
 
@@ -477,10 +619,14 @@ export const updatePackingList = async (req, res) => {
     });
 
     const lineIds = updatedDoc.items.map((it) => String(it.lineId));
-    const orderSellingByLineId = await buildOrderSellingMap(lineIds);
+    const partNums = updatedDoc.items.map((it) => it.partNum);
+    const [orderSellingByLineId, partNumByPartNum] = await Promise.all([
+      buildOrderSellingMap(lineIds),
+      buildPartNumMap(partNums),
+    ]);
     return res
       .status(200)
-      .json({ list: PackingList.toClient(updatedDoc, orderSellingByLineId) });
+      .json({ list: PackingList.toClient(updatedDoc, orderSellingByLineId, partNumByPartNum) });
   } catch (err) {
     if (err && err.status === 404) {
       return res.status(404).json({ message: 'Packing list not found' });

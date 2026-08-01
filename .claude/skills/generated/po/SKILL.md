@@ -59,8 +59,8 @@ Start here when exploring this area:
 | `LineCard` | Function | `frontend/src/components/po/LineCard.tsx` | 49 |
 | `computePosFor` | Function | `frontend/src/components/po/LineCard.tsx` | 67 |
 | `handler` | Function | `frontend/src/components/po/LineCard.tsx` | 101 |
-| `render` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 244 |
-| `sortValue` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 250 |
+| `render` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 245 |
+| `sortValue` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 251 |
 | `toDateInput` | Function | `frontend/src/pages/ProductionSchedule.tsx` | 51 |
 
 ## Execution Flows

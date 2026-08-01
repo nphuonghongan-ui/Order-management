@@ -10,6 +10,7 @@ import NewOrder from "./pages/NewOrder";
 import PackingList from "./pages/PackingList";
 import NewPackingList from "./pages/NewPackingList";
 import ProductionSchedule from "./pages/ProductionSchedule";
+import PartNumbers from "./pages/PartNumbers";
 import MyOrders from "./pages/MyOrders";
 import NotFound from "./pages/NotFound";
 
@@ -87,6 +88,14 @@ function App() {
               element={
                 <RoleGuard allowed={[ROLES.MANUFACTURE]}>
                   <ProductionSchedule />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="part-numbers"
+              element={
+                <RoleGuard allowed={[ROLES.MANUFACTURE]}>
+                  <PartNumbers />
                 </RoleGuard>
               }
             />

@@ -110,16 +110,18 @@ async function buildItems(packingList) {
   ];
   const partNumDocs = await PartNum.find({ partNum: { $in: partNums } });
   const partNumMap = new Map(
-    partNumDocs.map((p) => [p.partNum, p.dimension]),
+    partNumDocs.map((p) => [p.partNum, p]),
   );
 
   const items = [];
   const skipped = [];
   for (const it of packingList.items) {
-    const dim = partNumMap.get(it.partNum);
+    const part = partNumMap.get(it.partNum);
+    const dim = part?.dimension;
+    const weightKg = part?.weightKg;
     const qty = it.qty || 1;
-    if (!dim || qty <= 0) {
-      if (!dim) skipped.push(it.partNum);
+    if (!dim || !weightKg || qty <= 0) {
+      if (!dim || !weightKg) skipped.push(it.partNum);
       continue;
     }
     items.push({
@@ -129,7 +131,7 @@ async function buildItems(packingList) {
       width: dim.width,
       height: dim.height,
       length: dim.length,
-      total_weight: 100, // placeholder until partNum.weight exists
+      total_weight: qty * weightKg,
       is_stackable: true,
       is_tiltable: true,
       is_rotable: true,

@@ -5,7 +5,7 @@ description: "Skill for the Apis area of Order-management. 18 symbols across 9 f
 
 # Apis
 
-18 symbols | 9 files | Cohesion: 94%
+18 symbols | 9 files | Cohesion: 90%
 
 ## When to Use
 
@@ -50,11 +50,11 @@ Start here when exploring this area:
 | `handleSubmit` | Function | `frontend/src/pages/NewOrder.tsx` | 219 |
 | `isAxiosError` | Function | `frontend/src/lib/apis/api.ts` | 5 |
 | `extractErrorMessage` | Function | `frontend/src/lib/apis/api.ts` | 14 |
-| `submitPackingList` | Function | `frontend/src/lib/apis/packingListApi.ts` | 29 |
-| `updatePackingList` | Function | `frontend/src/lib/apis/packingListApi.ts` | 36 |
+| `submitPackingList` | Function | `frontend/src/lib/apis/packingListApi.ts` | 41 |
+| `updatePackingList` | Function | `frontend/src/lib/apis/packingListApi.ts` | 48 |
 | `handleSubmit` | Function | `frontend/src/pages/NewPackingList.tsx` | 79 |
-| `applyUpdated` | Function | `frontend/src/pages/PackingList.tsx` | 342 |
-| `handleSave` | Function | `frontend/src/pages/PackingList.tsx` | 436 |
+| `applyUpdated` | Function | `frontend/src/pages/PackingList.tsx` | 352 |
+| `handleSave` | Function | `frontend/src/pages/PackingList.tsx` | 518 |
 | `sendUrgeUpdate` | Function | `frontend/src/lib/apis/notificationApi.ts` | 39 |
 | `notifyManufactureQtyMismatch` | Function | `frontend/src/lib/apis/notificationApi.ts` | 90 |
 | `reset` | Function | `frontend/src/components/notification/NotifyManufactureDialog.tsx` | 93 |
@@ -65,11 +65,15 @@ Start here when exploring this area:
 | Flow | Type | Steps |
 |------|------|-------|
 | `Render → IsAxiosError` | cross_community | 5 |
+| `HandlePageJump → IsAxiosError` | cross_community | 5 |
+| `ConfirmDelete → IsAxiosError` | cross_community | 5 |
+| `OnCreated → IsAxiosError` | cross_community | 5 |
+| `OnImported → IsAxiosError` | cross_community | 5 |
 | `PackingList → IsAxiosError` | cross_community | 4 |
+| `PartNumbers → IsAxiosError` | cross_community | 4 |
+| `HandlePrev → IsAxiosError` | cross_community | 4 |
 | `HandleSubmit → ValidateItem` | intra_community | 3 |
 | `HandleSubmit → ValidateHeader` | intra_community | 3 |
-| `HandleSave → IsAxiosError` | intra_community | 3 |
-| `HandleSubmit → IsAxiosError` | intra_community | 3 |
 
 ## How to Explore
 

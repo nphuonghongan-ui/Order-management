@@ -12,12 +12,12 @@ const ACCOUNTS = [
 
 // Dimensions in centimetres (cm).
 const PART_NUMS = [
-  { no: 1, partNum: 'RMS120.1', dimension: { length: 50, width: 50, height: 50 }, weightKg: 2 },
-  { no: 2, partNum: 'RMS121.1', dimension: { length: 30, width: 60, height: 60 }, weightKg: 4 },
-  { no: 3, partNum: 'RMS122.1', dimension: { length: 20, width: 30, height: 60 }, weightKg: 6 },
-  { no: 4, partNum: 'XMAFL040', dimension: { length: 60, width: 40, height: 50 }, weightKg: 1.5 },
-  { no: 5, partNum: 'XMAFL150', dimension: { length: 50, width: 50, height: 50 }, weightKg: 10 },
-  { no: 6, partNum: 'SCS01010', dimension: { length: 30, width: 40, height: 50 }, weightKg: 4.5 },
+  { no: 1, partNum: 'RMS120.1', dimension: { length: 5, width: 5, height: 5 }, weightKg: 2 },
+  { no: 2, partNum: 'RMS121.1', dimension: { length: 3, width: 6, height: 6 }, weightKg: 4 },
+  { no: 3, partNum: 'RMS122.1', dimension: { length: 2, width: 3, height: 6 }, weightKg: 6 },
+  { no: 4, partNum: 'XMAFL040', dimension: { length: 6, width: 4, height: 5 }, weightKg: 1.5 },
+  { no: 5, partNum: 'XMAFL150', dimension: { length: 5, width: 5, height: 5 }, weightKg: 10 },
+  { no: 6, partNum: 'SCS01010', dimension: { length: 3, width: 4, height: 5 }, weightKg: 4.5 },
 ];
 
 const CONTAINERS = [

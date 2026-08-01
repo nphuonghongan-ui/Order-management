@@ -18,6 +18,7 @@ import { motion, useReducedMotion } from "motion/react";
 import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/utils";
+import { getCdnUrl } from "@/lib/utils/cdn";
 
 const TRUSTED_LOGOS = [
   { name: "Maersk", slug: "maersk" },
@@ -59,8 +60,7 @@ const PRICING_PLANS = [
   },
 ] as const;
 
-// TODO: replace with the final AxonLog demo MP4 (or self-hosted URL)
-const DEMO_VIDEO_URL = "https://cdn.axonlog.site/demo.mp4";
+const DEMO_VIDEO_URL = getCdnUrl("demo.mp4");
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -306,7 +306,7 @@ function PricingCard({
       <div className="mt-auto pt-6">
         <Button
           onClick={onCta}
-          className="h-11 w-full rounded-full bg-primary-light text-white hover:bg-primary-light/90 hover:text-white cursor-pointer"
+          className="h-11 w-full rounded-full bg-primary-light text-white hover:bg-primary-light/90 hover:text-white"
         >
           Choose plan
         </Button>
@@ -484,7 +484,7 @@ export default function LandingPage() {
             <Button
               size="default"
               onClick={goToLogin}
-              className="h-10 px-5 text-sm rounded-full cursor-pointer"
+              className="h-10 px-5 text-sm rounded-full"
             >
               Book a demo
             </Button>
@@ -494,7 +494,7 @@ export default function LandingPage() {
               onClick={goToLogin}
               aria-label="Sign in"
               title="Sign in"
-              className="h-10 w-10 rounded-full cursor-pointer bg-muted text-foreground"
+              className="h-10 w-10 rounded-full bg-muted text-foreground"
             >
               <LogIn />
             </Button>
@@ -578,7 +578,7 @@ export default function LandingPage() {
                 <Button
                   size="lg"
                   onClick={goToLogin}
-                  className="h-15 px-10 text-lg bg-white text-primary-light hover:bg-white/90 hover:text-primary cursor-pointer"
+                  className="h-15 px-10 text-lg bg-white text-primary-light hover:bg-white/90 hover:text-primary"
                 >
                   Get Started
                   <ArrowRight />

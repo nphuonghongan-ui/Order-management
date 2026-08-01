@@ -33,42 +33,42 @@ description: "Skill for the Packing-list area of Order-management. 39 symbols ac
 Start here when exploring this area:
 
 - **`calcCbm`** (Function) — `frontend/src/components/packing-list/types.ts:5`
-- **`packableLineMax`** (Function) — `frontend/src/components/packing-list/ItemPicker.tsx:488`
-- **`availableColumns`** (Function) — `frontend/src/components/packing-list/ItemPicker.tsx:525`
-- **`setPickedQtyForLine`** (Function) — `frontend/src/components/packing-list/ItemPicker.tsx:538`
-- **`pickedColumns`** (Function) — `frontend/src/components/packing-list/ItemPicker.tsx:557`
+- **`packableLineMax`** (Function) — `frontend/src/components/packing-list/ItemPicker.tsx:489`
+- **`availableColumns`** (Function) — `frontend/src/components/packing-list/ItemPicker.tsx:526`
+- **`setPickedQtyForLine`** (Function) — `frontend/src/components/packing-list/ItemPicker.tsx:539`
+- **`pickedColumns`** (Function) — `frontend/src/components/packing-list/ItemPicker.tsx:558`
 
 ## Key Symbols
 
 | Symbol | Type | File | Line |
 |--------|------|------|------|
 | `calcCbm` | Function | `frontend/src/components/packing-list/types.ts` | 5 |
-| `packableLineMax` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 488 |
-| `availableColumns` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 525 |
-| `setPickedQtyForLine` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 538 |
-| `pickedColumns` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 557 |
+| `packableLineMax` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 489 |
+| `availableColumns` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 526 |
+| `setPickedQtyForLine` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 539 |
+| `pickedColumns` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 558 |
 | `getPartNumDimensions` | Function | `frontend/src/components/packing-list/exportEnrichment.ts` | 9 |
 | `exportPackingListToExcel` | Function | `frontend/src/components/packing-list/exportPackingListExcel.ts` | 29 |
 | `handlePdf` | Function | `frontend/src/components/packing-list/ExportButtons.tsx` | 18 |
 | `handleExcel` | Function | `frontend/src/components/packing-list/ExportButtons.tsx` | 35 |
 | `exportPackingListToPDF` | Function | `frontend/src/components/packing-list/exportPackingListPdf.tsx` | 4 |
-| `remainingFor` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 480 |
-| `filteredAvailable` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 494 |
-| `addPickedQty` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 611 |
-| `moveSelRight` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 644 |
-| `moveAllRight` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 658 |
-| `submitQtyPrompt` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 719 |
+| `remainingFor` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 481 |
+| `filteredAvailable` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 495 |
+| `addPickedQty` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 612 |
+| `moveSelRight` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 645 |
+| `moveAllRight` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 659 |
+| `submitQtyPrompt` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 720 |
 | `PackingListDocument` | Function | `frontend/src/components/packing-list/PackingListPDF.tsx` | 224 |
 | `listLineItems` | Function | `frontend/src/lib/apis/lineItemApi.ts` | 19 |
-| `listPartNums` | Function | `frontend/src/lib/apis/partNumApi.ts` | 13 |
-| `load` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 430 |
+| `listPartNums` | Function | `frontend/src/lib/apis/partNumApi.ts` | 41 |
+| `load` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 431 |
 
 ## Execution Flows
 
 | Flow | Type | Steps |
 |------|------|-------|
-| `ItemPicker → ListPartNums` | cross_community | 4 |
 | `HandlePageJump → ListLineItems` | cross_community | 4 |
+| `ItemPicker → ListPartNums` | cross_community | 4 |
 | `PickedColumns → Cn` | cross_community | 4 |
 | `HandlePdf → CalcContainersNeeded` | cross_community | 4 |
 | `HandlePdf → CalcCbm` | cross_community | 4 |
