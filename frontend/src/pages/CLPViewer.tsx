@@ -292,8 +292,10 @@ export default function CLPViewer({ plId, autoStart }: CLPViewerProps) {
               w: entry.innerMm.w / 10,
               h: entry.innerMm.h / 10,
             }}
+            containerMaxWeightKg={entry.maxWeightKg}
             stats={result?.stats ?? null}
             placements={result?.placements ?? []}
+            packingListItems={record?.items ?? []}
           />
         </div>
 
@@ -334,7 +336,7 @@ export default function CLPViewer({ plId, autoStart }: CLPViewerProps) {
               {easyButtonLabel}
             </Button>
           </div>
-          <div className="pointer-events-none pr-[18rem] text-[10px] text-white/40">
+          <div className="pointer-events-none pr-[28rem] text-[10px] text-white/40">
             LMB rotate · RMB pan · Wheel zoom · Esc deselect · G/V/R/S tools
           </div>
         </div>

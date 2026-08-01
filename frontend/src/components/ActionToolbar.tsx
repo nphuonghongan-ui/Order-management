@@ -1,4 +1,5 @@
 import { Search, Plus, X } from "lucide-react";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 
@@ -17,6 +18,7 @@ interface ActionToolbarProps {
   ctaLabel?: string;
   onCTA?: () => void;
   className?: string;
+  children?: ReactNode;
 }
 
 export default function ActionToolbar({
@@ -29,6 +31,7 @@ export default function ActionToolbar({
   ctaLabel,
   onCTA,
   className,
+  children,
 }: ActionToolbarProps) {
   return (
     <div className={cn("flex items-center justify-between gap-4 mb-4", className)}>
@@ -74,11 +77,16 @@ export default function ActionToolbar({
         )}
       </div>
 
-      {ctaLabel && onCTA && (
-        <Button onClick={onCTA} className="shrink-0 cursor-pointer">
-          <Plus />
-          {ctaLabel}
-        </Button>
+      {(ctaLabel || children) && (
+        <div className="flex items-center gap-2 shrink-0">
+          {children}
+          {ctaLabel && onCTA && (
+            <Button onClick={onCTA}>
+              <Plus />
+              {ctaLabel}
+            </Button>
+          )}
+        </div>
       )}
     </div>
   );

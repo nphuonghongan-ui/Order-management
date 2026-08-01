@@ -45,7 +45,7 @@ export interface PickedItem {
   length: number;
   width: number;
   height: number;
-  weightKg?: number;
+  weightKg: number;
   cbm: number;
   currentSellingQty?: number;
   quantityPerCont?: number;

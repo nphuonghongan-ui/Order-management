@@ -47,8 +47,8 @@ Start here when exploring this area:
 | `optimize` | Function | `backend/src/services/clpOptimizer.js` | 102 |
 | `buildItemsFromPackingList` | Function | `backend/src/services/clpOptimizer.js` | 165 |
 | `createShipment` | Function | `backend/src/controllers/easycargoController.js` | 18 |
-| `getShipment` | Function | `backend/src/services/easycargoService.js` | 145 |
-| `createShipmentFromPackingList` | Function | `backend/src/services/easycargoService.js` | 154 |
+| `getShipment` | Function | `backend/src/services/easycargoService.js` | 147 |
+| `createShipmentFromPackingList` | Function | `backend/src/services/easycargoService.js` | 156 |
 | `toMmBox` | Function | `backend/src/services/clpOptimizer.js` | 5 |
 | `expandToIndividualBoxes` | Function | `backend/src/services/clpOptimizer.js` | 16 |
 | `sortBoxes` | Function | `backend/src/services/clpOptimizer.js` | 34 |
@@ -70,7 +70,6 @@ Start here when exploring this area:
 | `OptimizePackingList → PlacementAtPoint` | cross_community | 4 |
 | `OptimizePackingList → SortBoxes` | intra_community | 3 |
 | `OptimizePackingList → MakeExtremePoint` | intra_community | 3 |
-| `CreateShipment → BuildItems` | intra_community | 3 |
 
 ## Connected Areas
 

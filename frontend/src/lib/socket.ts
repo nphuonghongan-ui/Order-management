@@ -4,7 +4,7 @@ import type { NotificationItem } from "@/components/notification/types";
 import { useNotificationStore } from "@/stores/notificationStore";
 
 const SOCKET_URL =
-  import.meta.env.API_URL?.replace(/\/api$/, "") ?? "http://localhost:8000";
+  import.meta.env.VITE_API_URL?.replace(/\/api$/, "") ?? "http://localhost:8000";
 
 let socket: Socket | null = null;
 

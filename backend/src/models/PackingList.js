@@ -76,7 +76,11 @@ const packingListSchema = new mongoose.Schema(
 packingListSchema.index({ createdAt: -1, _id: -1 });
 packingListSchema.index({ 'items.lineId': 1 });
 
-packingListSchema.statics.toClient = (doc, orderSellingByLineId = new Map()) => ({
+packingListSchema.statics.toClient = (
+  doc,
+  orderSellingByLineId = new Map(),
+  partNumByPartNum = new Map()
+) => ({
   _id: doc._id,
   plNumber: doc.plNumber,
   customer: {
@@ -95,6 +99,11 @@ packingListSchema.statics.toClient = (doc, orderSellingByLineId = new Map()) => 
   },
   items: doc.items.map((it) => {
     const meta = orderSellingByLineId.get(String(it.lineId));
+    const pn = partNumByPartNum.get(it.partNum);
+    const d = pn?.dimension;
+    const l = d?.length ?? 0;
+    const w = d?.width ?? 0;
+    const h = d?.height ?? 0;
     return {
       lineId: it.lineId,
       poNum: it.poNum,
@@ -105,6 +114,11 @@ packingListSchema.statics.toClient = (doc, orderSellingByLineId = new Map()) => 
       unitPrice: it.unitPrice,
       currentSellingQty: meta?.sellingQuantity ?? 0,
       quantityPerCont: meta?.quantityPerCont ?? 0,
+      length: l,
+      width: w,
+      height: h,
+      weightKg: pn?.weightKg ?? 0,
+      cbm: (l * w * h * it.qty) / 1_000_000,
     };
   }),
   itemsCount: doc.itemsCount,
@@ -121,3 +135,4 @@ packingListSchema.statics.toClient = (doc, orderSellingByLineId = new Map()) => 
 });
 
 export default mongoose.model('PackingList', packingListSchema);
+

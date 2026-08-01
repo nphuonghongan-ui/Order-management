@@ -232,6 +232,31 @@ const options = {
               description:
                 'The source Order\'s current `orderDtl.sellingQuantity` at read time (i.e. remaining qty to pack for this line, before this PL\'s qty is added back). Lets the UI compute the per-item max for qty edits.',
             },
+            length: {
+              type: 'number',
+              minimum: 0,
+              description: 'cm — denormalized from the PartNum at read time.',
+            },
+            width: {
+              type: 'number',
+              minimum: 0,
+              description: 'cm — denormalized from the PartNum at read time.',
+            },
+            height: {
+              type: 'number',
+              minimum: 0,
+              description: 'cm — denormalized from the PartNum at read time.',
+            },
+            weightKg: {
+              type: 'number',
+              minimum: 0,
+              description: 'kg (per piece) — denormalized from the PartNum at read time.',
+            },
+            cbm: {
+              type: 'number',
+              minimum: 0,
+              description: 'm³ — computed: (length × width × height × qty) / 1,000,000.',
+            },
           },
         },
         PackingListPublic: {
@@ -334,6 +359,95 @@ const options = {
             weightKg: { type: 'number', minimum: 0, description: 'kg (per piece)' },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        PartNumListResponse: {
+          type: 'object',
+          properties: {
+            items: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/PartNumPublic' },
+            },
+            nextCursor: {
+              type: 'string',
+              nullable: true,
+              description: 'Opaque cursor for the next page; null when there are no more results.',
+            },
+            hasMore: {
+              type: 'boolean',
+              description: 'True when more rows exist beyond the current page.',
+            },
+          },
+        },
+        CreatePartNumRequest: {
+          type: 'object',
+          required: ['partNum', 'dimension'],
+          properties: {
+            no: { type: 'integer', minimum: 1, description: 'Optional. Auto-assigned as max(no)+1 when omitted.' },
+            partNum: { type: 'string', description: 'Trimmed and uppercased server-side; must be unique.' },
+            dimension: {
+              type: 'object',
+              required: ['length', 'width', 'height'],
+              properties: {
+                length: { type: 'number', minimum: 0, description: 'cm' },
+                width: { type: 'number', minimum: 0, description: 'cm' },
+                height: { type: 'number', minimum: 0, description: 'cm' },
+              },
+            },
+            weightKg: { type: 'number', minimum: 0, default: 0, description: 'kg per piece.' },
+          },
+        },
+        ImportPartNumRow: {
+          type: 'object',
+          required: ['partNum', 'dimension'],
+          properties: {
+            no: { type: 'integer', minimum: 1 },
+            partNum: { type: 'string' },
+            dimension: {
+              type: 'object',
+              required: ['length', 'width', 'height'],
+              properties: {
+                length: { type: 'number', minimum: 0 },
+                width: { type: 'number', minimum: 0 },
+                height: { type: 'number', minimum: 0 },
+              },
+            },
+            weightKg: { type: 'number', minimum: 0 },
+          },
+        },
+        ImportPartNumRequest: {
+          type: 'object',
+          required: ['items'],
+          properties: {
+            items: {
+              type: 'array',
+              minItems: 1,
+              maxItems: 1000,
+              items: { $ref: '#/components/schemas/ImportPartNumRow' },
+            },
+          },
+        },
+        ImportPartNumError: {
+          type: 'object',
+          properties: {
+            row: { type: 'integer', description: '1-based row index in the submitted array.' },
+            partNum: { type: 'string', nullable: true },
+            message: { type: 'string' },
+          },
+        },
+        ImportPartNumResponse: {
+          type: 'object',
+          properties: {
+            createdCount: { type: 'integer', minimum: 0 },
+            skippedCount: { type: 'integer', minimum: 0 },
+            created: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/PartNumPublic' },
+            },
+            errors: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/ImportPartNumError' },
+            },
           },
         },
         ContainerPublic: {

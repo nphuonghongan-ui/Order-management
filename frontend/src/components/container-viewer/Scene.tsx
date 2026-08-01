@@ -132,7 +132,7 @@ export default function Scene({ innerMm, shellColor, placements }: SceneProps) {
         {selected && tool !== "select" && <TransformGizmo box={selected} />}
 
         {showAxes && (
-          <GizmoHelper alignment="top-right" margin={[400, 120]}>
+          <GizmoHelper alignment="top-right" margin={[500, 110]}>
             <GizmoViewport
               axisColors={["#ef4444", "#22c55e", "#3b82f6"]}
               labelColor="white"

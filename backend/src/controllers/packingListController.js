@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Account from '../models/Account.js';
 import Order from '../models/Order.js';
 import PackingList from '../models/PackingList.js';
+import PartNum from '../models/PartNum.js';
 
 const MODE_VALUES = ['SEA', 'AIR', 'ROAD', 'RAIL'];
 
@@ -90,14 +91,37 @@ const buildOrderSellingMap = async (lineIds) => {
   );
 };
 
+const buildPartNumMap = async (partNums) => {
+  if (!partNums || partNums.length === 0) return new Map();
+  const partDocs = await PartNum.find({ partNum: { $in: partNums } })
+    .select('partNum dimension weightKg');
+  return new Map(
+    partDocs.map((p) => [
+      p.partNum,
+      {
+        dimension: p.dimension,
+        weightKg: p.weightKg ?? 0,
+      },
+    ])
+  );
+};
+
 export const listPackingLists = async (_req, res) => {
   const docs = await PackingList.find().sort({ createdAt: -1, _id: -1 });
   const allLineIds = [
     ...new Set(docs.flatMap((d) => d.items.map((it) => String(it.lineId)))),
   ];
-  const orderSellingByLineId = await buildOrderSellingMap(allLineIds);
+  const allPartNums = [
+    ...new Set(docs.flatMap((d) => d.items.map((it) => it.partNum))),
+  ];
+  const [orderSellingByLineId, partNumByPartNum] = await Promise.all([
+    buildOrderSellingMap(allLineIds),
+    buildPartNumMap(allPartNums),
+  ]);
   return res.status(200).json({
-    lists: docs.map((d) => PackingList.toClient(d, orderSellingByLineId)),
+    lists: docs.map((d) =>
+      PackingList.toClient(d, orderSellingByLineId, partNumByPartNum)
+    ),
   });
 };
 
@@ -107,8 +131,14 @@ export const getPackingList = async (req, res) => {
     return res.status(404).json({ message: 'Packing list not found' });
   }
   const lineIds = doc.items.map((it) => String(it.lineId));
-  const orderSellingByLineId = await buildOrderSellingMap(lineIds);
-  return res.status(200).json({ list: PackingList.toClient(doc, orderSellingByLineId) });
+  const partNums = doc.items.map((it) => it.partNum);
+  const [orderSellingByLineId, partNumByPartNum] = await Promise.all([
+    buildOrderSellingMap(lineIds),
+    buildPartNumMap(partNums),
+  ]);
+  return res
+    .status(200)
+    .json({ list: PackingList.toClient(doc, orderSellingByLineId, partNumByPartNum) });
 };
 
 export const createPackingList = async (req, res) => {
@@ -276,8 +306,14 @@ export const createPackingList = async (req, res) => {
     });
 
     const createdLineIds = createdDoc.items.map((it) => String(it.lineId));
-    const orderSellingByLineId = await buildOrderSellingMap(createdLineIds);
-    return res.status(201).json({ list: PackingList.toClient(createdDoc, orderSellingByLineId) });
+    const createdPartNums = createdDoc.items.map((it) => it.partNum);
+    const [orderSellingByLineId, partNumByPartNum] = await Promise.all([
+      buildOrderSellingMap(createdLineIds),
+      buildPartNumMap(createdPartNums),
+    ]);
+    return res
+      .status(201)
+      .json({ list: PackingList.toClient(createdDoc, orderSellingByLineId, partNumByPartNum) });
   } catch (err) {
     if (err && err.code === 11000) {
       return res
@@ -583,10 +619,14 @@ export const updatePackingList = async (req, res) => {
     });
 
     const lineIds = updatedDoc.items.map((it) => String(it.lineId));
-    const orderSellingByLineId = await buildOrderSellingMap(lineIds);
+    const partNums = updatedDoc.items.map((it) => it.partNum);
+    const [orderSellingByLineId, partNumByPartNum] = await Promise.all([
+      buildOrderSellingMap(lineIds),
+      buildPartNumMap(partNums),
+    ]);
     return res
       .status(200)
-      .json({ list: PackingList.toClient(updatedDoc, orderSellingByLineId) });
+      .json({ list: PackingList.toClient(updatedDoc, orderSellingByLineId, partNumByPartNum) });
   } catch (err) {
     if (err && err.status === 404) {
       return res.status(404).json({ message: 'Packing list not found' });

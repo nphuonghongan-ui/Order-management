@@ -19,6 +19,7 @@ export const MENU_BY_ROLE: Record<Role, MenuItem[]> = {
   ],
   [ROLES.MANUFACTURE]: [
     { label: "Production Schedule", path: "/dashboard/production", icon: "Factory" },
+    { label: "Part Numbers", path: "/dashboard/part-numbers", icon: "Boxes" },
   ],
   [ROLES.SALE]: [
     { label: "Packing List", path: "/dashboard/packing-list", icon: "ClipboardList" },

@@ -5,7 +5,7 @@ description: "Skill for the Container-viewer area of Order-management. 26 symbol
 
 # Container-viewer
 
-26 symbols | 9 files | Cohesion: 80%
+26 symbols | 9 files | Cohesion: 79%
 
 ## When to Use
 
@@ -17,11 +17,11 @@ description: "Skill for the Container-viewer area of Order-management. 26 symbol
 
 | File | Symbols |
 |------|---------|
-| `frontend/src/components/container-viewer/Toolbar.tsx` | ToolButton, setTool, Section, Toolbar, setAxisConstraint (+3) |
+| `frontend/src/components/container-viewer/Toolbar.tsx` | ToolButton, setTool, Section, Toolbar, setAxisConstraint (+2) |
 | `frontend/src/components/container-viewer/Scene.tsx` | cameraPositionFor, ViewController, TransformGizmo, Scene, setSelectedId (+1) |
+| `frontend/src/components/ui/tabs.tsx` | Tabs, TabsList, TabsContent |
 | `frontend/src/components/container-viewer/datExport.ts` | buildDatText, downloadDatFile, copyDatToClipboard |
 | `frontend/src/components/container-viewer/PackedBox.tsx` | PackedBox, setSelectedId |
-| `frontend/src/components/ui/tabs.tsx` | Tabs, TabsTrigger |
 | `frontend/src/pages/CLPViewer.tsx` | handleGenerateDat, handleCopyDat |
 | `frontend/src/stores/useClpStore.ts` | useClpStore |
 | `frontend/src/lib/format.ts` | formatNumber |
@@ -49,10 +49,10 @@ Start here when exploring this area:
 | `onKey` | Function | `frontend/src/components/container-viewer/Scene.tsx` | 94 |
 | `formatNumber` | Function | `frontend/src/lib/format.ts` | 2 |
 | `QtyCell` | Function | `frontend/src/components/QtyCell.tsx` | 9 |
-| `Toolbar` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 96 |
-| `setAxisConstraint` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 106 |
-| `setSpace` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 108 |
-| `setView` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 110 |
+| `Toolbar` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 120 |
+| `setAxisConstraint` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 132 |
+| `setSpace` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 134 |
+| `setView` | Function | `frontend/src/components/container-viewer/Toolbar.tsx` | 136 |
 | `buildDatText` | Function | `frontend/src/components/container-viewer/datExport.ts` | 14 |
 | `downloadDatFile` | Function | `frontend/src/components/container-viewer/datExport.ts` | 34 |
 | `copyDatToClipboard` | Function | `frontend/src/components/container-viewer/datExport.ts` | 47 |

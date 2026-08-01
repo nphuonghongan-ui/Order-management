@@ -97,11 +97,11 @@ export default function DataTable<T extends { _id: string }>({
             {columns.map((col) => (
               <th
                 key={col.key}
-                onClick={() => col.sortable !== false && handleSort(col.key)}
+                onClick={() => col.sortable === true && handleSort(col.key)}
                 className={cn(
                   "text-left font-bold text-xs uppercase tracking-wide py-3 px-4 text-muted-foreground select-none",
                   col.align === "right" && "text-right",
-                  col.sortable !== false && "cursor-pointer hover:text-foreground",
+                  col.sortable === true && "cursor-pointer hover:text-foreground",
                   col.width
                 )}
               >
@@ -124,7 +124,7 @@ export default function DataTable<T extends { _id: string }>({
                       </Tooltip>
                     </TooltipProvider>
                   )}
-                  {col.sortable !== false && (
+                  {col.sortable === true && (
                     sortKey === col.key ? (
                       sortDir === "asc"
                         ? <ArrowDown size={12} className="ml-1 text-primary" />
