@@ -143,6 +143,10 @@ export default function Toolbar({
   const toggleGrid = useClpStore((s) => s.toggleGrid);
   const toggleAxes = useClpStore((s) => s.toggleAxes);
   const toggleLabels = useClpStore((s) => s.toggleLabels);
+  const highlightedPartNum = useClpStore((s) => s.highlightedPartNum);
+  const toggleHighlightedPartNum = useClpStore(
+    (s) => s.toggleHighlightedPartNum
+  );
 
   const partGroups = useMemo<PartGroup[]>(() => {
     const map = new Map<string, PartGroup>();
@@ -428,35 +432,45 @@ export default function Toolbar({
                 </div>
               ) : (
                 <div className="divide-y divide-border/60">
-                  {packingListPartGroups.map((g) => (
-                    <div
-                      key={g.partNum}
-                      className="grid grid-cols-[1.5rem_1fr_auto] items-center gap-x-3 px-3 py-2 text-[11px]"
-                    >
-                      <span
-                        className="inline-block h-3.5 w-3.5 shrink-0 rounded-sm border border-border/60"
-                        style={{ background: g.color }}
-                        aria-hidden
-                      />
-                      <span
-                        className="truncate font-mono"
-                        title={g.partNum}
+                  {packingListPartGroups.map((g) => {
+                    const isActive = highlightedPartNum === g.partNum;
+                    return (
+                      <button
+                        key={g.partNum}
+                        type="button"
+                        onClick={() => toggleHighlightedPartNum(g.partNum)}
+                        className={cn(
+                          "grid w-full grid-cols-[1.5rem_1fr_auto] items-center gap-x-3 px-3 py-2 text-left text-[11px] transition-colors cursor-pointer",
+                          isActive
+                            ? "bg-muted/60 ring-1 ring-primary/40"
+                            : "hover:bg-muted/50"
+                        )}
                       >
-                        {g.partNum}
-                      </span>
-                      <div className="flex items-center gap-4 text-right tabular-nums">
-                        <span className="w-7">
-                          {formatNumber(g.qty)}
+                        <span
+                          className="inline-block h-3.5 w-3.5 shrink-0 rounded-sm border border-border/60"
+                          style={{ background: g.color }}
+                          aria-hidden
+                        />
+                        <span
+                          className="truncate font-mono"
+                          title={g.partNum}
+                        >
+                          {g.partNum}
                         </span>
-                        <span className="w-16">
-                          {formatNumber(Math.round(g.weightKg))} kg
-                        </span>
-                        <span className="w-20">
-                          {(g.volumeMm3 / 1e9).toFixed(2)} m³
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                        <div className="flex items-center gap-4 text-right tabular-nums">
+                          <span className="w-7">
+                            {formatNumber(g.qty)}
+                          </span>
+                          <span className="w-16">
+                            {formatNumber(Math.round(g.weightKg))} kg
+                          </span>
+                          <span className="w-20">
+                            {fmtCbmSmall(g.volumeMm3 / 1e9)} m³
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -471,7 +485,7 @@ export default function Toolbar({
           >
             <div className="grid grid-cols-2 gap-2">
               <StatCard
-                label="Total items"
+                label="Loaded items"
                 value={formatNumber(stats?.itemCount ?? 0)}
                 fillPct={
                   recordTotalQty > 0
@@ -479,12 +493,6 @@ export default function Toolbar({
                     : 0
                 }
                 accent="emerald"
-              />
-              <StatCard
-                label="Total fill"
-                value={`${(stats?.fillPct ?? 0).toFixed(1)}%`}
-                fillPct={(stats?.fillPct ?? 0) / 100}
-                accent="blue"
               />
               <StatCard
                 label="Total weight"
@@ -501,7 +509,7 @@ export default function Toolbar({
                 }
                 accent="orange"
               />
-              <StatCard
+              {/* <StatCard
                 label="Total volume"
                 value={
                   stats
@@ -515,6 +523,19 @@ export default function Toolbar({
                     : 0
                 }
                 accent="purple"
+              /> */}
+            </div>
+            <div className="mt-2">
+              <StatCard
+                label="Volume fill"
+                value={`${(stats?.fillPct ?? 0).toFixed(1)}%`}
+                subValue={
+                  stats
+                    ? `${(stats.usedVolumeMm3 / 1e9).toFixed(2)} / ${(containerVolumeMm3 / 1e9).toFixed(2)} m³`
+                    : undefined
+                }
+                caption="of container volume"
+                visual={<ContainerFillVisual fillPct={stats?.fillPct ?? 0} />}
               />
             </div>
             <div className="mt-2">
@@ -561,6 +582,12 @@ export default function Toolbar({
 }
 
 type AccentColor = "emerald" | "blue" | "orange" | "purple";
+
+function fmtCbmSmall(v: number): string {
+  if (v < 0.01) return v.toFixed(4);
+  if (v < 0.1) return v.toFixed(3);
+  return v.toFixed(2);
+}
 
 function ProgressBar({
   fillPct,
@@ -611,6 +638,8 @@ function StatCard({
   accent,
   className,
   badge,
+  caption,
+  visual,
 }: {
   label: string;
   value: string;
@@ -619,6 +648,8 @@ function StatCard({
   accent?: AccentColor;
   className?: string;
   badge?: React.ReactNode;
+  caption?: React.ReactNode;
+  visual?: React.ReactNode;
 }) {
   return (
     <div
@@ -643,11 +674,38 @@ function StatCard({
           </div>
         )}
       </div>
-      {fillPct !== undefined && accent && (
-        <div className="mt-2.5">
-          <ProgressBar fillPct={fillPct} accent={accent} />
+      {visual ? (
+        <div className="mt-2.5">{visual}</div>
+      ) : (
+        fillPct !== undefined && accent && (
+          <div className="mt-2.5">
+            <ProgressBar fillPct={fillPct} accent={accent} />
+          </div>
+        )
+      )}
+      {caption && (
+        <div className="mt-1 text-[9px] text-muted-foreground">
+          {caption}
         </div>
       )}
+    </div>
+  );
+}
+
+function ContainerFillVisual({ fillPct }: { fillPct: number }) {
+  const clamped = Math.max(0, Math.min(100, fillPct));
+  return (
+    <div className="relative h-14 w-full overflow-hidden rounded border border-border/80">
+      <div
+        className="absolute inset-x-0 bottom-0 bg-blue-500/40 transition-[height] duration-300"
+        style={{ height: `${clamped}%` }}
+      />
+      <div className="absolute right-2 top-1 bottom-1 w-px bg-border/70" />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-[11px] font-bold tabular-nums text-foreground">
+          {clamped.toFixed(1)}%
+        </span>
+      </div>
     </div>
   );
 }

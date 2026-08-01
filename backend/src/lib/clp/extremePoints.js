@@ -8,6 +8,9 @@ export function emitPointsFor(placed) {
     makeExtremePoint(x + l, y, z),
     makeExtremePoint(x, y, z + w),
     makeExtremePoint(x, y + h, z),
+    makeExtremePoint(x + l, y + h, z),
+    makeExtremePoint(x, y + h, z + w),
+    makeExtremePoint(x + l, y + h, z + w),
   ];
 }
 

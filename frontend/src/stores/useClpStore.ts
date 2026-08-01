@@ -8,6 +8,7 @@ import type {
 
 interface ClpViewerState {
   selectedId: string | null;
+  highlightedPartNum: string | null;
   tool: ToolMode;
   axisConstraint: AxisConstraint;
   space: TransformSpace;
@@ -18,6 +19,8 @@ interface ClpViewerState {
   showLabels: boolean;
 
   setSelectedId: (id: string | null) => void;
+  setHighlightedPartNum: (partNum: string | null) => void;
+  toggleHighlightedPartNum: (partNum: string) => void;
   setTool: (tool: ToolMode) => void;
   setAxisConstraint: (axis: AxisConstraint) => void;
   setSpace: (space: TransformSpace) => void;
@@ -31,6 +34,7 @@ interface ClpViewerState {
 
 const initial = {
   selectedId: null as string | null,
+  highlightedPartNum: null as string | null,
   tool: "select" as ToolMode,
   axisConstraint: "all" as AxisConstraint,
   space: "world" as TransformSpace,
@@ -44,6 +48,11 @@ const initial = {
 export const useClpStore = create<ClpViewerState>((set) => ({
   ...initial,
   setSelectedId: (id) => set({ selectedId: id }),
+  setHighlightedPartNum: (partNum) => set({ highlightedPartNum: partNum }),
+  toggleHighlightedPartNum: (partNum) =>
+    set((s) => ({
+      highlightedPartNum: s.highlightedPartNum === partNum ? null : partNum,
+    })),
   setTool: (tool) => set({ tool }),
   setAxisConstraint: (axis) => set({ axisConstraint: axis }),
   setSpace: (space) => set({ space }),
