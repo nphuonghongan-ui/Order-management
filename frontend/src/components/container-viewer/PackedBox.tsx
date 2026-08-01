@@ -11,10 +11,29 @@ export default function PackedBox({ box }: PackedBoxProps) {
   const selectedId = useClpStore((s) => s.selectedId);
   const setSelectedId = useClpStore((s) => s.setSelectedId);
   const showLabels = useClpStore((s) => s.showLabels);
+  const highlightedPartNum = useClpStore((s) => s.highlightedPartNum);
   const [hover, setHover] = useState(false);
 
   const isSelected = selectedId === box.id;
+  const hasHighlight = highlightedPartNum !== null;
+  const isHighlighted = hasHighlight && box.partNum === highlightedPartNum;
+  const isDimmed = hasHighlight && box.partNum !== highlightedPartNum;
   const color = box.color ?? "#3b6fd9";
+
+  let opacity = 0.85;
+  if (isDimmed) opacity = 0.25;
+  else if (isHighlighted) opacity = 1;
+  else if (isSelected || hover) opacity = 0.95;
+
+  let emissive = "#000000";
+  let emissiveIntensity = 0;
+  if (isSelected) {
+    emissive = "#3b6fd9";
+    emissiveIntensity = 0.35;
+  } else if (isHighlighted) {
+    emissive = "#f59e0b";
+    emissiveIntensity = 0.25;
+  }
 
   return (
     <group
@@ -28,6 +47,7 @@ export default function PackedBox({ box }: PackedBoxProps) {
         setSelectedId(isSelected ? null : box.id);
       }}
       onPointerOver={(e) => {
+        if (isDimmed) return;
         e.stopPropagation();
         setHover(true);
       }}
@@ -38,18 +58,29 @@ export default function PackedBox({ box }: PackedBoxProps) {
         <meshStandardMaterial
           color={color}
           transparent
-          opacity={isSelected || hover ? 0.95 : 0.85}
-          emissive={isSelected ? "#3b6fd9" : "#000000"}
-          emissiveIntensity={isSelected ? 0.35 : 0}
+          opacity={opacity}
+          emissive={emissive}
+          emissiveIntensity={emissiveIntensity}
         />
       </mesh>
-      {(isSelected || hover) && (
+      {(isSelected || hover) && !isDimmed && (
         <mesh rotation={[0, (box.rotationY * Math.PI) / 180, 0]}>
           <boxGeometry
             args={[box.size.l + 1, box.size.h + 1, box.size.w + 1]}
           />
           <meshBasicMaterial
             color="#fbbf24"
+            wireframe
+          />
+        </mesh>
+      )}
+      {isHighlighted && (
+        <mesh rotation={[0, (box.rotationY * Math.PI) / 180, 0]}>
+          <boxGeometry
+            args={[box.size.l + 2, box.size.h + 2, box.size.w + 2]}
+          />
+          <meshBasicMaterial
+            color="#06b6d4"
             wireframe
           />
         </mesh>

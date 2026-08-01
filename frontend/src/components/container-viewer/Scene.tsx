@@ -90,14 +90,20 @@ export default function Scene({ innerMm, shellColor, placements }: SceneProps) {
   const showGrid = useClpStore((s) => s.showGrid);
   const showAxes = useClpStore((s) => s.showAxes);
   const setSelectedId = useClpStore((s) => s.setSelectedId);
+  const setHighlightedPartNum = useClpStore(
+    (s) => s.setHighlightedPartNum
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelectedId(null);
+      if (e.key === "Escape") {
+        setSelectedId(null);
+        setHighlightedPartNum(null);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [setSelectedId]);
+  }, [setSelectedId, setHighlightedPartNum]);
 
   const selected = placements.find((p) => p.id === selectedId) ?? null;
 
@@ -109,7 +115,10 @@ export default function Scene({ innerMm, shellColor, placements }: SceneProps) {
         onCreated={({ gl }) => {
           gl.setClearColor("#0a1126", 1);
         }}
-        onPointerMissed={() => setSelectedId(null)}
+        onPointerMissed={() => {
+          setSelectedId(null);
+          setHighlightedPartNum(null);
+        }}
       >
         <ViewController innerMm={innerMm} view={view} />
         <ambientLight intensity={0.6} />

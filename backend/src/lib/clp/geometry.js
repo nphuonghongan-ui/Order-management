@@ -27,7 +27,29 @@ export function fitsAt(box, placed, container) {
   for (const other of placed) {
     if (aabbOverlap(box, other)) return false;
   }
+  if (!fullySupported(box, placed, container)) return false;
   return true;
+}
+
+export function fullySupported(box, placed, container) {
+  if (box.y <= 1e-3) return true;
+  const boxArea = box.l * box.w;
+  if (boxArea <= 0) return false;
+  const threshold = boxArea * 0.99;
+  let supportedArea = 0;
+  for (const other of placed) {
+    if (Math.abs(other.y + other.h - box.y) > 1e-3) continue;
+    const xOverlap =
+      Math.min(box.x + box.l, other.x + other.l) -
+      Math.max(box.x, other.x);
+    const zOverlap =
+      Math.min(box.z + box.w, other.z + other.w) -
+      Math.max(box.z, other.z);
+    if (xOverlap <= 0 || zOverlap <= 0) continue;
+    supportedArea += xOverlap * zOverlap;
+    if (supportedArea >= threshold) return true;
+  }
+  return false;
 }
 
 export function getOrientations(size) {
