@@ -171,6 +171,9 @@ export default function PartNumbers() {
     setDeleting(true);
     try {
       await deletePartNum(deleteTarget._id);
+      if (sessionStorage.getItem("partNums") !== null) {
+        sessionStorage.removeItem("partNums");
+      }
       toast.success(`Part number "${deleteTarget.partNum}" deleted`);
       setDeleteTarget(null);
       await refresh();

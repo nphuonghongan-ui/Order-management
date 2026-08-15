@@ -1,11 +1,11 @@
 ---
 name: ui
-description: "Skill for the Ui area of Order-management. 130 symbols across 51 files."
+description: "Skill for the Ui area of Order-management. 142 symbols across 53 files."
 ---
 
 # Ui
 
-130 symbols | 51 files | Cohesion: 63%
+142 symbols | 53 files | Cohesion: 62%
 
 ## When to Use
 
@@ -18,6 +18,7 @@ description: "Skill for the Ui area of Order-management. 130 symbols across 51 f
 | File | Symbols |
 |------|---------|
 | `frontend/src/components/ui/select.tsx` | SelectGroup, SelectLabel, SelectSeparator, Select, SelectValue (+5) |
+| `frontend/src/components/ui/command.tsx` | CommandInput, CommandSeparator, CommandShortcut, CommandDialog, Command (+4) |
 | `frontend/src/components/ui/dialog.tsx` | DialogOverlay, DialogTrigger, Dialog, DialogPortal, DialogContent (+4) |
 | `frontend/src/components/ui/sheet.tsx` | SheetFooter, SheetDescription, Sheet, SheetClose, SheetOverlay (+3) |
 | `frontend/src/components/ui/card.tsx` | CardAction, CardFooter, Card, CardHeader, CardTitle (+2) |
@@ -26,7 +27,6 @@ description: "Skill for the Ui area of Order-management. 130 symbols across 51 f
 | `frontend/src/components/ui/popover.tsx` | PopoverHeader, PopoverTitle, PopoverDescription, Popover, PopoverTrigger (+1) |
 | `frontend/src/components/ui/input-group.tsx` | InputGroup, InputGroupAddon, InputGroupButton, InputGroupText, InputGroupTextarea |
 | `frontend/src/components/packing-list/ItemPicker.tsx` | ItemPicker, promptMaxFor, openQtyPromptFor, ContextMenu, Box |
-| `frontend/src/components/LoadingScreen.tsx` | DotSpinner, DecorativeIcons, rng, LoadingScreen |
 
 ## Entry Points
 
@@ -82,10 +82,10 @@ Start here when exploring this area:
 
 | Area | Connections |
 |------|-------------|
-| Pages | 19 calls |
+| Pages | 20 calls |
 | Packing-list | 4 calls |
-| Po | 4 calls |
-| Container-viewer | 3 calls |
+| Po | 2 calls |
+| Container-viewer | 1 calls |
 | Notification | 1 calls |
 
 ## How to Explore

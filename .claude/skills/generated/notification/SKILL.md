@@ -48,6 +48,12 @@ Start here when exploring this area:
 | `NotificationRow` | Function | `frontend/src/components/notification/NotificationBell.tsx` | 44 |
 | `NotificationList` | Function | `frontend/src/components/notification/NotificationBell.tsx` | 177 |
 
+## Execution Flows
+
+| Flow | Type | Steps |
+|------|------|-------|
+| `NotificationList → HashName` | intra_community | 4 |
+
 ## Connected Areas
 
 | Area | Connections |

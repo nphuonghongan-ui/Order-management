@@ -124,6 +124,9 @@ export default function AddPartNumDialog({
         weightKg:
           form.weightKg === "" ? 0 : (toNumberOrNull(form.weightKg) ?? 0),
       });
+      if (sessionStorage.getItem("partNums") !== null) {
+        sessionStorage.removeItem("partNums");
+      }
       toast.success(`Part number "${created.partNum}" created`);
       onCreated(created);
       onOpenChange(false);
