@@ -116,7 +116,7 @@ export default function NewOrder() {
         setPartNums(JSON.parse(cached) as PartNumOption[]);
         return;
       } catch {
-        sessionStorage.removeItem("partNNums_v2");
+        sessionStorage.removeItem("partNums");
       }
     }
     try {

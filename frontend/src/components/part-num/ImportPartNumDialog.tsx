@@ -50,10 +50,11 @@ interface ParsedRow {
 
 const TEMPLATE_HEADERS = [
   "No.",
-  "OrderDtl#Part#",
-  "Dimension len",
-  "Dimension wid",
-  "Dimension he",
+  "OrderDtl#PartNum",
+  "Dimension length",
+  "Dimension width",
+  "Dimension height",
+  "Weight (kg)",
   "Quantity per cc",
   "CBM",
 ];
@@ -160,9 +161,7 @@ const parseSheet = (sheet: XLSX.WorkSheet): ParsedRow[] => {
     if (length == null || length < 0) cellErrors.length = "Required (≥ 0)";
     if (width == null || width < 0) cellErrors.width = "Required (≥ 0)";
     if (height == null || height < 0) cellErrors.height = "Required (≥ 0)";
-    if (weightRaw !== "" && weightRaw != null && (weightKg == null || weightKg < 0)) {
-      cellErrors.weightKg = "Must be ≥ 0";
-    }
+    if (weightKg == null || weightKg < 0) cellErrors.weightKg = "Required (≥ 0)";
     if (no != null && no < 1) cellErrors.no = "Min 1";
 
     out.push({
@@ -183,9 +182,9 @@ const parseSheet = (sheet: XLSX.WorkSheet): ParsedRow[] => {
 const downloadTemplate = () => {
   const aoa: (string | number)[][] = [
     TEMPLATE_HEADERS,
-    [1, "RMS120.1", 5, 5, 5, 12, 125],
-    [2, "RMS121.1", 3, 6, 6, 12, 108],
-    [3, "XMAFL040", 6, 4, 5, 1, 120],
+    [1, "RMS120.1", 5, 5, 5, 0.5, 12, 125],
+    [2, "RMS121.1", 3, 6, 6, 0.4, 12, 108],
+    [3, "XMAFL040", 6, 4, 5, 0.8, 1, 120],
   ];
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   ws["!cols"] = [
@@ -194,6 +193,7 @@ const downloadTemplate = () => {
     { wch: 14 },
     { wch: 14 },
     { wch: 14 },
+    { wch: 12 },
     { wch: 16 },
     { wch: 10 },
   ];
@@ -274,6 +274,9 @@ export default function ImportPartNumDialog({
     setSubmitting(true);
     try {
       const res = await importPartNums(buildPayload());
+      if (sessionStorage.getItem("partNums") !== null) {
+        sessionStorage.removeItem("partNums");
+      }
       setResult(res);
       onImported(res);
       const summary = `${res.createdCount} imported, ${res.skippedCount} skipped`;
@@ -306,11 +309,11 @@ export default function ImportPartNumDialog({
         <DialogHeader>
           <DialogTitle>Import Part Numbers from Excel</DialogTitle>
           <DialogDescription>
-            Upload a .xlsx, .xls, or .csv file. Only the columns{" "}
+            Upload a .xlsx, .xls, or .csv file. The columns{" "}
             <span className="font-mono">OrderDtl#PartNum</span>,{" "}
-            <span className="font-mono">Dimension len/wid/he</span> (cm) and
-            optional <span className="font-mono">Weight</span> (kg) are imported.
-            The <span className="font-mono">No.</span>,{" "}
+            <span className="font-mono">Dimension len/wid/he</span> (cm) and{" "}
+            <span className="font-mono">Weight</span> (kg) are required. The{" "}
+            <span className="font-mono">No.</span>,{" "}
             <span className="font-mono">Quantity per cc</span>, and{" "}
             <span className="font-mono">CBM</span> columns are read but ignored
             (sequence is auto-assigned).
@@ -462,7 +465,11 @@ export default function ImportPartNumDialog({
                           )}
                         </td>
                         <td className="py-1.5 px-2 text-right font-mono">
-                          {r.weightKg ?? 0}
+                          {r.weightKg ?? (
+                            <span className="text-destructive">
+                              {r.cellErrors.weightKg ?? "—"}
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))}

@@ -42,13 +42,13 @@ Start here when exploring this area:
 | `importPartNums` | Function | `frontend/src/lib/apis/partNumApi.ts` | 89 |
 | `buildPayload` | Function | `frontend/src/components/part-num/ImportPartNumDialog.tsx` | 259 |
 | `handleImport` | Function | `frontend/src/components/part-num/ImportPartNumDialog.tsx` | 271 |
-| `toNumberOrNull` | Function | `frontend/src/components/part-num/ImportPartNumDialog.tsx` | 62 |
-| `toIntOrNull` | Function | `frontend/src/components/part-num/ImportPartNumDialog.tsx` | 69 |
-| `toStrOrEmpty` | Function | `frontend/src/components/part-num/ImportPartNumDialog.tsx` | 76 |
-| `normalizeHeader` | Function | `frontend/src/components/part-num/ImportPartNumDialog.tsx` | 79 |
-| `resolveColumn` | Function | `frontend/src/components/part-num/ImportPartNumDialog.tsx` | 82 |
-| `findHeaderRow` | Function | `frontend/src/components/part-num/ImportPartNumDialog.tsx` | 95 |
-| `parseSheet` | Function | `frontend/src/components/part-num/ImportPartNumDialog.tsx` | 116 |
+| `toNumberOrNull` | Function | `frontend/src/components/part-num/ImportPartNumDialog.tsx` | 63 |
+| `toIntOrNull` | Function | `frontend/src/components/part-num/ImportPartNumDialog.tsx` | 70 |
+| `toStrOrEmpty` | Function | `frontend/src/components/part-num/ImportPartNumDialog.tsx` | 77 |
+| `normalizeHeader` | Function | `frontend/src/components/part-num/ImportPartNumDialog.tsx` | 80 |
+| `resolveColumn` | Function | `frontend/src/components/part-num/ImportPartNumDialog.tsx` | 83 |
+| `findHeaderRow` | Function | `frontend/src/components/part-num/ImportPartNumDialog.tsx` | 96 |
+| `parseSheet` | Function | `frontend/src/components/part-num/ImportPartNumDialog.tsx` | 117 |
 | `toNumberOrNull` | Function | `frontend/src/components/part-num/AddPartNumDialog.tsx` | 54 |
 
 ## Execution Flows
