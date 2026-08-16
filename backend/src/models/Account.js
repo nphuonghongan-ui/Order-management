@@ -19,9 +19,31 @@ const accountSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: false,
       minlength: 6,
       select: false,
+    },
+    email: {
+      type: String,
+      required: false,
+      unique: true,
+      sparse: true,
+      lowercase: true,
+      trim: true,
+      index: true,
+    },
+    googleSub: {
+      type: String,
+      required: false,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
+    authProvider: {
+      type: String,
+      required: true,
+      enum: ['local', 'google', 'both'],
+      default: 'local',
     },
     role: {
       type: String,
@@ -33,13 +55,13 @@ const accountSchema = new mongoose.Schema(
   { timestamps: true, collection: 'accounts' }
 );
 
-accountSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+accountSchema.pre('save', async function () {
+  if (!this.isModified('password') || !this.password) return;
   this.password = await bcrypt.hash(this.password, 10);
-  next();
 });
 
 accountSchema.methods.comparePassword = function (plain) {
+  if (!this.password) return false;
   return bcrypt.compare(plain, this.password);
 };
 
@@ -47,6 +69,8 @@ accountSchema.statics.toProfile = (doc) => ({
   customerCustId: doc.customerCustId,
   userName: doc.userName,
   role: doc.role,
+  authProvider: doc.authProvider,
+  email: doc.email || null,
 });
 
 export default mongoose.model('Account', accountSchema);

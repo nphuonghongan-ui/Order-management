@@ -6,7 +6,7 @@ const api = axios.create({
   withCredentials: true,
 });
 
-const PUBLIC_ENDPOINTS = ["/auth/login", "/auth/refresh"];
+const PUBLIC_ENDPOINTS = ["/auth/login", "/auth/refresh", "/auth/google"];
 
 const isPublicEndpoint = (url?: string) =>
   PUBLIC_ENDPOINTS.some((ep) => (url ?? "").includes(ep));

@@ -8,6 +8,16 @@ const ACCOUNTS = [
   { customerCustId: 'GRA', userName: 'GRA', password: '123456', role: 'PO' },
   { customerCustId: 'DYL', userName: 'DYLAN', password: '234567', role: 'Sale' },
   { customerCustId: 'AIG', userName: 'AIGTH', password: '345678', role: 'Manufacture' },
+  // Example Google-One-Tap-provisioned PO. The `email` must match the Google account
+  // that will sign in. `password` is empty (the schema and pre-save hook handle this).
+  // {
+  //   customerCustId: 'EXT-PO-001',
+  //   userName: 'ext-po-001',
+  //   email: 'po1@example.com',
+  //   password: '',
+  //   role: 'PO',
+  //   authProvider: 'google',
+  // },
 ];
 
 // Dimensions in centimetres (cm).
@@ -69,16 +79,22 @@ async function runSeedIfNeeded(name, run) {
 
 async function seedAccounts() {
   for (const row of ACCOUNTS) {
-    const hash = await bcrypt.hash(row.password, 10);
+    const update = {
+      customerCustId: row.customerCustId,
+      role: row.role,
+    };
+    if (row.password) {
+      update.password = await bcrypt.hash(row.password, 10);
+    }
+    if (row.email) {
+      update.email = row.email;
+    }
+    if (row.authProvider) {
+      update.authProvider = row.authProvider;
+    }
     await Account.findOneAndUpdate(
       { userName: row.userName },
-      {
-        $set: {
-          customerCustId: row.customerCustId,
-          role: row.role,
-          password: hash,
-        },
-      },
+      { $set: update },
       { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
     );
   }

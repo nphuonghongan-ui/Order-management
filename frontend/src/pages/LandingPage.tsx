@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 import {
   ArrowRight,
   Box,
@@ -19,6 +20,10 @@ import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/utils";
 import { getCdnUrl } from "@/lib/utils/cdn";
+import { GoogleLoginDialog } from "@/components/google/GoogleLoginDialog";
+import { useGoogleOneTap } from "@/lib/hooks/google/useGoogleOneTap";
+import type { GoogleCredentialResponse } from "@/lib/google/oneTap";
+import { useAuthStore } from "@/stores/authStore";
 
 const TRUSTED_LOGOS = [
   { name: "Maersk", slug: "maersk" },
@@ -426,8 +431,35 @@ function formatTime(s: number) {
 }
 
 export default function LandingPage() {
+  const [signInOpen, setSignInOpen] = useState(false);
+  const openSignIn = () => setSignInOpen(true);
+
   const navigate = useNavigate();
-  const goToLogin = () => navigate("/login");
+  const role = useAuthStore((s) => s.role);
+  const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
+
+  const handleCredential = useCallback(
+    async (response: GoogleCredentialResponse) => {
+      try {
+        const ok = await loginWithGoogle(response.credential);
+        if (ok) {
+          navigate("/dashboard");
+        }
+      } catch (err) {
+        const message =
+          (err as { response?: { data?: { message?: string } } })?.response
+            ?.data?.message || "Google sign-in failed";
+        toast.error(message);
+      }
+    },
+    [loginWithGoogle, navigate],
+  );
+
+  useGoogleOneTap({
+    onCredential: handleCredential,
+    onFallback: openSignIn,
+    enabled: !role,
+  });
 
   return (
     <div className="bg-background text-foreground">
@@ -483,7 +515,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-2 shrink-0">
             <Button
               size="default"
-              onClick={goToLogin}
+              onClick={openSignIn}
               className="h-10 px-5 text-sm rounded-full"
             >
               Book a demo
@@ -491,7 +523,7 @@ export default function LandingPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={goToLogin}
+              onClick={openSignIn}
               aria-label="Sign in"
               title="Sign in"
               className="h-10 w-10 rounded-full bg-muted text-foreground"
@@ -577,7 +609,7 @@ export default function LandingPage() {
               <div className="mt-10 flex flex-col flex-wrap items-center justify-center gap-3">
                 <Button
                   size="lg"
-                  onClick={goToLogin}
+                  onClick={openSignIn}
                   className="h-15 px-10 text-lg bg-white text-primary-light hover:bg-white/90 hover:text-primary"
                 >
                   Get Started
@@ -885,7 +917,7 @@ export default function LandingPage() {
                       price={plan.price}
                       description={plan.description}
                       features={plan.features}
-                      onCta={goToLogin}
+                      onCta={openSignIn}
                     />
                   </Reveal>
                 ))}
@@ -992,6 +1024,13 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      <GoogleLoginDialog
+        open={signInOpen}
+        onOpenChange={setSignInOpen}
+        title="Sign in to AxonLog"
+        description="Continue with Google for one-tap sign-in. Your AxonLog account is created on first use."
+      />
     </div>
   );
 }

@@ -8,6 +8,8 @@ interface AccountProfile {
   customerCustId: string;
   userName: string;
   role: Role;
+  authProvider?: "local" | "google" | "both";
+  email?: string | null;
 }
 
 interface AuthState {
@@ -23,6 +25,7 @@ interface AuthState {
   accessToken: string | null;
   restoreSession: () => Promise<void>;
   login: (userName: string, password: string) => Promise<boolean>;
+  loginWithGoogle: (credential: string) => Promise<boolean>;
   logout: () => Promise<void>;
 }
 
@@ -61,6 +64,22 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch {
       return false;
     }
+  },
+
+  loginWithGoogle: async (credential) => {
+    const { data } = await api.post<{
+      account: AccountProfile;
+      accessToken: string;
+    }>("/auth/google", { credential });
+
+    set({
+      role: data.account.role,
+      account: data.account,
+      accessToken: data.accessToken,
+      hydrated: true,
+    });
+    connectSocket(data.accessToken);
+    return true;
   },
 
   logout: async () => {

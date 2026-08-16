@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, logout, me, refresh } from '../controllers/authController.js';
+import { googleLogin, login, logout, me, refresh } from '../controllers/authController.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
@@ -30,6 +30,44 @@ const router = Router();
  *         description: Invalid credentials
  */
 router.post('/login', login);
+
+/**
+ * @openapi
+ * /auth/google:
+ *   post:
+ *     summary: Authenticate with a Google One Tap ID token
+ *     description: |
+ *       Verifies the Google ID token (JWT) and issues an AxonLog session.
+ *       Looks up an existing account by `email`. If no account matches,
+ *       auto-creates a new PO account with synthetic IDs (`B2C-...`,
+ *       `b2c-{googleSub}`), empty password, `authProvider: 'google'`,
+ *       and `emailVerified: true` (Google has already verified the email).
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [credential]
+ *             properties:
+ *               credential:
+ *                 type: string
+ *                 description: Google ID token (JWT) returned by `google.accounts.id`.
+ *     responses:
+ *       200:
+ *         description: Login successful (existing or newly-created account)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoginResponse'
+ *       400:
+ *         description: Missing credential
+ *       401:
+ *         description: Invalid, expired, or unverified Google ID token
+ */
+router.post('/google', googleLogin);
 
 /**
  * @openapi

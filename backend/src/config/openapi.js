@@ -42,6 +42,8 @@ const options = {
             customerCustId: { type: 'string' },
             userName: { type: 'string' },
             role: { type: 'string', enum: ['PO', 'Sale', 'Manufacture'] },
+            authProvider: { type: 'string', enum: ['local', 'google', 'both'] },
+            email: { type: 'string', nullable: true },
           },
         },
         LoginRequest: {

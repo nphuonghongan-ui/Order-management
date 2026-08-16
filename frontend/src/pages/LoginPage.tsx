@@ -1,15 +1,18 @@
-import { useState, type FormEvent } from "react";
+import { useCallback, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { ArrowRight, EyeOff, Eye } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import Logo from "@/components/Logo";
+import { GoogleSignInButton } from "@/components/google/GoogleSignInButton";
+import type { GoogleCredentialResponse } from "@/lib/google/oneTap";
 
 const sansFont = { fontFamily: "'Inter', sans-serif" };
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
+  const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -30,6 +33,27 @@ export default function LoginPage() {
       toast.error("Invalid username or password");
     }
   };
+
+  const handleGoogleCredential = useCallback(
+    async (response: GoogleCredentialResponse) => {
+      if (submitting) return;
+      setSubmitting(true);
+      try {
+        const ok = await loginWithGoogle(response.credential);
+        if (ok) {
+          navigate("/dashboard");
+        }
+      } catch (err) {
+        const message =
+          (err as { response?: { data?: { message?: string } } })?.response?.data
+            ?.message || "Google sign-in failed";
+        toast.error(message);
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [loginWithGoogle, navigate, submitting],
+  );
 
   const inputBorder = (focused: boolean) => ({
     border: `1.5px solid ${focused ? "#0052CC" : "#D6DCE4"}`,
@@ -169,6 +193,30 @@ export default function LoginPage() {
               {!submitting && <ArrowRight size={14} />}
             </button>
         </form>
+
+        {/* Divider */}
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1" style={{ background: "#E2E8F0" }} />
+          <span className="text-xs uppercase tracking-wider" style={{ color: "#94A3B8" }}>
+            Or
+          </span>
+          <div className="h-px flex-1" style={{ background: "#E2E8F0" }} />
+        </div>
+
+        {/* Google One Tap */}
+        <div className="flex justify-center">
+          <GoogleSignInButton
+            onCredential={handleGoogleCredential}
+            disabled={submitting}
+          />
+        </div>
+
+        <p
+          className="mt-6 text-center text-xs"
+          style={{ color: "#94A3B8", lineHeight: 1.6 }}
+        >
+          Google sign-in creates your AxonLog account on first use.
+        </p>
       </div>
     </div>
   );

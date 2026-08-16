@@ -26,6 +26,7 @@ export const signAccessToken = (account) =>
       userName: account.userName,
       role: account.role,
       customerCustId: account.customerCustId,
+      authProvider: account.authProvider,
       typ: 'access',
     },
     process.env.JWT_SECRET,
