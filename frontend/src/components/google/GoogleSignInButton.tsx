@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  GOOGLE_SCOPES,
   initGoogleAccounts,
   renderGoogleButton,
-  type GoogleCredentialResponse,
 } from "@/lib/google/oneTap";
+import { GOOGLE_DEFAULT_BUTTON_STYLE, GOOGLE_SCOPES } from "@/lib/google/constants";
+import type { GoogleCredentialResponse } from "@/lib/google/types";
 
 type Status = "loading" | "ready" | "error" | "disabled";
 
@@ -44,14 +44,7 @@ export function GoogleSignInButton({
     )
       .then(() => {
         if (cancelled || !containerRef.current) return;
-        renderGoogleButton(containerRef.current, {
-          type: "standard",
-          theme: "outline",
-          size: "large",
-          text: "signin_with",
-          shape: "rectangular",
-          width: 320,
-        });
+        renderGoogleButton(containerRef.current, GOOGLE_DEFAULT_BUTTON_STYLE);
         setStatus("ready");
       })
       .catch(() => {

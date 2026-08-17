@@ -29,6 +29,8 @@ const doRefresh = async () => {
   return data.accessToken;
 };
 
+// Handle 401 errors and refresh token if needed
+// 403 Forbidden, handle for authorization failed
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {

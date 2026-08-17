@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  GOOGLE_SCOPES,
   cancelGoogleOneTap,
   initGoogleAccounts,
   promptGoogleOneTap,
-  type GoogleCredentialResponse,
-  type GooglePromptMomentNotification,
 } from "@/lib/google/oneTap";
+import { GOOGLE_SCOPES } from "../google/constants";
+import type { GoogleCredentialResponse, GooglePromptMomentNotification } from "../google/types";
 
 export type OneTapStatus =
   | "idle"

@@ -1,17 +1,17 @@
 import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 
-const ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '15m';
-const REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+const ACCESS_EXPIRES_IN = process.env.ACCESS_TOKEN_EXPIRES_IN || '15m';
+const REFRESH_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '7d';
 
-const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+const REFRESH_SECRET = process.env.REFRESH_TOKEN_SECRET || process.env.ACCESS_TOKEN_SECRET;
 
-if (!process.env.JWT_SECRET) {
-  console.warn('[WARN] JWT_SECRET is not set. Access tokens will fail.');
+if (!process.env.ACCESS_TOKEN_SECRET) {
+  console.warn('[WARN] ACCESS_TOKEN_SECRET is not set. Access tokens will fail.');
 }
-if (!process.env.JWT_REFRESH_SECRET) {
+if (!process.env.REFRESH_TOKEN_SECRET) {
   console.warn(
-    '[WARN] JWT_REFRESH_SECRET is not set. Falling back to JWT_SECRET for refresh tokens (not recommended).'
+    '[WARN] REFRESH_TOKEN_SECRET is not set. Falling back to ACCESS_TOKEN_SECRET for refresh tokens (not recommended).'
   );
 }
 
@@ -29,7 +29,7 @@ export const signAccessToken = (account) =>
       authProvider: account.authProvider,
       typ: 'access',
     },
-    process.env.JWT_SECRET,
+    process.env.ACCESS_TOKEN_SECRET,
     { expiresIn: ACCESS_EXPIRES_IN }
   );
 

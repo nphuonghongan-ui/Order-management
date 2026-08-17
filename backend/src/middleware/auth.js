@@ -13,7 +13,7 @@ export const requireAuth = (req, res, next) => {
   }
 
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     if (payload.typ && payload.typ !== 'access') {
       return res.status(401).json({ message: 'Invalid token type' });
     }

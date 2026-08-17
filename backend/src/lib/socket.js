@@ -17,7 +17,7 @@ export const initSocket = (httpServer, origins) => {
       return next(new Error('Unauthorized: missing token'));
     }
     try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET);
+      const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
       if (payload.typ && payload.typ !== 'access') {
         return next(new Error('Unauthorized: invalid token type'));
       }

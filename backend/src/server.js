@@ -20,8 +20,8 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import easycargoRoutes from './routes/easycargoRoutes.js';
 import clpRoutes from './routes/clpRoutes.js';
 
-if (!process.env.JWT_SECRET) {
-  console.warn('[WARN] JWT_SECRET is not set. Auth will fail until it is.');
+if (!process.env.ACCESS_TOKEN_SECRET) {
+  console.warn('[WARN] ACCESS_TOKEN_SECRET is not set. Auth will fail until it is.');
 }
 
 const app = express();
