@@ -1,11 +1,11 @@
 ---
 name: controllers
-description: "Skill for the Controllers area of Order-management. 85 symbols across 12 files."
+description: "Skill for the Controllers area of Order-management. 77 symbols across 12 files."
 ---
 
 # Controllers
 
-85 symbols | 12 files | Cohesion: 98%
+77 symbols | 12 files | Cohesion: 91%
 
 ## When to Use
 
@@ -18,15 +18,15 @@ description: "Skill for the Controllers area of Order-management. 85 symbols acr
 | File | Symbols |
 |------|---------|
 | `backend/src/controllers/packingListController.js` | toStr, toUpper, toPositiveInt, toNonNegNumber, toDate (+11) |
-| `backend/src/controllers/authController.js` | setRefreshCookie, clearRefreshCookie, issueSession, revokeFamily, login (+9) |
 | `backend/src/controllers/partNumController.js` | toPositiveInt, toNonNegNumber, toUpperTrimmed, validatePartNumInput, sanitizePayload (+6) |
-| `backend/src/lib/oauthState.js` | b64urlDecode, decodeFlowCookie, clearOauthStateCookie, clearPkceVerifierCookie, clearOauthFlowCookies (+3) |
-| `backend/src/utils/tokens.js` | hashToken, newId, signAccessToken, signRefreshToken, verifyRefreshToken (+2) |
+| `backend/src/controllers/authController.js` | upsertGoogleAccount, issueGoogleSession, oauthCallback, redirectError, googleOnetapLogin (+5) |
+| `backend/src/utils/tokens.js` | hashToken, newId, signAccessToken, refreshExpiresAt, msFromExpiry (+2) |
 | `backend/src/controllers/poController.js` | toPositiveInt, toNonNegNumber, toDate, upper, validateLine (+2) |
 | `backend/src/controllers/notificationController.js` | sendUrgeUpdate, sanitizeRiskLines, notifyManufactureQtyMismatch, encodeCursor, decodeCursor (+1) |
 | `backend/src/controllers/lineItemController.js` | encodeCursor, decodeCursor, escapeRegex, listLineItems, toOptionalDate (+1) |
 | `backend/src/controllers/manufactureController.js` | encodeCursor, decodeCursor, escapeRegex, listManufactureItems, toOptionalDate (+1) |
-| `backend/src/lib/socket.js` | getIO, roomFor |
+| `backend/src/lib/oauthState.js` | b64urlDecode, decodeFlowCookie, clearOauthFlowCookies |
+| `backend/src/config/cookies.js` | clearCookie, getCookie |
 
 ## Entry Points
 
@@ -36,7 +36,7 @@ Start here when exploring this area:
 - **`getPackingList`** (Function) — `backend/src/controllers/packingListController.js:127`
 - **`createPackingList`** (Function) — `backend/src/controllers/packingListController.js:143`
 - **`updatePackingList`** (Function) — `backend/src/controllers/packingListController.js:375`
-- **`login`** (Function) — `backend/src/controllers/authController.js:70`
+- **`clearCookie`** (Function) — `backend/src/config/cookies.js:49`
 
 ## Key Symbols
 
@@ -46,28 +46,27 @@ Start here when exploring this area:
 | `getPackingList` | Function | `backend/src/controllers/packingListController.js` | 127 |
 | `createPackingList` | Function | `backend/src/controllers/packingListController.js` | 143 |
 | `updatePackingList` | Function | `backend/src/controllers/packingListController.js` | 375 |
-| `login` | Function | `backend/src/controllers/authController.js` | 70 |
-| `refresh` | Function | `backend/src/controllers/authController.js` | 90 |
-| `logout` | Function | `backend/src/controllers/authController.js` | 162 |
+| `clearCookie` | Function | `backend/src/config/cookies.js` | 49 |
+| `oauthCallback` | Function | `backend/src/controllers/authController.js` | 261 |
+| `redirectError` | Function | `backend/src/controllers/authController.js` | 266 |
+| `googleOnetapLogin` | Function | `backend/src/controllers/authController.js` | 362 |
+| `decodeFlowCookie` | Function | `backend/src/lib/oauthState.js` | 19 |
+| `clearOauthFlowCookies` | Function | `backend/src/lib/oauthState.js` | 44 |
+| `withRetry` | Function | `backend/src/utils/retry.js` | 0 |
+| `login` | Function | `backend/src/controllers/authController.js` | 54 |
 | `hashToken` | Function | `backend/src/utils/tokens.js` | 17 |
 | `newId` | Function | `backend/src/utils/tokens.js` | 20 |
 | `signAccessToken` | Function | `backend/src/utils/tokens.js` | 22 |
-| `signRefreshToken` | Function | `backend/src/utils/tokens.js` | 35 |
-| `verifyRefreshToken` | Function | `backend/src/utils/tokens.js` | 47 |
 | `refreshExpiresAt` | Function | `backend/src/utils/tokens.js` | 55 |
-| `oauthCallback` | Function | `backend/src/controllers/authController.js` | 276 |
-| `redirectError` | Function | `backend/src/controllers/authController.js` | 281 |
-| `googleOnetapLogin` | Function | `backend/src/controllers/authController.js` | 377 |
-| `decodeFlowCookie` | Function | `backend/src/lib/oauthState.js` | 38 |
-| `clearOauthStateCookie` | Function | `backend/src/lib/oauthState.js` | 63 |
-| `clearPkceVerifierCookie` | Function | `backend/src/lib/oauthState.js` | 67 |
-| `clearOauthFlowCookies` | Function | `backend/src/lib/oauthState.js` | 71 |
+| `createPartNum` | Function | `backend/src/controllers/partNumController.js` | 126 |
+| `importPartNums` | Function | `backend/src/controllers/partNumController.js` | 169 |
+| `createPO` | Function | `backend/src/controllers/poController.js` | 49 |
+| `pairKey` | Function | `backend/src/controllers/poController.js` | 94 |
 
 ## Execution Flows
 
 | Flow | Type | Steps |
 |------|------|-------|
-| `OauthStart → B64urlEncode` | intra_community | 4 |
 | `GoogleOnetapLogin → NewId` | cross_community | 4 |
 | `GoogleOnetapLogin → SignAccessToken` | cross_community | 4 |
 | `GoogleOnetapLogin → SignRefreshToken` | cross_community | 4 |
@@ -76,7 +75,14 @@ Start here when exploring this area:
 | `CreatePackingList → ToDate` | intra_community | 3 |
 | `UpdatePackingList → ToStr` | intra_community | 3 |
 | `UpdatePackingList → ToDate` | intra_community | 3 |
-| `OauthCallback → ClearOauthStateCookie` | intra_community | 3 |
+| `OauthCallback → ClearCookie` | intra_community | 3 |
+| `OauthCallback → B64urlDecode` | intra_community | 3 |
+
+## Connected Areas
+
+| Area | Connections |
+|------|-------------|
+| Config | 3 calls |
 
 ## How to Explore
 

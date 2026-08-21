@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **Order-management** (1723 symbols, 3820 relationships, 140 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **Order-management** (1741 symbols, 3853 relationships, 142 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
@@ -41,19 +41,19 @@ This project is indexed by GitNexus as **Order-management** (1723 symbols, 3820 
 | Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
 | Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
 | Work in the Ui area (118 symbols) | `.claude/skills/generated/ui/SKILL.md` |
-| Work in the Controllers area (85 symbols) | `.claude/skills/generated/controllers/SKILL.md` |
-| Work in the Pages area (74 symbols) | `.claude/skills/generated/pages/SKILL.md` |
+| Work in the Controllers area (77 symbols) | `.claude/skills/generated/controllers/SKILL.md` |
+| Work in the Pages area (77 symbols) | `.claude/skills/generated/pages/SKILL.md` |
 | Work in the Packing-list area (53 symbols) | `.claude/skills/generated/packing-list/SKILL.md` |
 | Work in the Services area (31 symbols) | `.claude/skills/generated/services/SKILL.md` |
 | Work in the Container-viewer area (29 symbols) | `.claude/skills/generated/container-viewer/SKILL.md` |
 | Work in the Po area (26 symbols) | `.claude/skills/generated/po/SKILL.md` |
+| Work in the Oauth area (19 symbols) | `.claude/skills/generated/oauth/SKILL.md` |
 | Work in the Apis area (18 symbols) | `.claude/skills/generated/apis/SKILL.md` |
 | Work in the Stores area (16 symbols) | `.claude/skills/generated/stores/SKILL.md` |
 | Work in the Part-num area (15 symbols) | `.claude/skills/generated/part-num/SKILL.md` |
 | Work in the Notification area (12 symbols) | `.claude/skills/generated/notification/SKILL.md` |
-| Work in the Google area (12 symbols) | `.claude/skills/generated/google/SKILL.md` |
-| Work in the Oauth area (11 symbols) | `.claude/skills/generated/oauth/SKILL.md` |
+| Work in the Config area (11 symbols) | `.claude/skills/generated/config/SKILL.md` |
 | Work in the Hooks area (9 symbols) | `.claude/skills/generated/hooks/SKILL.md` |
-| Work in the Config area (5 symbols) | `.claude/skills/generated/config/SKILL.md` |
+| Work in the Google area (5 symbols) | `.claude/skills/generated/google/SKILL.md` |
 
 <!-- gitnexus:end -->

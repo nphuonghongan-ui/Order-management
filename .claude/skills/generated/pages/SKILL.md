@@ -1,16 +1,16 @@
 ---
 name: pages
-description: "Skill for the Pages area of Order-management. 74 symbols across 18 files."
+description: "Skill for the Pages area of Order-management. 77 symbols across 19 files."
 ---
 
 # Pages
 
-74 symbols | 18 files | Cohesion: 75%
+77 symbols | 19 files | Cohesion: 76%
 
 ## When to Use
 
 - Working with code in `frontend/`
-- Understanding how LandingPage, enqueueOp, commitCustomer work
+- Understanding how LandingPage, useNavigation, Sidebar work
 - Modifying pages-related functionality
 
 ## Key Files
@@ -23,26 +23,33 @@ description: "Skill for the Pages area of Order-management. 74 symbols across 18
 | `frontend/src/pages/ProductionSchedule.tsx` | loadPage, handlePrev, handleNext, handlePageJump, isAxiosError (+2) |
 | `frontend/src/pages/MyOrders.tsx` | isAxiosError, loadPage, handlePrev, handleNext, handlePageJump (+1) |
 | `frontend/src/pages/CLPViewer.tsx` | runOptimize, handleContainerChange, handleCalculate, CLPViewer, handleSendEasyCargo |
+| `frontend/src/pages/LoginPage.tsx` | LoginPage, inputBorder, login, handleSubmit |
 | `frontend/src/lib/apis/packingListApi.ts` | listPackingLists, deletePackingList, getPackingList |
 | `frontend/src/pages/OAuthError.tsx` | friendly, OAuthError |
 | `frontend/src/pages/OAuthSuccess.tsx` | isSafePath, OAuthSuccess |
-| `frontend/src/lib/apis/manufactureApi.ts` | listManufactureItems, patchManufactureItem |
 
 ## Entry Points
 
 Start here when exploring this area:
 
 - **`LandingPage`** (Function) — `frontend/src/pages/LandingPage.tsx:430`
-- **`enqueueOp`** (Function) — `frontend/src/pages/PackingList.tsx:392`
-- **`commitCustomer`** (Function) — `frontend/src/pages/PackingList.tsx:416`
-- **`commitDelivery`** (Function) — `frontend/src/pages/PackingList.tsx:427`
-- **`commitItemQty`** (Function) — `frontend/src/pages/PackingList.tsx:438`
+- **`useNavigation`** (Function) — `frontend/src/lib/hooks/useNavigation.ts:3`
+- **`Sidebar`** (Function) — `frontend/src/components/Sidebar.tsx:26`
+- **`OAuthSignInButton`** (Function) — `frontend/src/components/oauth/OAuthSignInButton.tsx:24`
+- **`LoginPage`** (Function) — `frontend/src/pages/LoginPage.tsx:11`
 
 ## Key Symbols
 
 | Symbol | Type | File | Line |
 |--------|------|------|------|
 | `LandingPage` | Function | `frontend/src/pages/LandingPage.tsx` | 430 |
+| `useNavigation` | Function | `frontend/src/lib/hooks/useNavigation.ts` | 3 |
+| `Sidebar` | Function | `frontend/src/components/Sidebar.tsx` | 26 |
+| `OAuthSignInButton` | Function | `frontend/src/components/oauth/OAuthSignInButton.tsx` | 24 |
+| `LoginPage` | Function | `frontend/src/pages/LoginPage.tsx` | 11 |
+| `inputBorder` | Function | `frontend/src/pages/LoginPage.tsx` | 35 |
+| `OAuthError` | Function | `frontend/src/pages/OAuthError.tsx` | 29 |
+| `OAuthSuccess` | Function | `frontend/src/pages/OAuthSuccess.tsx` | 9 |
 | `enqueueOp` | Function | `frontend/src/pages/PackingList.tsx` | 392 |
 | `commitCustomer` | Function | `frontend/src/pages/PackingList.tsx` | 416 |
 | `commitDelivery` | Function | `frontend/src/pages/PackingList.tsx` | 427 |
@@ -55,13 +62,6 @@ Start here when exploring this area:
 | `deletePackingList` | Function | `frontend/src/lib/apis/packingListApi.ts` | 59 |
 | `ExportButtons` | Function | `frontend/src/components/packing-list/ExportButtons.tsx` | 14 |
 | `load` | Function | `frontend/src/pages/PackingList.tsx` | 296 |
-| `handleDelete` | Function | `frontend/src/pages/PackingList.tsx` | 339 |
-| `render` | Function | `frontend/src/pages/PackingList.tsx` | 582 |
-| `useNavigation` | Function | `frontend/src/lib/hooks/useNavigation.ts` | 3 |
-| `Sidebar` | Function | `frontend/src/components/Sidebar.tsx` | 26 |
-| `OAuthError` | Function | `frontend/src/pages/OAuthError.tsx` | 29 |
-| `OAuthSuccess` | Function | `frontend/src/pages/OAuthSuccess.tsx` | 9 |
-| `loadPage` | Function | `frontend/src/pages/MyOrders.tsx` | 77 |
 
 ## Execution Flows
 
@@ -85,7 +85,7 @@ Start here when exploring this area:
 | Ui | 10 calls |
 | Apis | 4 calls |
 | Packing-list | 3 calls |
-| Stores | 2 calls |
+| Stores | 3 calls |
 | Po | 1 calls |
 | Google | 1 calls |
 
