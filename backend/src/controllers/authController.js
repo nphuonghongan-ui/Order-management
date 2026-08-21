@@ -169,18 +169,34 @@ const FRONTEND_ORIGIN =
 
 const OAUTH_SUCCESS_RETURN_TO = '/dashboard/my-orders';
 
-const upsertGoogleAccount = async (payload) => {
-  let account = await Account.findOne({ email: payload.email });
+const upsertOAuthAccount = async (identity, { provider }) => {
+  const subField = provider === 'github' ? 'githubSub' : 'googleSub';
+  const providerLabel = provider === 'github' ? 'GitHub' : 'Google';
+
+  let account = identity.email
+    ? await Account.findOne({ email: identity.email })
+    : null;
+
+  if (!account && identity.sub) {
+    account = await Account.findOne({ [subField]: identity.sub });
+  }
 
   if (!account) {
+    if (!identity.email) {
+      const err = new Error(
+        `${providerLabel} sign-in requires an email or returning sub to match an existing account.`,
+      );
+      err.status = 400;
+      throw err;
+    }
     try {
       account = await withRetry(() =>
         Account.create({
           customerCustId: `B2C-${crypto.randomBytes(6).toString('hex').toUpperCase()}`,
-          userName: payload.name,
-          email: payload.email,
-          googleSub: payload.sub,
-          authProvider: 'google',
+          userName: identity.name || `user-${identity.sub}`,
+          email: identity.email,
+          [subField]: identity.sub,
+          authProvider: provider,
           role: 'PO',
           emailVerified: true,
           password: null,
@@ -188,7 +204,7 @@ const upsertGoogleAccount = async (payload) => {
       );
     } catch (err) {
       if (err?.code === 11000) {
-        account = await Account.findOne({ email: payload.email });
+        account = await Account.findOne({ email: identity.email });
       } else {
         throw err;
       }
@@ -196,25 +212,32 @@ const upsertGoogleAccount = async (payload) => {
   }
 
   if (account.role !== 'PO') {
-    const err = new Error('Google sign-in is only available for PO accounts.');
+    const err = new Error(`${providerLabel} sign-in is only available for PO accounts.`);
     err.status = 403;
     throw err;
   }
 
   let dirty = false;
-  if (!account.googleSub) {
-    account.googleSub = payload.sub;
+  if (!account[subField] && identity.sub) {
+    account[subField] = identity.sub;
     dirty = true;
   }
-  if (!account.email && payload.email) {
-    account.email = payload.email;
+  if (!account.email && identity.email) {
+    account.email = identity.email;
     dirty = true;
   }
   if (account.password && account.authProvider === 'local') {
     account.authProvider = 'both';
     dirty = true;
-  } else if (!account.password && account.authProvider !== 'google') {
-    account.authProvider = 'google';
+  } else if (!account.password && account.authProvider === 'local') {
+    account.authProvider = provider;
+    dirty = true;
+  } else if (
+    !account.password &&
+    account.authProvider !== 'both' &&
+    account.authProvider !== provider
+  ) {
+    account.authProvider = 'both';
     dirty = true;
   }
   if (dirty) {
@@ -314,31 +337,28 @@ export const oauthCallback = async (req, res) => {
 
   clearOauthFlowCookies(res);
 
-  let tokens;
+  let result;
   try {
-    tokens = await provider.exchangeCodeForTokens({
+    result = await provider.completeLogin({
       code: String(code),
       codeVerifier: presentVerifier,
     });
   } catch (err) {
+    console.error('[oauthCallback] completeLogin failed:', err);
     return res.redirect(
       redirectError('token_exchange_failed', err.message || 'unknown'),
     );
   }
 
-  let identity;
-  try {
-    identity = await provider.verifyIdentity({ idToken: tokens.id_token });
-  } catch (err) {
-    const params = new URLSearchParams({
-      error: tokens.id_token ? 'id_token_invalid' : 'missing_id_token',
-      error_description: err.message || 'unknown',
-    });
-    return res.redirect(`${FRONTEND_ORIGIN}/oauth/error?${params.toString()}`);
+  const { identity } = result;
+  if (!identity || !identity.sub) {
+    return res.redirect(
+      redirectError('identity_verification_failed', 'No identity returned by provider'),
+    );
   }
 
   try {
-    const account = await upsertGoogleAccount(identity);
+    const account = await upsertOAuthAccount(identity, { provider: provider.intent });
     const { accessToken } = await issueGoogleSession(req, res, account);
     const successUrl = new URL(`${FRONTEND_ORIGIN}/oauth/success`);
     const fragment = new URLSearchParams({
@@ -375,7 +395,7 @@ export const googleOnetapLogin = async (req, res) => {
   }
 
   try {
-    const account = await upsertGoogleAccount(payload);
+    const account = await upsertOAuthAccount(payload, { provider: 'google' });
     const { accessToken } = await issueGoogleSession(req, res, account);
     return res.status(200).json({
       account: Account.toProfile(account),

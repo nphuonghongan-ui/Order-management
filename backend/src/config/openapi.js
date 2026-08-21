@@ -42,7 +42,7 @@ const options = {
             customerCustId: { type: 'string' },
             userName: { type: 'string' },
             role: { type: 'string', enum: ['PO', 'Sale', 'Manufacture'] },
-            authProvider: { type: 'string', enum: ['local', 'google', 'both'] },
+            authProvider: { type: 'string', enum: ['local', 'google', 'github', 'both'] },
             email: { type: 'string', nullable: true },
           },
         },

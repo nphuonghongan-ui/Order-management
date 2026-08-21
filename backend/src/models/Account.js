@@ -39,10 +39,17 @@ const accountSchema = new mongoose.Schema(
       sparse: true,
       index: true,
     },
+    githubSub: {
+      type: String,
+      required: false,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
     authProvider: {
       type: String,
       required: true,
-      enum: ['local', 'google', 'both'],
+      enum: ['local', 'google', 'github', 'both'],
       default: 'local',
     },
     role: {

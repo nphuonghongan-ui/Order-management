@@ -119,6 +119,14 @@ export const google = {
   buildAuthUrl,
   exchangeCodeForTokens,
   verifyIdentity,
+  async completeLogin({ code, codeVerifier, redirectUri }) {
+    const tokens = await exchangeCodeForTokens({ code, codeVerifier, redirectUri });
+    if (!tokens.id_token) {
+      throw new Error('Google token response missing id_token');
+    }
+    const identity = await verifyIdentity({ idToken: tokens.id_token });
+    return { identity, tokens };
+  },
 };
 
 export const __verifyGoogleIdToken = verifyIdentity;
