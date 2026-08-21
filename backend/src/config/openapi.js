@@ -21,7 +21,7 @@ const options = {
         cookieAuth: {
           type: 'apiKey',
           in: 'cookie',
-          name: 'refresh_token',
+          name: '__Host-om_refresh',
           description: 'httpOnly refresh-token cookie (rotation handled server-side)',
         },
       },

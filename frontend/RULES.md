@@ -2,38 +2,49 @@
 
 This document is the authoritative spec for the Order Management app's flow, routing, role system, component structure, and backend contracts. All frontend code MUST follow these rules alongside the visual system defined in `DESIGN.md` (Logistics Core).
 
+All frontend web-storage keys and client-side identifiers MUST use the `om_` prefix, and all cookies MUST use the `__Host-<function>-<name>` pattern, so the application has a single, greppable namespace. The full list of identifiers is maintained in **§ 12. Backend Naming Conventions** and **§ 15. Frontend Token & Storage Naming**.
+
 ---
 
 ## 1. Auth & Role Flow
 
 ```
-/ (LoginPage) → enter username → mock role lookup → navigate to /dashboard
+/ (LoginPage) → enter username/password OR click "Sign in with Google" →
+  - username/password: POST /auth/login → accessToken (memory) + __Host-auth-refresh cookie (HttpOnly)
+  - Google One-Tap: POST /auth/google/onetap → accessToken (memory) + __Host-auth-refresh cookie
+  - Google OAuth: GET /auth/oauth?intent=google → Google consent → GET /auth/oauth/callback → __Host-auth-refresh cookie + /oauth/success
+→ navigate to /dashboard
 ```
 
 - **3 roles:** `PO`, `Sale`, `Manufacture`
-- **Mock auth (frontend-only for MVP):** username maps to a role.
-  - Username `po` → role `PO`
-  - Username `sale` → role `Sale`
-  - Username `mfg` → role `Manufacture`
-  - Any other username → error toast, stay on login
-- Password field is present but not validated in MVP (any value accepted).
-- Role is stored in:
-  - `AuthContext` (React context) for the session
-  - `localStorage` key `om_role` for persistence across refresh
-- On app load, `AuthContext` hydrates role from `localStorage`. If present, user is considered authenticated.
-- **Logout:** clears `AuthContext` + removes `om_role` from `localStorage` + navigates to `/`.
+- **Two Google paths + local, one session model:**
+  - **Local:** `POST /auth/login` with `{ userName, password }` → returns `{ account, accessToken }` and sets the `__Host-auth-refresh` HttpOnly cookie. Access token is held in memory only (never persisted).
+  - **Google One-Tap:** `POST /auth/google/onetap` with `{ credential }` (the JWT from `google.accounts.id`). Returns `{ account, accessToken }`, sets the `__Host-auth-refresh` cookie. No consent screen; only `openid email profile`.
+  - **Google OAuth (authorization code flow, PKCE S256):**
+    1. User clicks `GoogleSignInButton` (which is a thin wrapper over `<OAuthSignInButton intent="google" />`).
+    2. Browser is redirected to `GET /api/auth/oauth?intent=google` — the backend sets a short-lived cookie `__Host-oauth-state` carrying an opaque CSRF `state` plus the `__Host-oauth-pkce-verifier` cookie, then 302-redirects to `accounts.google.com/o/oauth2/v2/auth` with the scopes from `GOOGLE_OAUTH_SCOPES` (default `openid email profile https://www.googleapis.com/auth/youtube.readonly`).
+    3. Google redirects to `GET /api/auth/oauth/callback?code=...&state=...`. The backend verifies the `state` cookie matches the query `state`, recovers the provider from the cookie, exchanges `code` for an `id_token` via the provider's `exchangeCodeForTokens`, upserts the `Account`, and issues **AxonLog's own** `accessToken` + `__Host-auth-refresh` cookie (Google access/refresh tokens are NEVER stored).
+    4. Browser lands on `/oauth/success#access_token=...&returnTo=%2Fdashboard%2Fmy-orders&role=<...>&provider=<...>` which calls `restoreSession()` (which internally calls `/auth/refresh` to mint an `accessToken` from the cookie), then `navigate("/dashboard/my-orders", { replace: true })`. The post-OAuth destination is **hard-coded** by the backend; `returnTo` is no longer accepted from the client.
+  - **Future providers:** add a new module exporting `{ intent, buildAuthUrl, exchangeCodeForTokens, verifyIdentity, defaultScopes }` and register it in `backend/src/oauth/index.js`. Mirror the frontend config in `frontend/src/lib/oauth/providerEnv.ts` with the matching `VITE_<PROVIDER>_CLIENT_ID` env key. No controller changes required — `oauthStart` / `oauthCallback` dispatch via `getProvider(intent)`.
+- **Role is stored in:**
+  - `useAuthStore` (Zustand) `role` field for the session
+- On app load, the role lives in zustand memory only; a page reload requires re-authentication or session restore.
+- **Logout:** calls `POST /auth/logout` (revokes the refresh token family + clears the `__Host-auth-refresh` cookie), clears `useAuthStore`, and navigates to `/`.
 
 ### Route Guards
-- `ProtectedRoute` wraps `/dashboard` — if no role in context, redirect to `/`.
-- `LoginPage` at `/` and `/login` — if role already in context, redirect to `/dashboard`.
+- `ProtectedRoute` wraps `/dashboard` — if no role in store, redirect to `/`.
+- `PublicRoute` wraps `/` and `/login` — if role already in store, redirect to `/dashboard`.
+- `PublicRouteAlways` wraps `/oauth/success` and `/oauth/error` — these routes render regardless of role; the success page itself calls `restoreSession()` and then redirects to the dashboard.
 
 ---
 
 ## 2. Route Map
 
 ```
-/                          → LoginPage (public)
+/                          → LandingPage (public)
 /login                     → LoginPage (public, redirect to /dashboard if authed)
+/oauth/success       → OAuthSuccess (PublicRouteAlways)
+/oauth/error         → OAuthError  (PublicRouteAlways)
 /dashboard                 → ProtectedRoute → Dashboard layout
   /dashboard/inventory         → Inventory.jsx (PO + Manufacture)
   /dashboard/packing-list      → PackingList.jsx (Sale)
@@ -228,19 +239,75 @@ On submit:
 
 ## 7. Backend API Contracts
 
-### Auth (new — not yet implemented)
+### Auth
 
 ```
 POST /api/auth/login
   Request:
-    Body: { username: string, password: string }
+    Body: { userName: string, password: string }
   Response 200:
-    { role: "PO" | "Sale" | "Manufacture", token: string }
+    { account: AccountProfile, accessToken: string }
+    Set-Cookie: __Host-auth-refresh=... (HttpOnly, SameSite=Lax, 7d)
   Response 401:
     { error: "Invalid credentials" }
+
+POST /api/auth/google/onetap          # Google One-Tap ID-token sign-in
+  Request: { credential: string }     # JWT from google.accounts.id
+  Response 200: { account, accessToken }   Set-Cookie: __Host-auth-refresh
+  Response 401: { error: "Invalid Google credential: …" }
+
+GET  /api/auth/oauth?intent=<provider>
+  Provider is dispatched via the `intent` query string (default `google`).
+  Currently registered intents: `google`, `github` (stub).
+  Response 302: redirect to the provider's consent screen
+    Set-Cookie: __Host-oauth-state=... (HttpOnly, Secure, SameSite=Lax, 10m, opaque CSRF state)
+    Set-Cookie: __Host-oauth-pkce-verifier=... (HttpOnly, Secure, SameSite=Lax, 10m, PKCE verifier)
+
+GET  /api/auth/oauth/callback?code=...&state=...
+  Single callback for ALL providers. The provider is recovered from the
+  `__Host-oauth-state` cookie. The backend compares the `state` query
+  parameter against the cookie's `stateId`, then dispatches to the
+  registered strategy for the cookie's `provider`.
+  Response 302:
+    - success     → /oauth/success#access_token=...&returnTo=%2Fdashboard%2Fmy-orders&role=...&provider=<intent>
+                    Set-Cookie: __Host-auth-refresh=...
+    - error/deny  → /oauth/error?error=...&error_description=...
+
+POST /api/auth/refresh
+  Reads the `__Host-auth-refresh` cookie. Rotates the refresh family and returns
+  a new access token. Set-Cookie: __Host-auth-refresh (rotated).
+
+POST /api/auth/logout
+  Revokes the refresh token family. Set-Cookie: __Host-auth-refresh (cleared).
+  Returns 204.
+
+GET  /api/auth/me
+  Requires Authorization: Bearer <accessToken>. Returns { account }.
 ```
 
-MVP uses mock auth on the frontend. When backend is ready, swap `login()` in `AuthContext` to call this endpoint and store the returned JWT.
+`AccountProfile`:
+```json
+{
+  "customerCustId": "string",
+  "userName": "string",
+  "role": "PO" | "Sale" | "Manufacture",
+  "authProvider": "local" | "google" | "both",
+  "email": "string | null"
+}
+```
+
+**Browser-swapping protection** (see §15):
+- `/api/auth/oauth/callback` only accepts the callback if the
+  `__Host-oauth-state` cookie is present and matches the `state` query
+  parameter, and the `provider` carried in the cookie resolves to a
+  registered strategy.
+- Failure paths NEVER echo `code` or `state` to the SPA; they redirect to
+  `/oauth/error` with only `error` and `error_description`.
+
+**Adding a new OAuth provider:**
+1. Backend: create `src/oauth/<provider>.js` exporting `{ intent, buildAuthUrl, exchangeCodeForTokens, verifyIdentity, defaultScopes }`. Register in `src/oauth/index.js`'s `providers` map.
+2. Frontend: add `case` in `src/lib/oauth/providerEnv.ts`'s `resolveProviderConfig(intent)` and declare `VITE_<PROVIDER>_CLIENT_ID` in `.env.sample`.
+3. No URL changes — `GET /api/auth/oauth?intent=<provider>` and `GET /api/auth/oauth/callback` accept any registered provider via the `provider` field encoded in the `__Host-oauth-state` cookie.
 
 ### Inventory (new — replaces /api/tasks)
 
@@ -484,3 +551,77 @@ Every clickable button in the application MUST give the browser cursor the `poin
 - The rule covers `<button>` and `<Button>` only. Non-button clickable surfaces (sortable table headers, clickable list rows, tabs, file-picker labels) are out of scope and have their own conventions.
 
 Enforcement: code review. No automated check today.
+
+---
+
+## 15. Frontend Token & Storage Naming
+
+Client-side identifiers follow **two naming regimes**, split by storage type:
+
+### 15.1 Cookies — `__Host-<function>-<name>`
+
+Every cookie the application sets MUST use the `__Host-` prefix followed by a function segment and a name, hyphen-separated: `__Host-<function>-<name>` (e.g. `__Host-oauth-state`). The `<function>` segment comes from a fixed vocabulary — currently `auth` (session cookies) and `oauth` (OAuth flow cookies); add new segments deliberately.
+
+- `__Host-` is a **browser-enforced security prefix** (Cookie Prefixes spec): the browser only accepts the cookie if it is set with `Secure`, without a `Domain` attribute, and with `Path=/`. This hardens against subdomain cookie-tossing attacks.
+- The prefix is only meaningful on **cookies**. It has no effect on `localStorage`/`sessionStorage`, where it would be a cosmetic string — do not use it there.
+
+| Identifier | Type | Source of truth | Purpose | Lifetime |
+|------------|------|-----------------|---------|----------|
+| `__Host-auth-refresh` | HttpOnly cookie | Backend (`REFRESH_COOKIE_NAME` in `config/cookies.js`) | Rotated refresh token for re-issuing access tokens | 7 days (sliding) |
+| `__Host-oauth-state` | HttpOnly cookie | Backend (`STATE_COOKIE_NAME` in `lib/oauthState.js`) | Short-lived opaque CSRF state for the OAuth authorization-code flow. Carries `{ stateId, provider }` (base64url-encoded, dot-separated) so a single callback URL can dispatch to any registered provider strategy. | 10 minutes (`GOOGLE_OAUTH_STATE_TTL_SECONDS`) |
+| `__Host-oauth-pkce-verifier` | HttpOnly cookie | Backend (`PKCE_COOKIE_NAME` in `lib/oauthState.js`) | PKCE S256 verifier for the OAuth flow | 10 minutes |
+
+### 15.2 Web storage & client keys — `om_`
+
+All non-cookie client-side identifiers — `localStorage` keys, `sessionStorage` keys, IndexedDB stores, Zustand `persist` keys, query-string parameters we own, and React Query keys — MUST use the `om_` prefix (short for **O**rder **m**anagement). This keeps every application-managed identifier greppable in one place and prevents collisions with third-party libraries.
+
+| Identifier | Type | Source of truth | Purpose | Lifetime |
+|------------|------|-----------------|---------|----------|
+| `accessToken` (in-memory only) | Zustand state | `useAuthStore` | AxonLog access token used in `Authorization: Bearer …`. Never persisted (see Rules below). | Session (memory) |
+| `VITE_<PROVIDER>_CLIENT_ID` (e.g. `VITE_GOOGLE_CLIENT_ID`) | Build-time env | `frontend/src/lib/oauth/providerEnv.ts` | Per-provider public client id. Strategy-pattern dispatch via `resolveProviderConfig(intent)`. | Build-time |
+
+### Rules
+
+- **Never persist `accessToken` to `localStorage`, `sessionStorage`, or any disk-backed store.** It belongs only in zustand memory; the existing comment in `stores/authStore.ts` explains why. If you ever need cross-tab sharing, use `BroadcastChannel` + zustand — never `zustand/persist` for this field.
+- **Refresh tokens live in HttpOnly cookies only.** The frontend never reads or writes them.
+- **Google's access/refresh tokens are NOT stored anywhere** by this application. The OAuth flow exchanges `code` → `id_token`, upserts the Account, and immediately issues AxonLog's own `accessToken` + `refresh_token`. If a future feature actually needs Google API access on behalf of the user, it must add an explicit "Connect Google" flow with its own storage — that decision is **out of scope** today.
+- **OAuth post-success destination is hard-coded server-side.** The backend always redirects to `/dashboard/my-orders` after a successful OAuth flow; clients cannot influence it.
+- **OAuth error pages must never echo `code` or `state`.** If the provider returns the user with `?error=access_denied&error_description=…`, the SPA renders the error without leaking the auth code or state — see `pages/OAuthError.tsx`. This is the browser-swapping-attack mitigation: an attacker who tricks the victim into clicking a malicious OAuth callback URL should not be able to use the redirect chain to sign themselves in as the victim.
+- **One OAuth provider strategy per file.** Both backend (`backend/src/oauth/<provider>.js`) and frontend (`frontend/src/lib/oauth/providerEnv.ts`) implement the Strategy pattern. To add a new provider:
+   1. Backend: create `src/oauth/<provider>.js` exporting `{ intent, buildAuthUrl, exchangeCodeForTokens, verifyIdentity, defaultScopes }`. Register the strategy in `src/oauth/index.js`'s `providers` map.
+   2. Frontend: add `case` in `resolveProviderConfig(intent)` for the new intent and declare `VITE_<PROVIDER>_CLIENT_ID` in `.env.sample`.
+   3. No URL changes — `GET /api/auth/oauth?intent=<provider>` and `GET /api/auth/oauth/callback` accept any registered provider out of the box.
+
+### Greppability
+
+A single ripgrep covers every application-owned identifier:
+
+```sh
+rg "__Host-(auth-refresh|oauth-state|oauth-pkce-verifier)" backend/src
+rg "om_|VITE_(GOOGLE|GITHUB)_CLIENT_ID" frontend/src
+```
+
+---
+
+## 16. Navigation — `useNavigation` Hook
+
+All programmatic navigation (redirects, button-driven route changes) in the SPA MUST go through the shared hook `frontend/src/lib/hooks/useNavigation.ts` — never call `useNavigate` from `react-router` directly in pages or components. `useNavigate` may only appear inside the hook itself.
+
+```tsx
+const go = useNavigation(toBaseAddress, queryParams?, options?);
+// go()                → navigates to toBaseAddress (+ query string)
+// go(overridePath)    → navigates to overridePath (+ bound query string)
+// go(path, options)   → per-call NavigateOptions override (e.g. { replace: true })
+```
+
+- **Signature:** `useNavigation(toBaseAddress: string, queryParams: Record<string, string | undefined> = {}, options?: NavigateOptions)` returns a stable callback (safe to pass bare to `onClick` / `onCTA` — non-string first args such as React events are ignored).
+- **Query params:** pass as the second argument; `undefined` values are dropped and `URLSearchParams` handles encoding. Never hand-build `?a=b&c=d` strings with `encodeURIComponent`.
+- **Dynamic destinations** (paths only known at click time, e.g. `${row._id}/loading/run`): bind the query params once at the top of the component and pass the path as the callback's first argument — `openLoadingRun(\`${row._id}/loading/run\`)`. Hooks cannot be called inside loops/callbacks, so this is the only compliant pattern for per-row navigation.
+- **`{ replace: true }`** goes in the hook's `options` argument (e.g. post-OAuth and error redirects).
+- **In scope:** `navigate()` calls in pages/components. **Out of scope:** `<Link to="…">` / `<NavLink>` JSX declarative navigation, and route guards (`ProtectedRoute`, `PublicRoute`) which use their own redirect logic.
+
+Enforcement: code review. A ripgrep for direct usage makes violations greppable:
+
+```sh
+rg "useNavigate" frontend/src --glob '!lib/hooks/useNavigation.ts'
+```

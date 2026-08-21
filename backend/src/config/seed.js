@@ -8,16 +8,6 @@ const ACCOUNTS = [
   { customerCustId: 'GRA', userName: 'GRA', password: '123456', role: 'PO' },
   { customerCustId: 'DYL', userName: 'DYLAN', password: '234567', role: 'Sale' },
   { customerCustId: 'AIG', userName: 'AIGTH', password: '345678', role: 'Manufacture' },
-  // Example Google-One-Tap-provisioned PO. The `email` must match the Google account
-  // that will sign in. `password` is empty (the schema and pre-save hook handle this).
-  // {
-  //   customerCustId: 'EXT-PO-001',
-  //   userName: 'ext-po-001',
-  //   email: 'po1@example.com',
-  //   password: '',
-  //   role: 'PO',
-  //   authProvider: 'google',
-  // },
 ];
 
 // Dimensions in centimetres (cm).

@@ -1,5 +1,7 @@
 import 'dotenv/config';
 import http from 'http';
+import https from 'https';
+import fs from 'fs';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -54,12 +56,33 @@ app.use("/api/clp", clpRoutes);
 app.get('/', apiReference({ pageTitle: 'Order Management API', content: spec }));
 
 const PORT = process.env.PORT || 8000;
-const server = http.createServer(app);
+const useHttps = process.env.USE_HTTPS === 'true';
+
+let server;
+if (useHttps) {
+  const keyPath = process.env.SSL_KEY;
+  const certPath = process.env.SSL_CERT;
+  if (!keyPath || !certPath) {
+    throw new Error('[server] SSL_KEY and SSL_CERT must be set when USE_HTTPS=true');
+  }
+  if (!fs.existsSync(keyPath) || !fs.existsSync(certPath)) {
+    throw new Error(
+      `[server] TLS files missing: expected ${keyPath} and ${certPath}. ` +
+      'Generate with "mkcert -install && mkcert localhost 127.0.0.1 ::1" inside backend/certs/.'
+    );
+  }
+  const key = fs.readFileSync(keyPath);
+  const cert = fs.readFileSync(certPath);
+  server = https.createServer({ key, cert }, app);
+} else {
+  server = http.createServer(app);
+}
 
 connectDB().then(async () => {
   await autoSeed();
   initSocket(server, origins);
+  const protocol = useHttps ? 'https' : 'http';
   server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on ${protocol}://localhost:${PORT}`);
   });
 });

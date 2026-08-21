@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate, Link } from "react-router";
+import { Link } from "react-router";
 import { toast } from "sonner";
 import {
   AlertCircle,
@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
+import { useNavigation } from "@/lib/hooks/useNavigation";
 import { Field } from "@/components/po/Field";
 import { ItemPicker } from "@/components/packing-list/ItemPicker";
 import { EmptyState } from "@/components/EmptyState";
@@ -58,7 +59,7 @@ interface SubmittedInfo {
 }
 
 export default function NewPackingList() {
-  const navigate = useNavigate();
+  const goBackToList = useNavigation("/dashboard/packing-list");
   const [customer, setCustomer] = useState<CustomerInfo>(EMPTY_CUSTOMER);
   const [delivery, setDelivery] = useState<DeliveryInfo>(EMPTY_DELIVERY);
   const [picked, setPicked] = useState<PickedItem[]>([]);
@@ -122,7 +123,7 @@ export default function NewPackingList() {
           {" - "}
           $ {fmt(submitted.total)}
         </p>
-        <Button onClick={() => navigate("/dashboard/packing-list")} className="mt-2">
+        <Button onClick={goBackToList} className="mt-2">
           <ArrowLeft />
           Back to Packing Lists
         </Button>
@@ -139,7 +140,7 @@ export default function NewPackingList() {
               type="button"
               variant="outline"
               size="icon-sm"
-              onClick={() => navigate("/dashboard/packing-list")}
+              onClick={goBackToList}
               aria-label="Back to packing lists"
               className="mr-2"
             >

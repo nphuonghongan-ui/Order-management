@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigation } from "@/lib/hooks/useNavigation";
 import {
   AlertCircle,
   ArrowLeft,
@@ -40,7 +40,7 @@ type Stage =
   | "error";
 
 export default function CLPViewer({ plId, autoStart }: CLPViewerProps) {
-  const navigate = useNavigate();
+  const goBackToList = useNavigation("/dashboard/packing-list");
 
   const [record, setRecord] = useState<PackingListRecord | null>(null);
   const [stage, setStage] = useState<Stage>("loading");
@@ -176,7 +176,7 @@ export default function CLPViewer({ plId, autoStart }: CLPViewerProps) {
         <p className="max-w-md text-center text-sm text-destructive">
           Missing packing list id
         </p>
-        <Button onClick={() => navigate("/dashboard/packing-list")}>
+        <Button onClick={goBackToList}>
           Back
         </Button>
       </div>
@@ -213,7 +213,7 @@ export default function CLPViewer({ plId, autoStart }: CLPViewerProps) {
           <Button variant="outline" onClick={handleRetry}>
             Retry
           </Button>
-          <Button onClick={() => navigate("/dashboard/packing-list")}>
+          <Button onClick={goBackToList}>
             Back
           </Button>
         </div>
@@ -240,7 +240,7 @@ export default function CLPViewer({ plId, autoStart }: CLPViewerProps) {
         <Button size="lg" className="gap-2" onClick={handleCalculate}>
           <Play size={16} /> Calculate load plan
         </Button>
-        <Button onClick={() => navigate("/dashboard/packing-list")}>
+        <Button onClick={goBackToList}>
           Back
         </Button>
       </div>
@@ -304,7 +304,7 @@ export default function CLPViewer({ plId, autoStart }: CLPViewerProps) {
             <Button
               variant="secondary"
               className="gap-1.5"
-              onClick={() => navigate("/dashboard/packing-list")}
+              onClick={goBackToList}
             >
               <ArrowLeft size={14} /> Back
             </Button>

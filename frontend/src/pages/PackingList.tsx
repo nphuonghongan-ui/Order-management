@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigation } from "@/lib/hooks/useNavigation";
 import { toast } from "sonner";
 import {
   AlertCircle,
@@ -268,7 +268,8 @@ function poColorHex(key: string | undefined): string {
 }
 
 export default function PackingList() {
-  const navigate = useNavigate();
+  const goToNew = useNavigation("new");
+  const openLoadingRun = useNavigation("", { auto: "1" });
   const [records, setRecords] = useState<PackingListRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -680,7 +681,7 @@ export default function PackingList() {
               loadingTimerRef.current = setTimeout(() => {
                 setLoadingToContainerId(null);
                 loadingTimerRef.current = null;
-                navigate(`${row._id}/loading/run?auto=1`);
+                openLoadingRun(`${row._id}/loading/run`);
               }, 500);
             }}
             disabled={loadingToContainerId === row._id}
@@ -793,7 +794,7 @@ export default function PackingList() {
         setSearch={setQ}
         searchPlaceholder="Search by PL number, customer, or recipient..."
         ctaLabel="New Packing List"
-        onCTA={() => navigate("new")}
+        onCTA={goToNew}
       />
 
       <DataTable
@@ -806,7 +807,7 @@ export default function PackingList() {
               title="No packing lists yet"
               description="Create your first packing list to get started."
               action={
-                <Button onClick={() => navigate("new")}>
+                <Button onClick={goToNew}>
                   <Plus />
                   New Packing List
                 </Button>

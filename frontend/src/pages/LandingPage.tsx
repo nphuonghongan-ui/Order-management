@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigation } from "@/lib/hooks/useNavigation";
 import { toast } from "sonner";
 import {
   ArrowRight,
@@ -429,18 +429,18 @@ function formatTime(s: number) {
 }
 
 export default function LandingPage() {
-  const navigate = useNavigate();
-  const goToLogin = () => navigate("/login");
+  const goToLogin = useNavigation("/login");
+  const goToDashboard = useNavigation("/dashboard");
 
   const role = useAuthStore((s) => s.role);
-  const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
+  const loginWithGoogleOneTap = useAuthStore((s) => s.loginWithGoogleOneTap);
 
   const handleCredential = useCallback(
     async (response: GoogleCredentialResponse) => {
       try {
-        const ok = await loginWithGoogle(response.credential);
+        const ok = await loginWithGoogleOneTap(response.credential);
         if (ok) {
-          navigate("/dashboard");
+          goToDashboard();
         }
       } catch (err) {
         const message =
@@ -449,7 +449,7 @@ export default function LandingPage() {
         toast.error(message);
       }
     },
-    [loginWithGoogle, navigate],
+    [loginWithGoogleOneTap, goToDashboard],
   );
 
   useGoogleOneTap({
