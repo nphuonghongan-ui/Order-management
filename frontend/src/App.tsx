@@ -12,6 +12,8 @@ import NewPackingList from "./pages/NewPackingList";
 import ProductionSchedule from "./pages/ProductionSchedule";
 import PartNumbers from "./pages/PartNumbers";
 import MyOrders from "./pages/MyOrders";
+import OAuthSuccess from "./pages/OAuthSuccess";
+import OAuthError from "./pages/OAuthError";
 import NotFound from "./pages/NotFound";
 
 const LoadingToContainer = lazy(
@@ -31,6 +33,12 @@ function PublicRoute() {
   const role = useAuthStore((s) => s.role);
   if (!hydrated) return null;
   if (role) return <Navigate to={DEFAULT_PATH_BY_ROLE[role]} replace />;
+  return <Outlet />;
+}
+
+function PublicRouteAlways() {
+  const hydrated = useAuthStore((s) => s.hydrated);
+  if (!hydrated) return null;
   return <Outlet />;
 }
 
@@ -128,6 +136,10 @@ function App() {
               />
             </Route>
           </Route>
+        </Route>
+        <Route element={<PublicRouteAlways />}>
+          <Route path="/oauth/success" element={<OAuthSuccess />} />
+          <Route path="/oauth/error" element={<OAuthError />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

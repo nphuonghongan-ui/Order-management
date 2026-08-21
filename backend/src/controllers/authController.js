@@ -1,6 +1,10 @@
 import Account from '../models/Account.js';
 import RefreshToken from '../models/RefreshToken.js';
-import { refreshCookieOptions } from '../config/cookies.js';
+import {
+  setCookie,
+  clearCookie,
+  getCookie,
+} from '../config/cookies.js';
 import {
   signAccessToken,
   signRefreshToken,
@@ -9,17 +13,15 @@ import {
   newId,
   refreshExpiresAt,
 } from '../utils/tokens.js';
-import { verifyGoogleIdToken } from '../utils/google.js';
+import { __verifyGoogleIdToken } from '../oauth/google.js';
+import { getProvider } from '../oauth/index.js';
+import {
+  createOauthFlow,
+  decodeFlowCookie,
+  clearOauthFlowCookies,
+} from '../lib/oauthState.js';
 import { withRetry } from '../utils/retry.js';
 import crypto from 'node:crypto';
-
-const setRefreshCookie = (res, refreshToken) => {
-  res.cookie('refresh_token', refreshToken, refreshCookieOptions);
-};
-
-const clearRefreshCookie123 = (res) => {
-  res.clearCookie('refresh_token', refreshCookieOptions);
-};
 
 const issueSession = async (res, account) => {
   const jti = newId();
@@ -39,7 +41,7 @@ const issueSession = async (res, account) => {
     expiresAt: refreshExpiresAt(),
   });
 
-  setRefreshCookie(res, refreshToken);
+  setCookie(res, 'refresh', refreshToken);
   return { accessToken };
 };
 
@@ -71,7 +73,7 @@ export const login = async (req, res) => {
 };
 
 export const refresh = async (req, res) => {
-  const presented = req.cookies?.refresh_token;
+  const presented = getCookie(req, 'refresh');
 
   if (!presented) {
     return res.status(401).json({ message: 'Refresh token required' });
@@ -134,7 +136,7 @@ export const refresh = async (req, res) => {
     expiresAt: refreshExpiresAt(),
   });
 
-  setRefreshCookie(res, refreshToken);
+  setCookie(res, 'refresh', refreshToken);
   return res.status(200).json({ accessToken });
 };
 
@@ -143,7 +145,7 @@ export const me = (req, res) => {
 };
 
 export const logout = async (req, res) => {
-  const presented = req.cookies?.refresh_token;
+  const presented = getCookie(req, 'refresh');
   if (presented) {
     try {
       const payload = verifyRefreshToken(presented);
@@ -155,45 +157,48 @@ export const logout = async (req, res) => {
       // invalid/expired refresh token — nothing to revoke, still clear cookies
     }
   }
-  clearRefreshCookie123(res);
+  clearCookie(res, 'refresh');
   return res.status(204).send();
 };
 
-export const googleLogin = async (req, res) => {
-  const { credential } = req.body || {};
+const FRONTEND_ORIGIN =
+  (process.env.CORS_ORIGIN || 'http://localhost:5173')
+    .split(',')
+    .map((o) => o.trim())
+    .find(Boolean) || 'http://localhost:5173';
 
-  if (!credential) {
-    return res.status(400).json({ message: 'Google credential is required' });
-  }
+const OAUTH_SUCCESS_RETURN_TO = '/dashboard/my-orders';
 
-  let payload;
-  try {
-    payload = await verifyGoogleIdToken(credential);
-  } catch (err) {
-    return res.status(401).json({ message: `Invalid Google credential: ${err.message}` });
-  }
-
+const upsertGoogleAccount = async (payload) => {
   let account = await Account.findOne({ email: payload.email });
 
   if (!account) {
-    account = await withRetry(() =>
-      Account.create({
-        customerCustId: `B2C-${crypto.randomBytes(6).toString('hex').toUpperCase()}`,
-        userName: payload.name,
-        email: payload.email,
-        googleSub: payload.sub,
-        authProvider: 'google',
-        role: 'PO',
-        emailVerified: true,
-        password: null,
-      }),
-    );
+    try {
+      account = await withRetry(() =>
+        Account.create({
+          customerCustId: `B2C-${crypto.randomBytes(6).toString('hex').toUpperCase()}`,
+          userName: payload.name,
+          email: payload.email,
+          googleSub: payload.sub,
+          authProvider: 'google',
+          role: 'PO',
+          emailVerified: true,
+          password: null,
+        }),
+      );
+    } catch (err) {
+      if (err?.code === 11000) {
+        account = await Account.findOne({ email: payload.email });
+      } else {
+        throw err;
+      }
+    }
   }
 
   if (account.role !== 'PO') {
-    return res.status(403).json({
-      message: 'Google sign-in is only available for PO accounts.',
-    });
+    const err = new Error('Google sign-in is only available for PO accounts.');
+    err.status = 403;
+    throw err;
   }
 
   let dirty = false;
@@ -216,9 +221,169 @@ export const googleLogin = async (req, res) => {
     await account.save();
   }
 
+  return account;
+};
+
+const issueGoogleSession = async (req, res, account) => {
   const { accessToken } = await issueSession(res, account);
-  return res.status(200).json({
-    account: Account.toProfile(account),
-    accessToken,
+  return { accessToken, account };
+};
+
+export const oauthStart = async (req, res) => {
+  const intent =
+    typeof req.query?.intent === 'string' ? req.query.intent : 'google';
+  const provider = getProvider(intent);
+
+  if (!provider) {
+    const params = new URLSearchParams({
+      error: 'unknown_provider',
+      error_description: `OAuth provider "${intent}" is not configured`,
+    });
+    return res.redirect(
+      `${FRONTEND_ORIGIN}/oauth/error?${params.toString()}`,
+    );
+  }
+
+  const { state, codeVerifier, cookieValue } = createOauthFlow({
+    provider: provider.intent,
   });
+
+  setCookie(res, 'oauthState', cookieValue);
+  setCookie(res, 'pkceVerifier', codeVerifier);
+
+  const url = provider.buildAuthUrl({
+    state: state,
+    codeVerifier,
+  });
+
+  return res.redirect(url);
+};
+
+export const oauthCallback = async (req, res) => {
+  const { code, state, error, error_description: errorDescription } = req.query || {};
+  const presentedState = getCookie(req, 'oauthState');
+  const presentVerifier = getCookie(req, 'pkceVerifier');
+
+  const redirectError = (errorCode, description) => {
+    const params = new URLSearchParams({
+      error: errorCode,
+      error_description: description || '',
+    });
+    return `${FRONTEND_ORIGIN}/oauth/error?${params.toString()}`;
+  };
+
+  if (error) {
+    clearOauthFlowCookies(res);
+    return res.redirect(
+      redirectError(String(error), errorDescription ? String(errorDescription) : ''),
+    );
+  }
+
+  if (!code || !state || !presentedState || !presentVerifier) {
+    clearOauthFlowCookies(res);
+    return res.redirect(
+      redirectError(
+        'invalid_state',
+        'Missing or mismatched OAuth state',
+      ),
+    );
+  }
+
+  const flow = decodeFlowCookie(presentedState);
+
+  if (!flow || flow.stateId !== state) {
+    clearOauthFlowCookies(res);
+    return res.redirect(
+      redirectError(
+        'invalid_state',
+        'Missing or mismatched OAuth state',
+      ),
+    );
+  }
+
+  const provider = getProvider(flow.provider);
+  if (!provider) {
+    clearOauthFlowCookies(res);
+    return res.redirect(
+      redirectError(
+        'unknown_provider',
+        `OAuth provider "${flow.provider}" is not configured`,
+      ),
+    );
+  }
+
+  clearOauthFlowCookies(res);
+
+  let tokens;
+  try {
+    tokens = await provider.exchangeCodeForTokens({
+      code: String(code),
+      codeVerifier: presentVerifier,
+    });
+  } catch (err) {
+    return res.redirect(
+      redirectError('token_exchange_failed', err.message || 'unknown'),
+    );
+  }
+
+  let identity;
+  try {
+    identity = await provider.verifyIdentity({ idToken: tokens.id_token });
+  } catch (err) {
+    const params = new URLSearchParams({
+      error: tokens.id_token ? 'id_token_invalid' : 'missing_id_token',
+      error_description: err.message || 'unknown',
+    });
+    return res.redirect(`${FRONTEND_ORIGIN}/oauth/error?${params.toString()}`);
+  }
+
+  try {
+    const account = await upsertGoogleAccount(identity);
+    const { accessToken } = await issueGoogleSession(req, res, account);
+    const successUrl = new URL(`${FRONTEND_ORIGIN}/oauth/success`);
+    const fragment = new URLSearchParams({
+      access_token: accessToken,
+      returnTo: OAUTH_SUCCESS_RETURN_TO,
+      provider: provider.intent,
+    });
+    successUrl.hash = fragment.toString();
+    return res.redirect(successUrl.toString());
+  } catch (err) {
+    console.error('[oauthCallback] failed:', err);
+    const status = err.status || 500;
+    return res.redirect(
+      redirectError(
+        status === 403 ? 'forbidden' : 'server_error',
+        err.message || 'unknown',
+      ),
+    );
+  }
+};
+
+export const googleOnetapLogin = async (req, res) => {
+  const { credential } = req.body || {};
+
+  if (!credential) {
+    return res.status(400).json({ message: 'Google credential is required' });
+  }
+
+  let payload;
+  try {
+    payload = await __verifyGoogleIdToken({ idToken: credential });
+  } catch (err) {
+    return res.status(401).json({ message: `Invalid Google credential: ${err.message}` });
+  }
+
+  try {
+    const account = await upsertGoogleAccount(payload);
+    const { accessToken } = await issueGoogleSession(req, res, account);
+    return res.status(200).json({
+      account: Account.toProfile(account),
+      accessToken,
+    });
+  } catch (err) {
+    console.error('[googleOnetapLogin] failed:', err);
+    const status = err.status || 500;
+    return res.status(status).json({ message: err.message || 'Google login failed' });
+  }
 };

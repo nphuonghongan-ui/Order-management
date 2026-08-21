@@ -1,4 +1,4 @@
-import { useNavigate, useLocation, Link } from "react-router";
+import { useLocation, Link } from "react-router";
 import {
   Package,
   ClipboardList,
@@ -13,6 +13,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { MENU_BY_ROLE } from "@/lib/roles";
 import { cn } from "@/lib/utils/utils";
 import Logo from "@/components/Logo";
+import { useNavigation } from "@/lib/hooks/useNavigation";
 
 const ICONS: Record<string, LucideIcon> = {
   Package,
@@ -26,14 +27,14 @@ const ICONS: Record<string, LucideIcon> = {
 export default function Sidebar() {
   const role = useAuthStore((s) => s.role);
   const logout = useAuthStore((s) => s.logout);
-  const navigate = useNavigate();
+  const goToHome = useNavigation("/");
   const location = useLocation();
 
   const menuItems = role ? MENU_BY_ROLE[role] : [];
 
   const handleLogout = () => {
     logout();
-    navigate("/");
+    goToHome();
   };
 
   return (

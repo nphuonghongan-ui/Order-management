@@ -4,6 +4,8 @@ import { connectSocket, disconnectSocket } from "@/lib/socket";
 import { useNotificationStore } from "@/stores/notificationStore";
 import type { Role } from "@/lib/roles";
 
+let restoreInFlight: Promise<void> | null = null;
+
 interface AccountProfile {
   customerCustId: string;
   userName: string;
@@ -25,7 +27,7 @@ interface AuthState {
   accessToken: string | null;
   restoreSession: () => Promise<void>;
   login: (userName: string, password: string) => Promise<boolean>;
-  loginWithGoogle: (credential: string) => Promise<boolean>;
+  loginWithGoogleOneTap: (credential: string) => Promise<boolean>;
   logout: () => Promise<void>;
 }
 
@@ -36,14 +38,31 @@ export const useAuthStore = create<AuthState>((set) => ({
   accessToken: null,
 
   restoreSession: async () => {
-    try {
-      const { data } = await api.get<{ account: AccountProfile }>("/auth/me");
-      set({ role: data.account.role, account: data.account, hydrated: true });
-      const token = useAuthStore.getState().accessToken;
-      if (token) connectSocket(token);
-    } catch {
-      set({ role: null, account: null, hydrated: true });
-    }
+    if (restoreInFlight) return restoreInFlight;
+    restoreInFlight = (async () => {
+      try {
+        if (!useAuthStore.getState().accessToken) {
+          try {
+            const { data } = await api.post<{ accessToken: string }>(
+              "/auth/refresh",
+            );
+            useAuthStore.setState({ accessToken: data.accessToken });
+          } catch {
+            set({ role: null, account: null, hydrated: true });
+            return;
+          }
+        }
+        const { data } = await api.get<{ account: AccountProfile }>("/auth/me");
+        set({ role: data.account.role, account: data.account, hydrated: true });
+        const token = useAuthStore.getState().accessToken;
+        if (token) connectSocket(token);
+      } catch {
+        set({ role: null, account: null, hydrated: true });
+      }
+    })().finally(() => {
+      restoreInFlight = null;
+    });
+    return restoreInFlight;
   },
 
   login: async (userName, password) => {
@@ -66,11 +85,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  loginWithGoogle: async (credential) => {
+  loginWithGoogleOneTap: async (credential) => {
     const { data } = await api.post<{
       account: AccountProfile;
       accessToken: string;
-    }>("/auth/google", { credential });
+    }>("/auth/google/onetap", { credential });
 
     set({
       role: data.account.role,

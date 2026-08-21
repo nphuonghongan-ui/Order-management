@@ -568,8 +568,10 @@ Every cookie the application sets MUST use the `__Host-` prefix followed by a fu
 | Identifier | Type | Source of truth | Purpose | Lifetime |
 |------------|------|-----------------|---------|----------|
 | `__Host-auth-refresh` | HttpOnly cookie | Backend (`REFRESH_COOKIE_NAME` in `config/cookies.js`) | Rotated refresh token for re-issuing access tokens | 7 days (sliding) |
-| `__Host-oauth-state` | HttpOnly cookie | Backend (`STATE_COOKIE_NAME` in `lib/oauthState.js`) | Short-lived opaque CSRF state for the OAuth authorization-code flow. Carries `{ stateId, provider }` (base64url-encoded, dot-separated) so a single callback URL can dispatch to any registered provider strategy. | 10 minutes (`GOOGLE_OAUTH_STATE_TTL_SECONDS`) |
-| `__Host-oauth-pkce-verifier` | HttpOnly cookie | Backend (`PKCE_COOKIE_NAME` in `lib/oauthState.js`) | PKCE S256 verifier for the OAuth flow | 10 minutes |
+| `__Host-oauth-state` | HttpOnly cookie | Backend (`STATE_COOKIE_NAME` in `config/cookies.js`) | Short-lived opaque CSRF state for the OAuth authorization-code flow. Carries `{ stateId, provider }` (base64url-encoded, dot-separated) so a single callback URL can dispatch to any registered provider strategy. | 10 minutes (`GOOGLE_OAUTH_STATE_TTL_SECONDS`) |
+| `__Host-oauth-pkce-verifier` | HttpOnly cookie | Backend (`PKCE_COOKIE_NAME` in `config/cookies.js`) | PKCE S256 verifier for the OAuth flow | 10 minutes |
+
+All three names are derived in code via the `hostCookieName(function, name)` helper in `config/cookies.js`, and all option objects inherit from a shared `baseCookieOptions(overrides)` factory — the `__Host-` pattern and base attributes are enforced in one place, not hand-written per cookie. All cookie access MUST go through the generic helpers exported from `config/cookies.js` — `setCookie(res, key, value)`, `clearCookie(res, key)`, `getCookie(req, key)` (keyed by the registry: `refresh`, `oauthState`, `pkceVerifier`). Controllers and services never call `res.cookie` / `res.clearCookie` directly or import cookie names/options.
 
 ### 15.2 Web storage & client keys — `om_`
 
