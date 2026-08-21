@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { ArrowRight, EyeOff, Eye } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import Logo from "@/components/Logo";
-import { GoogleSignInButton } from "@/components/google/GoogleSignInButton";
+import { OAuthSignInButton } from "@/components/oauth/OAuthSignInButton";
+import { SUPPORTED_OAUTH_INTENTS } from "@/lib/oauth/providerEnv";
 
 const sansFont = { fontFamily: "'Inter', sans-serif" };
 
@@ -105,6 +106,27 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {/* OAuth sign-in (authorization code flow) */}
+        <div className="flex flex-col gap-2">
+          {SUPPORTED_OAUTH_INTENTS.map((intent) => (
+            <OAuthSignInButton
+              key={intent}
+              intent={intent}
+              className="w-full"
+              disabled={submitting}
+            />
+          ))}
+        </div>
+
+        {/* Divider */}
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1" style={{ background: "#E2E8F0" }} />
+          <span className="text-xs uppercase tracking-wider" style={{ color: "#94A3B8" }}>
+            Or
+          </span>
+          <div className="h-px flex-1" style={{ background: "#E2E8F0" }} />
+        </div>
+
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* Username */}
@@ -170,27 +192,6 @@ export default function LoginPage() {
               {!submitting && <ArrowRight size={14} />}
             </button>
         </form>
-
-        {/* Divider */}
-        <div className="my-6 flex items-center gap-3">
-          <div className="h-px flex-1" style={{ background: "#E2E8F0" }} />
-          <span className="text-xs uppercase tracking-wider" style={{ color: "#94A3B8" }}>
-            Or
-          </span>
-          <div className="h-px flex-1" style={{ background: "#E2E8F0" }} />
-        </div>
-
-        {/* Google sign-in (OAuth authorization code flow) */}
-        <div className="flex justify-center">
-          <GoogleSignInButton disabled={submitting} />
-        </div>
-
-        <p
-          className="mt-6 text-center text-xs"
-          style={{ color: "#94A3B8", lineHeight: 1.6 }}
-        >
-          Google sign-in creates your AxonLog account on first use.
-        </p>
       </div>
     </div>
   );
