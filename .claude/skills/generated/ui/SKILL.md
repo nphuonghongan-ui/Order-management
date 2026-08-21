@@ -1,16 +1,16 @@
 ---
 name: ui
-description: "Skill for the Ui area of Order-management. 142 symbols across 53 files."
+description: "Skill for the Ui area of Order-management. 118 symbols across 48 files."
 ---
 
 # Ui
 
-142 symbols | 53 files | Cohesion: 62%
+118 symbols | 48 files | Cohesion: 63%
 
 ## When to Use
 
 - Working with code in `frontend/`
-- Understanding how cn, ActionToolbar, LoadingScreen work
+- Understanding how cn, LoadingScreen, Logo work
 - Modifying ui-related functionality
 
 ## Key Files
@@ -18,32 +18,31 @@ description: "Skill for the Ui area of Order-management. 142 symbols across 53 f
 | File | Symbols |
 |------|---------|
 | `frontend/src/components/ui/select.tsx` | SelectGroup, SelectLabel, SelectSeparator, Select, SelectValue (+5) |
-| `frontend/src/components/ui/command.tsx` | CommandInput, CommandSeparator, CommandShortcut, CommandDialog, Command (+4) |
 | `frontend/src/components/ui/dialog.tsx` | DialogOverlay, DialogTrigger, Dialog, DialogPortal, DialogContent (+4) |
 | `frontend/src/components/ui/sheet.tsx` | SheetFooter, SheetDescription, Sheet, SheetClose, SheetOverlay (+3) |
-| `frontend/src/components/ui/card.tsx` | CardAction, CardFooter, Card, CardHeader, CardTitle (+2) |
 | `frontend/src/pages/NewOrder.tsx` | NewOrder, loadNextPONum, updatePoNum, resetForm, updateItem (+2) |
 | `frontend/src/components/ui/pagination.tsx` | Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious (+2) |
 | `frontend/src/components/ui/popover.tsx` | PopoverHeader, PopoverTitle, PopoverDescription, Popover, PopoverTrigger (+1) |
 | `frontend/src/components/ui/input-group.tsx` | InputGroup, InputGroupAddon, InputGroupButton, InputGroupText, InputGroupTextarea |
-| `frontend/src/components/packing-list/ItemPicker.tsx` | ItemPicker, promptMaxFor, openQtyPromptFor, ContextMenu, Box |
+| `frontend/src/components/LoadingScreen.tsx` | DotSpinner, DecorativeIcons, rng, LoadingScreen |
+| `frontend/src/components/ui/command.tsx` | CommandInput, CommandSeparator, CommandShortcut, CommandDialog |
+| `frontend/src/components/ui/tooltip.tsx` | TooltipProvider, Tooltip, TooltipTrigger, TooltipContent |
 
 ## Entry Points
 
 Start here when exploring this area:
 
 - **`cn`** (Function) — `frontend/src/lib/utils/utils.ts:3`
-- **`ActionToolbar`** (Function) — `frontend/src/components/ActionToolbar.tsx:23`
 - **`LoadingScreen`** (Function) — `frontend/src/components/LoadingScreen.tsx:88`
 - **`Logo`** (Function) — `frontend/src/components/Logo.tsx:15`
 - **`SkeletonRow`** (Function) — `frontend/src/components/SkeletonRow.tsx:10`
+- **`SkeletonTable`** (Function) — `frontend/src/components/SkeletonRow.tsx:36`
 
 ## Key Symbols
 
 | Symbol | Type | File | Line |
 |--------|------|------|------|
 | `cn` | Function | `frontend/src/lib/utils/utils.ts` | 3 |
-| `ActionToolbar` | Function | `frontend/src/components/ActionToolbar.tsx` | 23 |
 | `LoadingScreen` | Function | `frontend/src/components/LoadingScreen.tsx` | 88 |
 | `Logo` | Function | `frontend/src/components/Logo.tsx` | 15 |
 | `SkeletonRow` | Function | `frontend/src/components/SkeletonRow.tsx` | 10 |
@@ -62,6 +61,7 @@ Start here when exploring this area:
 | `resetForm` | Function | `frontend/src/pages/NewOrder.tsx` | 136 |
 | `updateItem` | Function | `frontend/src/pages/NewOrder.tsx` | 146 |
 | `addLine` | Function | `frontend/src/pages/NewOrder.tsx` | 163 |
+| `removeLine` | Function | `frontend/src/pages/NewOrder.tsx` | 171 |
 
 ## Execution Flows
 
@@ -73,19 +73,20 @@ Start here when exploring this area:
 | `PartNumbers → IsAxiosError` | cross_community | 4 |
 | `AddPartNumDialog → Cn` | cross_community | 4 |
 | `ImportPartNumDialog → Cn` | cross_community | 4 |
-| `ItemPicker → ListPartNums` | cross_community | 4 |
 | `ItemPicker → Cn` | cross_community | 4 |
 | `TopBar → Cn` | cross_community | 4 |
 | `PickedColumns → Cn` | cross_community | 4 |
+| `ConfirmDiscardDialog → Cn` | cross_community | 4 |
 
 ## Connected Areas
 
 | Area | Connections |
 |------|-------------|
-| Pages | 20 calls |
-| Packing-list | 4 calls |
-| Po | 2 calls |
-| Container-viewer | 1 calls |
+| Pages | 12 calls |
+| Packing-list | 7 calls |
+| Po | 6 calls |
+| Stores | 3 calls |
+| Container-viewer | 2 calls |
 | Notification | 1 calls |
 
 ## How to Explore

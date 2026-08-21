@@ -1,11 +1,11 @@
 ---
 name: po
-description: "Skill for the Po area of Order-management. 15 symbols across 7 files."
+description: "Skill for the Po area of Order-management. 26 symbols across 11 files."
 ---
 
 # Po
 
-15 symbols | 7 files | Cohesion: 82%
+26 symbols | 11 files | Cohesion: 70%
 
 ## When to Use
 
@@ -18,12 +18,15 @@ description: "Skill for the Po area of Order-management. 15 symbols across 7 fil
 | File | Symbols |
 |------|---------|
 | `frontend/src/components/po/lineItemColumns.tsx` | partNumCell, monoCell, currencyCell, modePill, exWorkDateCell |
+| `frontend/src/components/ui/command.tsx` | Command, CommandList, CommandEmpty, CommandGroup, CommandItem |
 | `frontend/src/pages/ProductionSchedule.tsx` | toDateInput, updatePending, sortValue, render |
+| `frontend/src/components/po/LineCard.tsx` | LineCard, computePosFor, handler |
+| `frontend/src/components/po/utils.ts` | calcContainersNeeded, calcTotal |
 | `frontend/src/components/packing-list/ItemPicker.tsx` | render, sortValue |
-| `frontend/src/components/po/utils.ts` | calcContainersNeeded |
 | `frontend/src/lib/format.ts` | formatCurrency |
 | `frontend/src/components/MoneyCell.tsx` | MoneyCell |
 | `frontend/src/pages/MyOrders.tsx` | render |
+| `frontend/src/components/po/DimensionBox.tsx` | DimensionBox |
 
 ## Entry Points
 
@@ -51,9 +54,14 @@ Start here when exploring this area:
 | `updatePending` | Function | `frontend/src/pages/ProductionSchedule.tsx` | 168 |
 | `sortValue` | Function | `frontend/src/pages/ProductionSchedule.tsx` | 285 |
 | `render` | Function | `frontend/src/pages/ProductionSchedule.tsx` | 286 |
+| `calcTotal` | Function | `frontend/src/components/po/utils.ts` | 5 |
+| `DimensionBox` | Function | `frontend/src/components/po/DimensionBox.tsx` | 14 |
+| `Field` | Function | `frontend/src/components/po/Field.tsx` | 3 |
+| `LineCard` | Function | `frontend/src/components/po/LineCard.tsx` | 49 |
+| `computePosFor` | Function | `frontend/src/components/po/LineCard.tsx` | 67 |
+| `handler` | Function | `frontend/src/components/po/LineCard.tsx` | 101 |
 | `render` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 245 |
 | `sortValue` | Function | `frontend/src/components/packing-list/ItemPicker.tsx` | 251 |
-| `toDateInput` | Function | `frontend/src/pages/ProductionSchedule.tsx` | 51 |
 
 ## Execution Flows
 
@@ -63,6 +71,7 @@ Start here when exploring this area:
 | `Render → Cn` | cross_community | 3 |
 | `Render → Cn` | cross_community | 3 |
 | `Render → FormatCurrency` | intra_community | 3 |
+| `LineCard → Cn` | cross_community | 3 |
 | `Render → Cn` | cross_community | 3 |
 | `Render → FormatCurrency` | cross_community | 3 |
 | `HandleExcel → CalcContainersNeeded` | cross_community | 3 |
@@ -73,8 +82,8 @@ Start here when exploring this area:
 
 | Area | Connections |
 |------|-------------|
-| Ui | 3 calls |
-| Pages | 1 calls |
+| Ui | 13 calls |
+| Packing-list | 3 calls |
 
 ## How to Explore
 

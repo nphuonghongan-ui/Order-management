@@ -1,11 +1,11 @@
 ---
 name: controllers
-description: "Skill for the Controllers area of Order-management. 68 symbols across 9 files."
+description: "Skill for the Controllers area of Order-management. 85 symbols across 12 files."
 ---
 
 # Controllers
 
-68 symbols | 9 files | Cohesion: 100%
+85 symbols | 12 files | Cohesion: 98%
 
 ## When to Use
 
@@ -18,8 +18,9 @@ description: "Skill for the Controllers area of Order-management. 68 symbols acr
 | File | Symbols |
 |------|---------|
 | `backend/src/controllers/packingListController.js` | toStr, toUpper, toPositiveInt, toNonNegNumber, toDate (+11) |
+| `backend/src/controllers/authController.js` | setRefreshCookie, clearRefreshCookie, issueSession, revokeFamily, login (+9) |
 | `backend/src/controllers/partNumController.js` | toPositiveInt, toNonNegNumber, toUpperTrimmed, validatePartNumInput, sanitizePayload (+6) |
-| `backend/src/controllers/authController.js` | setRefreshCookie, clearRefreshCookie123, issueSession, revokeFamily, login (+2) |
+| `backend/src/lib/oauthState.js` | b64urlDecode, decodeFlowCookie, clearOauthStateCookie, clearPkceVerifierCookie, clearOauthFlowCookies (+3) |
 | `backend/src/utils/tokens.js` | hashToken, newId, signAccessToken, signRefreshToken, verifyRefreshToken (+2) |
 | `backend/src/controllers/poController.js` | toPositiveInt, toNonNegNumber, toDate, upper, validateLine (+2) |
 | `backend/src/controllers/notificationController.js` | sendUrgeUpdate, sanitizeRiskLines, notifyManufactureQtyMismatch, encodeCursor, decodeCursor (+1) |
@@ -35,7 +36,7 @@ Start here when exploring this area:
 - **`getPackingList`** (Function) — `backend/src/controllers/packingListController.js:127`
 - **`createPackingList`** (Function) — `backend/src/controllers/packingListController.js:143`
 - **`updatePackingList`** (Function) — `backend/src/controllers/packingListController.js:375`
-- **`login`** (Function) — `backend/src/controllers/authController.js:49`
+- **`login`** (Function) — `backend/src/controllers/authController.js:70`
 
 ## Key Symbols
 
@@ -45,37 +46,37 @@ Start here when exploring this area:
 | `getPackingList` | Function | `backend/src/controllers/packingListController.js` | 127 |
 | `createPackingList` | Function | `backend/src/controllers/packingListController.js` | 143 |
 | `updatePackingList` | Function | `backend/src/controllers/packingListController.js` | 375 |
-| `login` | Function | `backend/src/controllers/authController.js` | 49 |
-| `refresh` | Function | `backend/src/controllers/authController.js` | 69 |
-| `logout` | Function | `backend/src/controllers/authController.js` | 141 |
+| `login` | Function | `backend/src/controllers/authController.js` | 70 |
+| `refresh` | Function | `backend/src/controllers/authController.js` | 90 |
+| `logout` | Function | `backend/src/controllers/authController.js` | 162 |
 | `hashToken` | Function | `backend/src/utils/tokens.js` | 17 |
 | `newId` | Function | `backend/src/utils/tokens.js` | 20 |
 | `signAccessToken` | Function | `backend/src/utils/tokens.js` | 22 |
-| `signRefreshToken` | Function | `backend/src/utils/tokens.js` | 34 |
-| `verifyRefreshToken` | Function | `backend/src/utils/tokens.js` | 46 |
-| `refreshExpiresAt` | Function | `backend/src/utils/tokens.js` | 54 |
-| `createPartNum` | Function | `backend/src/controllers/partNumController.js` | 126 |
-| `importPartNums` | Function | `backend/src/controllers/partNumController.js` | 169 |
-| `createPO` | Function | `backend/src/controllers/poController.js` | 49 |
-| `pairKey` | Function | `backend/src/controllers/poController.js` | 94 |
-| `sendUrgeUpdate` | Function | `backend/src/controllers/notificationController.js` | 61 |
-| `notifyManufactureQtyMismatch` | Function | `backend/src/controllers/notificationController.js` | 195 |
-| `getIO` | Function | `backend/src/lib/socket.js` | 43 |
+| `signRefreshToken` | Function | `backend/src/utils/tokens.js` | 35 |
+| `verifyRefreshToken` | Function | `backend/src/utils/tokens.js` | 47 |
+| `refreshExpiresAt` | Function | `backend/src/utils/tokens.js` | 55 |
+| `oauthCallback` | Function | `backend/src/controllers/authController.js` | 276 |
+| `redirectError` | Function | `backend/src/controllers/authController.js` | 281 |
+| `googleOnetapLogin` | Function | `backend/src/controllers/authController.js` | 377 |
+| `decodeFlowCookie` | Function | `backend/src/lib/oauthState.js` | 38 |
+| `clearOauthStateCookie` | Function | `backend/src/lib/oauthState.js` | 63 |
+| `clearPkceVerifierCookie` | Function | `backend/src/lib/oauthState.js` | 67 |
+| `clearOauthFlowCookies` | Function | `backend/src/lib/oauthState.js` | 71 |
 
 ## Execution Flows
 
 | Flow | Type | Steps |
 |------|------|-------|
+| `OauthStart → B64urlEncode` | intra_community | 4 |
+| `GoogleOnetapLogin → NewId` | cross_community | 4 |
+| `GoogleOnetapLogin → SignAccessToken` | cross_community | 4 |
+| `GoogleOnetapLogin → SignRefreshToken` | cross_community | 4 |
+| `GoogleOnetapLogin → HashToken` | cross_community | 4 |
 | `CreatePackingList → ToStr` | intra_community | 3 |
 | `CreatePackingList → ToDate` | intra_community | 3 |
 | `UpdatePackingList → ToStr` | intra_community | 3 |
 | `UpdatePackingList → ToDate` | intra_community | 3 |
-| `CreatePartNum → ToUpperTrimmed` | intra_community | 3 |
-| `CreatePartNum → ToNonNegNumber` | intra_community | 3 |
-| `CreatePartNum → ToPositiveInt` | intra_community | 3 |
-| `ImportPartNums → ToUpperTrimmed` | intra_community | 3 |
-| `ImportPartNums → ToNonNegNumber` | intra_community | 3 |
-| `ImportPartNums → ToPositiveInt` | intra_community | 3 |
+| `OauthCallback → ClearOauthStateCookie` | intra_community | 3 |
 
 ## How to Explore
 

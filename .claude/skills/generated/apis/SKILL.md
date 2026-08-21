@@ -52,9 +52,9 @@ Start here when exploring this area:
 | `extractErrorMessage` | Function | `frontend/src/lib/apis/api.ts` | 14 |
 | `submitPackingList` | Function | `frontend/src/lib/apis/packingListApi.ts` | 41 |
 | `updatePackingList` | Function | `frontend/src/lib/apis/packingListApi.ts` | 48 |
-| `handleSubmit` | Function | `frontend/src/pages/NewPackingList.tsx` | 79 |
-| `applyUpdated` | Function | `frontend/src/pages/PackingList.tsx` | 352 |
-| `handleSave` | Function | `frontend/src/pages/PackingList.tsx` | 518 |
+| `handleSubmit` | Function | `frontend/src/pages/NewPackingList.tsx` | 80 |
+| `applyUpdated` | Function | `frontend/src/pages/PackingList.tsx` | 353 |
+| `handleSave` | Function | `frontend/src/pages/PackingList.tsx` | 519 |
 | `sendUrgeUpdate` | Function | `frontend/src/lib/apis/notificationApi.ts` | 39 |
 | `notifyManufactureQtyMismatch` | Function | `frontend/src/lib/apis/notificationApi.ts` | 90 |
 | `reset` | Function | `frontend/src/components/notification/NotifyManufactureDialog.tsx` | 93 |
