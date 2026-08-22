@@ -21,9 +21,9 @@ import { PageShell } from "@/components/PageShell";
 import { StatBar } from "@/components/StatBar";
 import { SectionHeader } from "@/components/SectionHeader";
 import { EmptyState } from "@/components/EmptyState";
-import { IconField } from "@/components/Detail/IconField";
-import { MetaField } from "@/components/Detail/MetaField";
-import { SectionCard } from "@/components/Detail/SectionCard";
+import { IconField } from "@/components/detail/IconField";
+import { MetaField } from "@/components/detail/MetaField";
+import { SectionCard } from "@/components/detail/SectionCard";
 import {
   Sheet,
   SheetContent,

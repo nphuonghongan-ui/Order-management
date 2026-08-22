@@ -27,8 +27,8 @@ import { EmptyState } from "@/components/EmptyState";
 import { DirtyChip } from "@/components/DirtyChip";
 import { ConfirmDiscardDialog } from "@/components/ConfirmDiscardDialog";
 import LoadingScreen from "@/components/LoadingScreen";
-import { MetaField } from "@/components/Detail/MetaField";
-import { SectionCard } from "@/components/Detail/SectionCard";
+import { MetaField } from "@/components/detail/MetaField";
+import { SectionCard } from "@/components/detail/SectionCard";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
