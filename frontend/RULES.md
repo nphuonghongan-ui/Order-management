@@ -627,3 +627,45 @@ Enforcement: code review. A ripgrep for direct usage makes violations greppable:
 ```sh
 rg "useNavigate" frontend/src --glob '!lib/hooks/useNavigation.ts'
 ```
+
+---
+
+## 17. Backend Generic OAuth Abstraction (Frontend Implementation Notes)
+
+The backend centralizes all shared OAuth plumbing in `backend/src/oauth/base.js` as factories. Each provider file (`backend/src/oauth/<provider>.js`) is now a thin wiring layer. Frontend implementers adding or debugging OAuth providers MUST understand what the backend does for them and what the contract is, so the SPA never duplicates logic that already lives server-side.
+
+### 17.1 What lives in `base.js` (shared across every provider)
+
+| Factory | Responsibility |
+|---|---|
+| `createEnvRequirement(envKey)` | Returns a `() => value` getter. **Throws on missing or empty** — `requireClientSecret` is mandatory; an empty `GOOGLE_CLIENT_SECRET` / `GITHUB_CLIENT_SECRET` is a hard error, not a fallback to `''`. |
+| `createDefaultScopesReader(providerKey, fallbackScopes)` | Reads `${PROVIDER_KEY.toUpperCase()}_OAUTH_SCOPES` (space-separated). Falls back to the array passed in if the env var is unset. |
+| `createBuildAuthUrl({ authUrl, providerName, requireClientId, requireRedirectUri, defaultScopesForEnv, extraParams, requirePkce })` | Builds the consent URL. When `requirePkce: true` (default), automatically appends `code_challenge` (S256 of the verifier) and `code_challenge_method=S256`. Provider-specific fixed params go in `extraParams` (e.g. Google: `response_type`, `access_type`, `include_granted_scopes`, `prompt`; GitHub: `allow_signup`). |
+| `createExchangeCodeForTokens({ tokenUrl, providerName, requireClientId, requireClientSecret, requireRedirectUri, requirePkce, extraBody, validateResponse, userAgent })` | POSTs the token-exchange form. Always sends `client_secret`. When `requirePkce: true`, sends `code_verifier`. Generic JSON parse + `error_description \|\| error` mapping. `extraBody` injects provider-only fields (e.g. Google adds `grant_type=authorization_code`). `validateResponse` runs after parsing — used by GitHub to assert `payload.access_token` is present. |
+| `createCompleteLogin({ providerName, exchangeCodeForTokens, verifyIdentity, extractIdentityInput })` | Orchestrates `exchange → verify → { identity, tokens }`. `extractIdentityInput(tokens)` is the only provider-specific glue: Google maps `tokens.id_token` (and throws if missing), GitHub maps `tokens.access_token`. |
+| `fetchJson(url, { init, defaultHeaders, providerName, errorFrom })` | Generic JSON fetch. GitHub uses it with `defaultHeaders` (GitHub API version + `User-Agent`) and a custom `errorFrom` (`error_description \|\| message \|\| error`). |
+
+### 17.2 What stays per-provider (cannot be abstracted)
+
+- **`verifyIdentity`** — GitHub calls `GET /user` (+ `/user/emails` fallback); Google verifies a JWT `id_token` via `OAuth2Client.verifyIdToken`. Different transport, different trust model — must remain provider-specific.
+- **PKCE behavior** — `requirePkce: true` for both Google and GitHub. GitHub uses PKCE per the [web application flow](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#web-application-flow); the previous "accept `codeVerifier` and ignore it" stub is gone. The shared contract — `buildAuthUrl({ state, codeVerifier, … })` and `exchangeCodeForTokens({ code, codeVerifier, … })` — is now real for both providers.
+- **Provider-specific URL params** — `access_type`, `prompt`, `allow_signup`, etc. live in the `extraParams` passed to the `buildAuthUrl` factory.
+
+### 17.3 Frontend implications
+
+- The SPA **never** needs to know whether a provider uses PKCE — the backend handles it transparently via `__Host-oauth-pkce-verifier`. Adding a provider does NOT require any new SPA logic for PKCE.
+- The SPA **never** sends a `client_secret` to the backend. The `VITE_<PROVIDER>_CLIENT_ID` env var is the only per-provider frontend config, and it is optional (the backend reads `GITHUB_CLIENT_ID` / `GOOGLE_CLIENT_ID` server-side).
+- Adding a new provider means:
+  1. Backend: create `backend/src/oauth/<provider>.js` exporting `{ intent, buildAuthUrl, exchangeCodeForTokens, verifyIdentity, defaultScopes }`. Implement those by composing the `base.js` factories; only `verifyIdentity` is hand-written. Register in `backend/src/oauth/index.js`.
+  2. Frontend: add a `case` in `frontend/src/lib/oauth/providerEnv.ts`'s `resolveProviderConfig(intent)` and declare `VITE_<PROVIDER>_CLIENT_ID` in `.env.sample`.
+  3. **No controller or route changes** — `oauthStart` / `oauthCallback` dispatch via `getProvider(intent)` and the generic factory plumbing handles everything else.
+- The contract `completeLogin` returns `{ identity, tokens }` where `identity` is normalized to `{ sub, email, name, picture, emailVerified }`. Any downstream code that consumes this shape remains unchanged when a provider is added or swapped.
+- `requireClientSecret` now throws on missing/empty. If a developer's `.env` lacks `GOOGLE_CLIENT_SECRET` / `GITHUB_CLIENT_SECRET`, the first OAuth attempt returns an error redirect to `/oauth/error` — surface this in troubleshooting docs as "provider env not configured".
+
+### 17.4 Greppability
+
+```sh
+rg "create(BuildAuthUrl|ExchangeCodeForTokens|CompleteLogin|EnvRequirement|DefaultScopesReader)" backend/src/oauth
+rg "requireClientSecret" backend/src/oauth   # should only appear in base.js + provider wiring
+rg "fetchJson" backend/src/oauth              # generic helper usage
+```

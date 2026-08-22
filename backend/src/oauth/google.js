@@ -1,5 +1,11 @@
-import crypto from 'node:crypto';
 import { OAuth2Client } from 'google-auth-library';
+import {
+  createBuildAuthUrl,
+  createCompleteLogin,
+  createDefaultScopesReader,
+  createEnvRequirement,
+  createExchangeCodeForTokens,
+} from './base.js';
 
 const ALLOWED_ISSUERS = new Set([
   'accounts.google.com',
@@ -9,80 +15,39 @@ const ALLOWED_ISSUERS = new Set([
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 
-const base64UrlEncode = (buffer) =>
-  Buffer.from(buffer).toString('base64url');
+const requireClientId = createEnvRequirement('GOOGLE_CLIENT_ID');
+const requireClientSecret = createEnvRequirement('GOOGLE_CLIENT_SECRET');
+const requireRedirectUri = createEnvRequirement('GOOGLE_REDIRECT_URI');
 
-const deriveCodeChallenge = (verifier) =>
-  base64UrlEncode(crypto.createHash('sha256').update(verifier).digest());
+const defaultScopesForEnv = createDefaultScopesReader('google', [
+  'openid',
+  'email',
+  'profile',
+]);
 
-const requireClientId = () => {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  if (!clientId) throw new Error('GOOGLE_CLIENT_ID is not configured');
-  return clientId;
-};
-
-const requireRedirectUri = () => {
-  const uri = process.env.GOOGLE_REDIRECT_URI;
-  if (!uri) throw new Error('GOOGLE_REDIRECT_URI is not configured');
-  return uri;
-};
-
-const defaultScopesForEnv = () => {
-  const raw = process.env.GOOGLE_OAUTH_SCOPES || 'openid email profile';
-  return raw
-    .split(/\s+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-};
-
-const buildAuthUrl = ({ state, codeVerifier, scopes, redirectUri }) => {
-  const params = new URLSearchParams({
-    client_id: requireClientId(),
-    redirect_uri: redirectUri || requireRedirectUri(),
+const buildAuthUrl = createBuildAuthUrl({
+  authUrl: GOOGLE_AUTH_URL,
+  requireClientId,
+  requireRedirectUri,
+  defaultScopesForEnv,
+  extraParams: {
     response_type: 'code',
-    scope: (scopes && scopes.length ? scopes : defaultScopesForEnv()).join(' '),
     access_type: 'online',
     include_granted_scopes: 'true',
-    state,
-    code_challenge: deriveCodeChallenge(codeVerifier),
-    code_challenge_method: 'S256',
     prompt: 'select_account',
-  });
-  return `${GOOGLE_AUTH_URL}?${params.toString()}`;
-};
+  },
+  requirePkce: true,
+});
 
-const exchangeCodeForTokens = async ({ code, codeVerifier, redirectUri }) => {
-  const clientId = requireClientId();
-  const body = new URLSearchParams({
-    code,
-    client_id: clientId,
-    client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
-    redirect_uri: redirectUri || requireRedirectUri(),
-    grant_type: 'authorization_code',
-    code_verifier: codeVerifier,
-  });
-
-  const res = await fetch(GOOGLE_TOKEN_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: body.toString(),
-  });
-
-  const text = await res.text();
-  let payload;
-  try {
-    payload = JSON.parse(text);
-  } catch {
-    throw new Error('Google token endpoint returned a non-JSON response');
-  }
-
-  if (!res.ok) {
-    const msg = payload?.error_description || payload?.error || 'token exchange failed';
-    throw new Error(`Google token exchange failed: ${msg}`);
-  }
-
-  return payload;
-};
+const exchangeCodeForTokens = createExchangeCodeForTokens({
+  tokenUrl: GOOGLE_TOKEN_URL,
+  providerName: 'Google',
+  requireClientId,
+  requireClientSecret,
+  requireRedirectUri,
+  requirePkce: true,
+  extraBody: () => ({ grant_type: 'authorization_code' }),
+});
 
 const verifyIdentity = async ({ idToken }) => {
   if (!idToken || typeof idToken !== 'string') {
@@ -110,8 +75,20 @@ const verifyIdentity = async ({ idToken }) => {
     email: payload.email,
     name: payload.name || null,
     picture: payload.picture || null,
+    emailVerified: true,
   };
 };
+
+const completeLogin = createCompleteLogin({
+  exchangeCodeForTokens,
+  verifyIdentity,
+  extractIdentityInput: (tokens) => {
+    if (!tokens.id_token) {
+      throw new Error('Google token response missing id_token');
+    }
+    return { idToken: tokens.id_token };
+  },
+});
 
 export const google = {
   intent: 'google',
@@ -119,14 +96,7 @@ export const google = {
   buildAuthUrl,
   exchangeCodeForTokens,
   verifyIdentity,
-  async completeLogin({ code, codeVerifier, redirectUri }) {
-    const tokens = await exchangeCodeForTokens({ code, codeVerifier, redirectUri });
-    if (!tokens.id_token) {
-      throw new Error('Google token response missing id_token');
-    }
-    const identity = await verifyIdentity({ idToken: tokens.id_token });
-    return { identity, tokens };
-  },
+  completeLogin,
 };
 
 export const __verifyGoogleIdToken = verifyIdentity;

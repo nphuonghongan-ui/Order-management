@@ -1,16 +1,13 @@
 // GitHub OAuth strategy.
-//
-// Configure a GitHub OAuth App at https://github.com/settings/applications/new
-// with the Authorization callback URL set to `GITHUB_REDIRECT_URI` from the
-// backend `.env`. Set `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`.
-//
-// GitHub's OAuth flow differs from Google's in two ways:
-//   1. No PKCE — the `codeVerifier` argument is accepted for shared contract
-//      parity but ignored.
-//   2. The token endpoint returns an opaque `access_token`, not an `id_token`.
-//      Identity is fetched separately via
-//      `GET https://api.github.com/user` (and `GET /user/emails` for the
-//      primary verified email when the public profile email is hidden).
+
+import {
+  createBuildAuthUrl,
+  createCompleteLogin,
+  createDefaultScopesReader,
+  createEnvRequirement,
+  createExchangeCodeForTokens,
+  fetchJson,
+} from './base.js';
 
 const GITHUB_AUTH_URL = 'https://github.com/login/oauth/authorize';
 const GITHUB_TOKEN_URL = 'https://github.com/login/oauth/access_token';
@@ -19,121 +16,60 @@ const GITHUB_EMAILS_URL = 'https://api.github.com/user/emails';
 
 const USER_AGENT = 'axonlog';
 
-const requireClientId = () => {
-  const clientId = process.env.GITHUB_CLIENT_ID;
-  if (!clientId) throw new Error('GITHUB_CLIENT_ID is not configured');
-  return clientId;
-};
+const requireClientId = createEnvRequirement('GITHUB_CLIENT_ID');
+const requireClientSecret = createEnvRequirement('GITHUB_CLIENT_SECRET');
+const requireRedirectUri = createEnvRequirement('GITHUB_REDIRECT_URI');
 
-const requireClientSecret = () => {
-  const secret = process.env.GITHUB_CLIENT_SECRET;
-  if (!secret) throw new Error('GITHUB_CLIENT_SECRET is not configured');
-  return secret;
-};
+const defaultScopesForEnv = createDefaultScopesReader('github', [
+  'read:user',
+  'user:email',
+]);
 
-const requireRedirectUri = () => {
-  const uri = process.env.GITHUB_REDIRECT_URI;
-  if (!uri) throw new Error('GITHUB_REDIRECT_URI is not configured');
-  return uri;
-};
+const buildAuthUrl = createBuildAuthUrl({
+  authUrl: GITHUB_AUTH_URL,
+  requireClientId,
+  requireRedirectUri,
+  defaultScopesForEnv,
+  extraParams: { allow_signup: 'true' },
+  requirePkce: true,
+});
 
-const defaultScopesForEnv = () => {
-  const raw = process.env.GITHUB_OAUTH_SCOPES || 'read:user user:email';
-  return raw
-    .split(/\s+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-};
+const exchangeCodeForTokens = createExchangeCodeForTokens({
+  tokenUrl: GITHUB_TOKEN_URL,
+  providerName: 'GitHub',
+  requireClientId,
+  requireClientSecret,
+  requireRedirectUri,
+  requirePkce: true,
+  userAgent: USER_AGENT,
+  validateResponse: (payload) => {
+    if (!payload.access_token) {
+      throw new Error('GitHub token exchange returned no access_token');
+    }
+  },
+});
 
-const buildAuthUrl = ({ state, codeVerifier, redirectUri, scopes }) => {
-  const params = new URLSearchParams({
-    client_id: requireClientId(),
-    redirect_uri: redirectUri || requireRedirectUri(),
-    scope: (scopes && scopes.length ? scopes : defaultScopesForEnv()).join(' '),
-    state,
-    allow_signup: 'true',
-  });
-  return `${GITHUB_AUTH_URL}?${params.toString()}`;
-};
-
-const fetchJson = async (url, init = {}) => {
-  const res = await fetch(url, {
-    ...init,
-    headers: {
+const githubFetchJson = (url, init) =>
+  fetchJson(url, {
+    init,
+    providerName: 'GitHub',
+    defaultHeaders: {
       Accept: 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28',
       'User-Agent': USER_AGENT,
-      ...(init.headers || {}),
     },
+    errorFrom: (payload) =>
+      payload?.error_description || payload?.message || payload?.error,
   });
-  const text = await res.text();
-  let payload;
-  try {
-    payload = text ? JSON.parse(text) : null;
-  } catch {
-    throw new Error(`GitHub returned a non-JSON response from ${url}`);
-  }
-  if (!res.ok) {
-    const msg =
-      payload?.error_description ||
-      payload?.message ||
-      payload?.error ||
-      `HTTP ${res.status}`;
-    throw new Error(`GitHub request failed (${url}): ${msg}`);
-  }
-  return payload;
-};
-
-const exchangeCodeForTokens = async ({ code, redirectUri }) => {
-  if (!code || typeof code !== 'string') {
-    throw new Error('Missing authorization code');
-  }
-
-  const body = new URLSearchParams({
-    client_id: requireClientId(),
-    client_secret: requireClientSecret(),
-    code,
-    redirect_uri: redirectUri || requireRedirectUri(),
-  });
-
-  const res = await fetch(GITHUB_TOKEN_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Accept: 'application/json',
-      'User-Agent': USER_AGENT,
-    },
-    body: body.toString(),
-  });
-
-  const text = await res.text();
-  let payload;
-  try {
-    payload = text ? JSON.parse(text) : {};
-  } catch {
-    throw new Error('GitHub token endpoint returned a non-JSON response');
-  }
-
-  if (!res.ok || payload.error) {
-    const msg = payload.error_description || payload.error || 'token exchange failed';
-    throw new Error(`GitHub token exchange failed: ${msg}`);
-  }
-
-  if (!payload.access_token) {
-    throw new Error('GitHub token exchange returned no access_token');
-  }
-
-  return payload;
-};
 
 const fetchUser = async (accessToken) =>
-  fetchJson(GITHUB_USER_URL, {
+  githubFetchJson(GITHUB_USER_URL, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
 const fetchPrimaryEmail = async (accessToken, fallbackEmail) => {
   try {
-    const emails = await fetchJson(GITHUB_EMAILS_URL, {
+    const emails = await githubFetchJson(GITHUB_EMAILS_URL, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (Array.isArray(emails)) {
@@ -171,17 +107,19 @@ const verifyIdentity = async ({ accessToken }) => {
   };
 };
 
+const completeLogin = createCompleteLogin({
+  exchangeCodeForTokens,
+  verifyIdentity,
+  extractIdentityInput: (tokens) => ({ accessToken: tokens.access_token }),
+});
+
 export const github = {
   intent: 'github',
   defaultScopes: ['read:user', 'user:email'],
   buildAuthUrl,
   exchangeCodeForTokens,
   verifyIdentity,
-  async completeLogin({ code, redirectUri }) {
-    const tokens = await exchangeCodeForTokens({ code, redirectUri });
-    const identity = await verifyIdentity({ accessToken: tokens.access_token });
-    return { identity, tokens };
-  },
+  completeLogin,
 };
 
 export const __verifyGitHubIdentity = verifyIdentity;
