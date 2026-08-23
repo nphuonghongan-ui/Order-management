@@ -21,6 +21,9 @@ import containerRoutes from './routes/containerRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import easycargoRoutes from './routes/easycargoRoutes.js';
 import clpRoutes from './routes/clpRoutes.js';
+import yardRoutes from './routes/yardRoutes.js';
+import slotRoutes from './routes/slotRoutes.js';
+import yardContainerRoutes from './routes/yardContainerRoutes.js';
 
 if (!process.env.ACCESS_TOKEN_SECRET) {
   console.warn('[WARN] ACCESS_TOKEN_SECRET is not set. Auth will fail until it is.');
@@ -52,6 +55,9 @@ app.use("/api/containers", containerRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/easycargo", easycargoRoutes);
 app.use("/api/clp", clpRoutes);
+app.use("/api/yards", yardRoutes);
+app.use("/api/slots", slotRoutes);
+app.use("/api/yard-containers", yardContainerRoutes);
 
 app.get('/', apiReference({ pageTitle: 'Order Management API', content: spec }));
 

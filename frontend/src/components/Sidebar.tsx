@@ -7,6 +7,7 @@ import {
   PackagePlus,
   ListChecks,
   Boxes,
+  Warehouse,
   type LucideIcon,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
@@ -22,6 +23,7 @@ const ICONS: Record<string, LucideIcon> = {
   ClipboardList,
   Factory,
   Boxes,
+  Warehouse,
 };
 
 export default function Sidebar() {

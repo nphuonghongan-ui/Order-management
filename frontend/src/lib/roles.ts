@@ -23,6 +23,7 @@ export const MENU_BY_ROLE: Record<Role, MenuItem[]> = {
   ],
   [ROLES.SALE]: [
     { label: "Packing List", path: "/dashboard/packing-list", icon: "ClipboardList" },
+    { label: "Yard Dashboard", path: "/dashboard/yard", icon: "Warehouse" },
   ],
 };
 

@@ -15,6 +15,7 @@ import MyOrders from "./pages/MyOrders";
 import OAuthSuccess from "./pages/OAuthSuccess";
 import OAuthError from "./pages/OAuthError";
 import NotFound from "./pages/NotFound";
+import YardDashboard from "./pages/YardDashboard";
 
 const LoadingToContainer = lazy(
   () => import("./pages/LoadingToContainer")
@@ -135,6 +136,14 @@ function App() {
                 }
               />
             </Route>
+            <Route
+              path="yard"
+              element={
+                <RoleGuard allowed={[ROLES.SALE]}>
+                  <YardDashboard />
+                </RoleGuard>
+              }
+            />
           </Route>
         </Route>
         <Route element={<PublicRouteAlways />}>
